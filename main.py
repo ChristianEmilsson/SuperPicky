@@ -148,430 +148,48 @@ class WorkerThread(threading.Thread):
             self._stop_caffeinate()
 
     def process_files(self):
-        """处理文件的核心逻辑"""
-        import time
-
-        start_time = time.time()
-        self.stats['start_time'] = start_time
-
-        raw_extensions = ['.nef', '.cr2', '.cr3', '.arw', '.raf', '.orf', '.rw2', '.pef', '.dng', '.3fr', 'iiq']
-        jpg_extensions = ['.jpg', '.jpeg']
-
-        raw_dict = {}
-        jpg_dict = {}
-        files_tbr = []
-
-        # V3.1: 收集所有3星照片，用于后续计算精选旗标（美学+锐度双排名交集）
-        star_3_photos = []  # [(raw_file_path, nima_score, sharpness), ...]
-
-        # V3.3: 收集每个文件的评分（用于后续移动到分类文件夹）
-        file_ratings = {}  # {文件名前缀: rating值}
-
-        # 扫描文件
-        scan_start = time.time()
-        for filename in os.listdir(self.dir_path):
-            if filename.startswith('.'):
-                continue
-
-            file_prefix, file_ext = os.path.splitext(filename)
-            if file_ext.lower() in raw_extensions:
-                raw_dict[file_prefix] = file_ext
-            if file_ext.lower() in jpg_extensions:
-                jpg_dict[file_prefix] = file_ext
-                files_tbr.append(filename)
-
-        scan_time = (time.time() - scan_start) * 1000
-        if self.i18n:
-            self.log_callback(self.i18n.t("logs.scan_time", time=scan_time))
-        else:
-            self.log_callback(f"⏱️  文件扫描耗时: {scan_time:.1f}ms")
-
-        # 转换RAW文件
-        raw_files_to_convert = []
-        for key, value in raw_dict.items():
-            if key in jpg_dict.keys():
-                log_message(f"FILE: [{key}] has raw and jpg files", self.dir_path)
-                jpg_dict.pop(key)
-                continue
-            else:
-                raw_file_path = os.path.join(self.dir_path, key + value)
-                raw_files_to_convert.append((key, raw_file_path))
-
-        if raw_files_to_convert:
-            raw_start = time.time()
-            import multiprocessing
-            max_workers = min(4, multiprocessing.cpu_count())
-            if self.i18n:
-                self.log_callback(self.i18n.t("logs.raw_conversion_start", count=len(raw_files_to_convert), threads=max_workers))
-            else:
-                self.log_callback(f"🔄 开始并行转换 {len(raw_files_to_convert)} 个RAW文件（{max_workers}线程）...")
-
-            def convert_single_raw(args):
-                key, raw_path = args
-                try:
-                    raw_to_jpeg(raw_path)
-                    return (key, True, None)
-                except Exception as e:
-                    return (key, False, str(e))
-
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                future_to_raw = {executor.submit(convert_single_raw, args): args for args in raw_files_to_convert}
-                converted_count = 0
-                for future in as_completed(future_to_raw):
-                    key, success, error = future.result()
-                    if success:
-                        files_tbr.append(key + ".jpg")
-                        converted_count += 1
-                        if converted_count % 5 == 0 or converted_count == len(raw_files_to_convert):
-                            if self.i18n:
-                                self.log_callback(self.i18n.t("logs.raw_converted", current=converted_count, total=len(raw_files_to_convert)))
-                            else:
-                                self.log_callback(f"  ✅ 已转换 {converted_count}/{len(raw_files_to_convert)} 张")
-                    else:
-                        self.log_callback(f"  ❌ 转换失败: {key}.NEF ({error})")
-
-            raw_time_sec = time.time() - raw_start
-            avg_raw_time_sec = raw_time_sec / len(raw_files_to_convert) if len(raw_files_to_convert) > 0 else 0
-            if self.i18n:
-                self.log_callback(self.i18n.t("logs.raw_conversion_time", time_str=self._format_time(raw_time_sec), avg=avg_raw_time_sec))
-            else:
-                self.log_callback(f"⏱️  RAW转换耗时: {self._format_time(raw_time_sec)} (平均 {avg_raw_time_sec:.1f}秒/张)\n")
-
-        processed_files = set()
-        process_bar = 0
-
-        # 获取ExifTool管理器
-        exiftool_mgr = get_exiftool_manager()
-
-        # 加载模型
-        model_start = time.time()
-        if self.i18n:
-            self.log_callback(self.i18n.t("logs.model_loading"))
-        else:
-            self.log_callback("🤖 加载AI模型...")
-        model = load_yolo_model()
-        model_time = (time.time() - model_start) * 1000
-        if self.i18n:
-            self.log_callback(self.i18n.t("logs.model_load_time", time=model_time))
-        else:
-            self.log_callback(f"⏱️  模型加载耗时: {model_time:.0f}ms")
-
-        total_files = len(files_tbr)
-        if self.i18n:
-            self.log_callback(self.i18n.t("logs.files_to_process", total=total_files))
-        else:
-            self.log_callback(f"📁 共 {total_files} 个文件待处理\n")
-
-        ai_total_start = time.time()
-
-        # 处理每个文件
-        for i, filename in enumerate(files_tbr):
-            if self._stop_event.is_set():
-                break
-
-            if filename in processed_files:
-                continue
-            if i < process_bar:
-                continue
-
-            process_bar += 1
-            processed_files.add(filename)
-
-            # 更新进度
-            should_update_progress = (
-                process_bar % 5 == 0 or
-                process_bar == total_files or
-                process_bar == 1
-            )
-            if should_update_progress:
-                progress = int((process_bar / total_files) * 100)
-                self.progress_callback(progress)
-
-            filepath = os.path.join(self.dir_path, filename)
-            file_prefix, _ = os.path.splitext(filename)
-
-            if self.i18n:
-                self.log_callback(self.i18n.t("logs.processing_file", current=process_bar, total=total_files, filename=filename))
-            else:
-                self.log_callback(f"[{process_bar}/{total_files}] 处理: {filename}")
-
-            # 记录单张照片处理开始时间
-            photo_start = time.time()
-
-            # 运行AI检测（V3.1: 不再需要preview_callback和work_dir）
-            try:
-                result = detect_and_draw_birds(filepath, model, None, self.dir_path, self.ui_settings, self.i18n)
-                if result is None:
-                    if self.i18n:
-                        self.log_callback(self.i18n.t("logs.cannot_process", filename=filename), "error")
-                    else:
-                        self.log_callback(f"  ⚠️  无法处理: {filename} (AI推理失败)", "error")
-                    continue
-            except Exception as e:
-                if self.i18n:
-                    self.log_callback(self.i18n.t("logs.processing_error", filename=filename, error=str(e)), "error")
-                else:
-                    self.log_callback(f"  ❌ 处理异常: {filename} - {str(e)}", "error")
-                continue
-
-            detected, selected, confidence, sharpness, nima, brisque = result
-
-            # 获取RAW文件路径
-            raw_file_path = None
-            if file_prefix in raw_dict:
-                raw_extension = raw_dict[file_prefix]
-                raw_file_path = os.path.join(self.dir_path, file_prefix + raw_extension)
-
-            # 构建IQA评分显示文本
-            iqa_text = ""
-            if nima is not None:
-                if self.i18n:
-                    iqa_text += self.i18n.t("logs.iqa_aesthetic", score=nima)
-                else:
-                    iqa_text += f", 美学:{nima:.2f}"
-            if brisque is not None:
-                if self.i18n:
-                    iqa_text += self.i18n.t("logs.iqa_distortion", score=brisque)
-                else:
-                    iqa_text += f", 失真:{brisque:.2f}"
-
-            # V3.1: 新的评分逻辑（带具体原因，使用高级配置）
-            config = get_advanced_config()
-            reject_reason = ""
-            quality_issue = ""
-
-            if not detected:
-                rating_value = -1
-                if self.i18n:
-                    reject_reason = self.i18n.t("logs.reject_no_bird")
-                else:
-                    reject_reason = "完全没鸟"
-            elif selected:
-                rating_value = 3
-            else:
-                # 检查0星的具体原因（使用配置阈值）
-                if confidence < config.min_confidence:
-                    rating_value = 0
-                    if self.i18n:
-                        quality_issue = self.i18n.t("logs.quality_low_confidence", confidence=confidence, threshold=config.min_confidence)
-                    else:
-                        quality_issue = f"置信度太低({confidence:.0%}<{config.min_confidence:.0%})"
-                elif brisque is not None and brisque > config.max_brisque:
-                    rating_value = 0
-                    if self.i18n:
-                        quality_issue = self.i18n.t("logs.quality_high_distortion", distortion=brisque, threshold=config.max_brisque)
-                    else:
-                        quality_issue = f"失真过高({brisque:.1f}>{config.max_brisque})"
-                elif nima is not None and nima < config.min_nima:
-                    rating_value = 0
-                    if self.i18n:
-                        quality_issue = self.i18n.t("logs.quality_low_aesthetic", aesthetic=nima, threshold=config.min_nima)
-                    else:
-                        quality_issue = f"美学太差({nima:.1f}<{config.min_nima:.1f})"
-                elif sharpness < config.min_sharpness:
-                    rating_value = 0
-                    if self.i18n:
-                        quality_issue = self.i18n.t("logs.quality_low_sharpness", sharpness=sharpness, threshold=config.min_sharpness)
-                    else:
-                        quality_issue = f"锐度太低({sharpness:.0f}<{config.min_sharpness})"
-                elif sharpness >= self.ui_settings[1] or \
-                     (nima is not None and nima >= self.ui_settings[2]):
-                    rating_value = 2
-                else:
-                    rating_value = 1
-
-            # 设置Lightroom评分（带详细原因）
-            # V3.1: 3星照片暂时不设置pick，等全部处理完成后，根据美学+锐度双排名交集设置
-            if rating_value == 3:
-                rating, pick = 3, 0
-                self.stats['star_3'] += 1
-                if self.i18n:
-                    self.log_callback(self.i18n.t("logs.excellent_photo", confidence=confidence, sharpness=sharpness, iqa_text=iqa_text), "success")
-                else:
-                    self.log_callback(f"  ⭐⭐⭐ 优选照片 (AI:{confidence:.2f}, 锐度:{sharpness:.1f}{iqa_text})", "success")
-            elif rating_value == 2:
-                rating, pick = 2, 0
-                self.stats['star_2'] += 1
-                if self.i18n:
-                    self.log_callback(self.i18n.t("logs.good_photo", confidence=confidence, sharpness=sharpness, iqa_text=iqa_text), "info")
-                else:
-                    self.log_callback(f"  ⭐⭐ 良好照片 (AI:{confidence:.2f}, 锐度:{sharpness:.1f}{iqa_text})", "info")
-            elif rating_value == 1:
-                rating, pick = 1, 0
-                self.stats['star_1'] += 1
-                if self.i18n:
-                    self.log_callback(self.i18n.t("logs.average_photo", confidence=confidence, sharpness=sharpness, iqa_text=iqa_text), "warning")
-                else:
-                    self.log_callback(f"  ⭐ 普通照片 (AI:{confidence:.2f}, 锐度:{sharpness:.1f}{iqa_text})", "warning")
-            elif rating_value == 0:
-                rating, pick = 0, 0
-                self.stats['star_0'] += 1
-                if self.i18n:
-                    self.log_callback(self.i18n.t("logs.poor_quality", reason=quality_issue, confidence=confidence, iqa_text=iqa_text), "warning")
-                else:
-                    self.log_callback(f"  0星 - {quality_issue} (AI:{confidence:.2f}, 锐度:{sharpness:.1f}{iqa_text})", "warning")
-            else:  # -1
-                rating, pick = -1, -1
-                self.stats['no_bird'] += 1
-                if self.i18n:
-                    self.log_callback(self.i18n.t("logs.no_bird"), "error")
-                else:
-                    self.log_callback(f"  ❌ 已拒绝 - {reject_reason}", "error")
-
-            self.stats['total'] += 1
-
-            # V3.1: 单张即时写入EXIF元数据
-            if raw_file_path and os.path.exists(raw_file_path):
-                exif_start = time.time()
-                single_batch = [{
-                    'file': raw_file_path,
-                    'rating': rating,
-                    'pick': pick,
-                    'sharpness': sharpness,
-                    'nima_score': nima,
-                    'brisque_score': brisque
-                }]
-                batch_stats = exiftool_mgr.batch_set_metadata(single_batch)
-                exif_time = (time.time() - exif_start) * 1000
-
-                if batch_stats['failed'] > 0:
-                    self.log_callback(f"  ⚠️  EXIF写入失败")
-                # 不显示成功日志，避免刷屏
-
-                # V3.1: 收集3星照片信息（用于后续计算精选旗标）
-                if rating_value == 3 and nima is not None:
-                    star_3_photos.append({
-                        'file': raw_file_path,
-                        'nima': nima,
-                        'sharpness': sharpness
-                    })
-
-                # V3.3: 记录文件评分（用于后续移动到分类文件夹）
-                file_ratings[file_prefix] = rating_value
-
-        # V3.1: 计算精选旗标（3星照片中美学+锐度双排名交集）
-        if len(star_3_photos) > 0:
-            picked_start = time.time()
-            if self.i18n:
-                self.log_callback(self.i18n.t("logs.picked_calculation_start", count=len(star_3_photos)))
-            else:
-                self.log_callback(f"\n🎯 计算精选旗标 (共{len(star_3_photos)}张3星照片)...")
-            config = get_advanced_config()
-            top_percent = config.picked_top_percentage / 100.0
-
-            # 计算需要选取的数量（至少1张）
-            top_count = max(1, int(len(star_3_photos) * top_percent))
-
-            # 按美学排序，取Top N%
-            sorted_by_nima = sorted(star_3_photos, key=lambda x: x['nima'], reverse=True)
-            nima_top_files = set([photo['file'] for photo in sorted_by_nima[:top_count]])
-
-            # 按锐度排序，取Top N%
-            sorted_by_sharpness = sorted(star_3_photos, key=lambda x: x['sharpness'], reverse=True)
-            sharpness_top_files = set([photo['file'] for photo in sorted_by_sharpness[:top_count]])
-
-            # 计算交集（同时在美学和锐度Top N%中的照片）
-            picked_files = nima_top_files & sharpness_top_files
-
-            if len(picked_files) > 0:
-                if self.i18n:
-                    self.log_callback(self.i18n.t("logs.picked_aesthetic_top", percent=config.picked_top_percentage, count=len(nima_top_files)))
-                    self.log_callback(self.i18n.t("logs.picked_sharpness_top", percent=config.picked_top_percentage, count=len(sharpness_top_files)))
-                    self.log_callback(self.i18n.t("logs.picked_intersection", count=len(picked_files)))
-                else:
-                    self.log_callback(f"  📌 美学Top{config.picked_top_percentage}%: {len(nima_top_files)}张")
-                    self.log_callback(f"  📌 锐度Top{config.picked_top_percentage}%: {len(sharpness_top_files)}张")
-                    self.log_callback(f"  ⭐ 双排名交集: {len(picked_files)}张 → 设为精选")
-
-                # 批量写入Rating=3和Pick=1到这些照片（复用现有的exiftool_mgr）
-                # 注意：虽然之前已经写过Rating=3，但exiftool的batch模式需要完整参数
-                picked_batch = []
-                for file_path in picked_files:
-                    picked_batch.append({
-                        'file': file_path,
-                        'rating': 3,  # 确保是3星
-                        'pick': 1
-                    })
-
-                exif_picked_start = time.time()
-                picked_stats = exiftool_mgr.batch_set_metadata(picked_batch)
-                exif_picked_time = (time.time() - exif_picked_start) * 1000
-
-                if picked_stats['failed'] > 0:
-                    if self.i18n:
-                        self.log_callback(self.i18n.t("logs.picked_exif_failed", failed=picked_stats['failed']))
-                    else:
-                        self.log_callback(f"  ⚠️  {picked_stats['failed']} 张照片精选旗标写入失败")
-                else:
-                    if self.i18n:
-                        self.log_callback(self.i18n.t("logs.picked_exif_success"))
-                    else:
-                        self.log_callback(f"  ✅ 精选旗标写入成功")
-                if self.i18n:
-                    self.log_callback(self.i18n.t("logs.picked_exif_time", time=exif_picked_time))
-                else:
-                    self.log_callback(f"  ⏱️  精选EXIF写入耗时: {exif_picked_time:.1f}ms")
-
-                # 更新统计数据
-                self.stats['picked'] = len(picked_files) - picked_stats.get('failed', 0)
-            else:
-                if self.i18n:
-                    self.log_callback(self.i18n.t("logs.picked_no_intersection"))
-                else:
-                    self.log_callback(f"  ℹ️  双排名交集为空，未设置精选旗标")
-                self.stats['picked'] = 0
-
-            picked_total_time = (time.time() - picked_start) * 1000
-            if self.i18n:
-                self.log_callback(self.i18n.t("logs.picked_total_time", time=picked_total_time))
-            else:
-                self.log_callback(f"  ⏱️  精选旗标计算总耗时: {picked_total_time:.1f}ms")
-
-        # AI检测总耗时
-        ai_total_time_sec = time.time() - ai_total_start
-        avg_ai_time_sec = ai_total_time_sec / total_files if total_files > 0 else 0
-        if self.i18n:
-            self.log_callback(self.i18n.t("logs.ai_detection_total", time_str=self._format_time(ai_total_time_sec), avg=avg_ai_time_sec))
-        else:
-            self.log_callback(f"\n⏱️  AI检测总耗时: {self._format_time(ai_total_time_sec)} (平均 {avg_ai_time_sec:.1f}秒/张)")
-
-        # V3.3: 移动照片到分类文件夹
-        self._move_files_to_rating_folders(file_ratings, raw_dict)
-
-        # V3.1: 清理临时JPG文件
-        if self.i18n:
-            self.log_callback(self.i18n.t("logs.cleaning_temp"))
-        else:
-            self.log_callback("\n🧹 清理临时文件...")
-        deleted_count = 0
-        for filename in files_tbr:
-            file_prefix, file_ext = os.path.splitext(filename)
-            # 只删除RAW转换的JPG文件
-            if file_prefix in raw_dict and file_ext.lower() in ['.jpg', '.jpeg']:
-                jpg_path = os.path.join(self.dir_path, filename)
-                try:
-                    if os.path.exists(jpg_path):
-                        os.remove(jpg_path)
-                        deleted_count += 1
-                except Exception as e:
-                    if self.i18n:
-                        self.log_callback(self.i18n.t("logs.delete_failed", filename=filename, error=str(e)))
-                    else:
-                        self.log_callback(f"  ⚠️  删除失败 {filename}: {e}")
-
-        if deleted_count > 0:
-            if self.i18n:
-                self.log_callback(self.i18n.t("logs.temp_deleted", count=deleted_count))
-            else:
-                self.log_callback(f"✅ 已删除 {deleted_count} 个临时JPG文件")
-
-        # 记录结束时间
-        end_time = time.time()
-        self.stats['end_time'] = end_time
-        self.stats['total_time'] = end_time - start_time
-        self.stats['avg_time'] = (self.stats['total_time'] / total_files) if total_files > 0 else 0
-
-        # V3.1: 不在这里显示"处理完成"，而是在finished_callback中清屏后显示完整报告
+        """处理文件 - 调用核心处理器"""
+        from core.photo_processor import (
+            PhotoProcessor,
+            ProcessingSettings,
+            ProcessingCallbacks
+        )
+        
+        # 转换 UI 设置为 ProcessingSettings
+        settings = ProcessingSettings(
+            ai_confidence=self.ui_settings[0],
+            sharpness_threshold=self.ui_settings[1],
+            nima_threshold=self.ui_settings[2],
+            save_crop=self.ui_settings[3] if len(self.ui_settings) > 3 else False,
+            normalization_mode=self.ui_settings[4] if len(self.ui_settings) > 4 else 'log'
+        )
+        
+        # 创建回调（包装日志以支持 i18n）
+        callbacks = ProcessingCallbacks(
+            log=self._log_wrapper,
+            progress=self.progress_callback
+        )
+        
+        # 创建核心处理器
+        processor = PhotoProcessor(
+            dir_path=self.dir_path,
+            settings=settings,
+            callbacks=callbacks
+        )
+        
+        # 执行处理
+        result = processor.process(
+            organize_files=True,
+            cleanup_temp=True
+        )
+        
+        # 更新统计数据
+        self.stats = result.stats
+    
+    def _log_wrapper(self, msg: str, level: str = "info"):
+        """日志包装器 - 支持 i18n（如果需要的话）"""
+        # 目前直接传递，未来可以在这里添加 i18n 翻译
+        self.log_callback(msg)
 
     def _move_files_to_rating_folders(self, file_ratings, raw_dict):
         """
