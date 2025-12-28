@@ -12,6 +12,7 @@ from core.photo_processor import (
     ProcessingCallbacks,
     ProcessingResult
 )
+from utils import log_message
 
 
 class CLIProcessor:
@@ -27,10 +28,11 @@ class CLIProcessor:
             verbose: 详细输出
         """
         self.verbose = verbose
+        self.dir_path = dir_path  # 保存目录路径用于日志
         
-        # GUI默认设置: [50, 7500, 4.8, False, 'log_compression']
+        # GUI默认设置: [50, 500, 4.8, False, 'log_compression']
         if ui_settings is None:
-            ui_settings = [50, 7500, 4.8, False, 'log_compression']
+            ui_settings = [50, 500, 4.8, False, 'log_compression']
         
         # 转换为 ProcessingSettings
         settings = ProcessingSettings(
@@ -52,7 +54,7 @@ class CLIProcessor:
         )
     
     def _log(self, msg: str, level: str = "info"):
-        """日志回调 - 带颜色输出"""
+        """日志回调 - 带颜色输出并写入文件"""
         if not self.verbose:
             return
         
@@ -67,7 +69,12 @@ class CLIProcessor:
         
         color = colors.get(level, "")
         reset = colors["reset"] if color else ""
+        
+        # 输出到终端（带颜色）
         print(f"{color}{msg}{reset}")
+        
+        # 同时写入日志文件（不带颜色，不重复打印）
+        log_message(msg, self.dir_path, file_only=True)
     
     def _progress(self, percent: int):
         """进度回调 - CLI可选"""
@@ -118,7 +125,8 @@ class CLIProcessor:
         self._log(f"  总文件数: {stats['total']}")
         self._log(f"  ├─ ⭐⭐⭐ 优选 (3星): {stats['star_3']}  (精选: {stats['picked']})")
         self._log(f"  ├─ ⭐⭐   良好 (2星): {stats['star_2']}")
-        self._log(f"  ├─ 普通 (不达标)  : {stats['star_0']}")
+        self._log(f"  ├─ ⭐ 普通 (1星): {stats.get('star_1', 0)}")
+        self._log(f"  ├─ 普通 (0星)  : {stats['star_0']}")
         self._log(f"  └─ ❌    无鸟       : {stats['no_bird']}")
         self._log("")
         self._log(f"  总耗时: {stats['total_time']:.1f}秒")

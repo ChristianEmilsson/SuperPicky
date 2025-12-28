@@ -2,16 +2,17 @@
 # -*- coding: utf-8 -*-
 """
 Rating Engine - 评分引擎
-负责根据 AI 检测结果计算照片评分
+负责根据 AI 检测结果和关键点检测计算照片评分
 
 职责：
-- 接收原始数据（置信度、锐度、美学分数、失真分数）
+- 接收原始数据（置信度、锐度、美学分数、关键点检测结果）
 - 根据配置计算评分和旗标
 - 返回评分结果和原因
 
-评分等级（简化版）：
+评分等级（关键点增强版）：
 - -1 = 无鸟（排除）
--  0 = 普通（不达标）
+-  0 = 普通（双眼不可见 或 最低标准不通过）
+-  1 = 普通（通过最低标准但锐度和美学都不达标）
 -  2 = 良好（锐度或美学达标）
 -  3 = 优选（锐度+美学双达标）
 
@@ -25,7 +26,7 @@ from typing import Optional, Tuple
 @dataclass
 class RatingResult:
     """评分结果"""
-    rating: int          # -1=无鸟, 0=普通(不达标), 2=良好, 3=优选
+    rating: int          # -1=无鸟, 0=普通(问题照片), 1=普通(合格), 2=良好, 3=优选
     pick: int            # 0=无旗标, 1=精选, -1=排除
     reason: str          # 评分原因说明
     
@@ -36,6 +37,8 @@ class RatingResult:
             return "⭐⭐⭐"
         elif self.rating == 2:
             return "⭐⭐"
+        elif self.rating == 1:
+            return "⭐"
         elif self.rating == 0:
             return "普通"
         else:  # -1
@@ -44,25 +47,28 @@ class RatingResult:
 
 class RatingEngine:
     """
-    评分引擎（简化版）
+    评分引擎（关键点增强版）
     
-    评分规则（从底部往上判定）：
+    评分规则：
     1. 无鸟 → -1 (Rejected)
-    2. 锐度 >= 阈值 AND 美学 >= 阈值 → 3星 (优选)
-    3. 锐度 >= 阈值 OR 美学 >= 阈值 → 2星 (良好)
-    4. 其他 → 0 (普通/不达标)
+    2. 最低标准不通过 → 0 (普通-问题照片)
+    3. 双眼不可见 → 0 (普通-角度不佳)
+    4. 锐度 >= 阈值 AND 美学 >= 阈值 → 3星 (优选)
+    5. 锐度 >= 阈值 OR 美学 >= 阈值 → 2星 (良好)
+    6. 通过最低标准但都不达标 → 1星 (普通-合格)
     """
     
     def __init__(
         self,
         # 最低标准阈值（低于此为 0 星）
         min_confidence: float = 0.50,
-        min_sharpness: float = 6500,
-        min_nima: float = 4.3,
-        max_brisque: float = 55,
-        # 达标阈值（达到此为 2 星或更高）
-        sharpness_threshold: float = 7500,
-        nima_threshold: float = 4.8,
+        min_sharpness: float = 250,    # 头部区域锐度最低阈值
+        min_nima: float = 4.2,
+        # 2星达标阈值
+        sharpness_threshold: float = 500,  # 头部区域锐度2星达标阈值
+        nima_threshold: float = 5.0,
+        # 3星锐度阈值（更严格）
+        star3_sharpness_threshold: float = 600,
     ):
         """
         初始化评分引擎
@@ -71,19 +77,19 @@ class RatingEngine:
             min_confidence: AI 置信度最低阈值 (0-1)
             min_sharpness: 锐度最低阈值
             min_nima: NIMA 美学最低阈值 (0-10)
-            max_brisque: BRISQUE 失真最高阈值 (越低越好)
-            sharpness_threshold: 锐度达标阈值 (达到此为 2 星)
-            nima_threshold: NIMA 达标阈值 (达到此为 2 星)
+            sharpness_threshold: 锐度2星达标阈值
+            nima_threshold: NIMA 达标阈值 (2/3星)
+            star3_sharpness_threshold: 3星锐度阈值（需要同时满足NIMA）
         """
         # 最低标准
         self.min_confidence = min_confidence
         self.min_sharpness = min_sharpness
         self.min_nima = min_nima
-        self.max_brisque = max_brisque
         
         # 达标标准
         self.sharpness_threshold = sharpness_threshold
         self.nima_threshold = nima_threshold
+        self.star3_sharpness_threshold = star3_sharpness_threshold
     
     def calculate(
         self,
@@ -91,7 +97,7 @@ class RatingEngine:
         confidence: float,
         sharpness: float,
         nima: Optional[float] = None,
-        brisque: Optional[float] = None,
+        both_eyes_hidden: bool = False,
     ) -> RatingResult:
         """
         计算评分
@@ -99,9 +105,9 @@ class RatingEngine:
         Args:
             detected: 是否检测到鸟
             confidence: AI 置信度 (0-1)
-            sharpness: 归一化锐度值
+            sharpness: 归一化锐度值（关键点启用时为头部锐度）
             nima: NIMA 美学评分 (0-10)，可选
-            brisque: BRISQUE 失真评分 (越低越好)，可选
+            both_eyes_hidden: 双眼是否都不可见（关键点检测结果）
             
         Returns:
             RatingResult 包含评分、旗标和原因
@@ -122,13 +128,6 @@ class RatingEngine:
                 reason=f"置信度太低({confidence:.0%}<{self.min_confidence:.0%})"
             )
         
-        if brisque is not None and brisque > self.max_brisque:
-            return RatingResult(
-                rating=0,
-                pick=0,
-                reason=f"失真过高({brisque:.1f}>{self.max_brisque})"
-            )
-        
         if nima is not None and nima < self.min_nima:
             return RatingResult(
                 rating=0,
@@ -136,6 +135,16 @@ class RatingEngine:
                 reason=f"美学太差({nima:.1f}<{self.min_nima:.1f})"
             )
         
+        # 第三步：双眼可见性检查（在锐度检查之前！）
+        # 当眼睛不可见时，head_sharpness=0，应该返回"角度不佳"而非"锐度太低"
+        if both_eyes_hidden:
+            return RatingResult(
+                rating=0,
+                pick=0,
+                reason="双眼不可见（角度不佳）"
+            )
+        
+        # 第四步：锐度检查（只有眼睛可见时才有意义）
         if sharpness < self.min_sharpness:
             return RatingResult(
                 rating=0,
@@ -143,20 +152,21 @@ class RatingEngine:
                 reason=f"锐度太低({sharpness:.0f}<{self.min_sharpness})"
             )
         
-        # 第三步：3 星判定（锐度 AND 美学都达标）
-        sharpness_ok = sharpness >= self.sharpness_threshold
+        # 第五步：3 星判定（锐度 >= 600 AND 美学 >= 5.0）
+        sharpness_3star_ok = sharpness >= self.star3_sharpness_threshold
         nima_ok = nima is not None and nima >= self.nima_threshold
         
-        if sharpness_ok and nima_ok:
+        if sharpness_3star_ok and nima_ok:
             return RatingResult(
                 rating=3,
                 pick=0,  # 精选旗标由 PhotoProcessor 后续计算
                 reason="优选照片（锐度+美学双达标）"
             )
         
-        # 第四步：2 星判定（锐度 OR 美学达标）
-        if sharpness_ok or nima_ok:
-            if sharpness_ok:
+        # 第六步：2 星判定（锐度≥500 OR 美学达标）
+        sharpness_2star_ok = sharpness >= self.sharpness_threshold
+        if sharpness_2star_ok or nima_ok:
+            if sharpness_2star_ok:
                 return RatingResult(
                     rating=2,
                     pick=0,
@@ -169,9 +179,9 @@ class RatingEngine:
                     reason="良好照片（美学达标）"
                 )
         
-        # 第五步：0 = 普通（通过最低标准但未达标）
+        # 第六步：1 = 普通（通过最低标准但未达标）
         return RatingResult(
-            rating=0,
+            rating=1,
             pick=0,
             reason="普通照片（锐度和美学均未达标）"
         )
@@ -202,8 +212,8 @@ def create_rating_engine_from_config(config) -> RatingEngine:
         min_confidence=config.min_confidence,
         min_sharpness=config.min_sharpness,
         min_nima=config.min_nima,
-        max_brisque=config.max_brisque,
-        # 达标阈值使用默认值，由 UI 滑块动态调整
-        sharpness_threshold=7500,
-        nima_threshold=4.8,
+        # 达标阈值
+        sharpness_threshold=500,  # 2星锐度阈值
+        nima_threshold=5.0,       # 2/3星NIMA阈值
+        star3_sharpness_threshold=600,  # 3星锐度阈值
     )

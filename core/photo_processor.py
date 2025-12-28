@@ -28,11 +28,15 @@ from ai_model import load_yolo_model, detect_and_draw_birds
 from exiftool_manager import get_exiftool_manager
 from advanced_config import get_advanced_config
 from core.rating_engine import RatingEngine, create_rating_engine_from_config
+from core.keypoint_detector import KeypointDetector, get_keypoint_detector
 
-# 文件夹名称映射（简化版：只有 2 星和 3 星有文件夹）
+# 文件夹名称映射（新增 1 星支持）
 RATING_FOLDER_NAMES = {
     3: "3星_优选",
-    2: "2星_良好"
+    2: "2星_良好",  # 默认目录
+    "2_sharpness": "2星_良好_锐度",  # 锐度达标
+    "2_nima": "2星_良好_美学",  # NIMA达标
+    1: "普通"
 }
 
 
@@ -40,7 +44,7 @@ RATING_FOLDER_NAMES = {
 class ProcessingSettings:
     """处理参数配置"""
     ai_confidence: int = 50
-    sharpness_threshold: int = 7500
+    sharpness_threshold: int = 200   # 头部区域锐度达标阈值
     nima_threshold: float = 4.8
     save_crop: bool = False
     normalization_mode: str = 'log_compression'  # 默认使用log_compression，与GUI一致
@@ -106,13 +110,14 @@ class PhotoProcessor:
         self._log(f"  ⚙️  高级配置 - min_sharpness: {self.config.min_sharpness}")
         self._log(f"  ⚙️  高级配置 - min_nima: {self.config.min_nima}\n")
         
-        # 统计数据（简化版：无 star_1）
+        # 统计数据（支持 0/1/2/3 星）
         self.stats = {
             'total': 0,
             'star_3': 0,
             'picked': 0,
             'star_2': 0,
-            'star_0': 0,  # 普通照片
+            'star_1': 0,  # 普通照片（合格）
+            'star_0': 0,  # 普通照片（问题）
             'no_bird': 0,
             'start_time': 0,
             'end_time': 0,
@@ -122,6 +127,7 @@ class PhotoProcessor:
         
         # 内部状态
         self.file_ratings = {}
+        self.star2_reasons = {}  # 记录2星原因: 'sharpness' 或 'nima'
         self.star_3_photos = []
     
     def _log(self, msg: str, level: str = "info"):
@@ -271,13 +277,24 @@ class PhotoProcessor:
         self._log(f"⏱️  RAW转换耗时: {raw_time:.1f}秒 (平均 {avg_time:.1f}秒/张)\n")
     
     def _process_images(self, files_tbr, raw_dict):
-        """处理所有图片 - AI检测与评分"""
+        """处理所有图片 - AI检测、关键点检测与评分"""
         # 加载模型
         model_start = time.time()
         self._log("🤖 加载AI模型...")
         model = load_yolo_model()
         model_time = (time.time() - model_start) * 1000
         self._log(f"⏱️  模型加载耗时: {model_time:.0f}ms")
+        
+        # 加载关键点检测模型
+        self._log("👁️  加载关键点模型...")
+        keypoint_detector = get_keypoint_detector()
+        try:
+            keypoint_detector.load_model()
+            self._log("✅ 关键点模型加载成功")
+            use_keypoints = True
+        except FileNotFoundError:
+            self._log("⚠️  关键点模型未找到，使用传统锐度计算", "warning")
+            use_keypoints = False
         
         total_files = len(files_tbr)
         self._log(f"📁 共 {total_files} 个文件待处理\n")
@@ -296,6 +313,7 @@ class PhotoProcessor:
         ai_total_start = time.time()
         
         for i, filename in enumerate(files_tbr, 1):
+
             filepath = os.path.join(self.dir_path, filename)
             file_prefix, _ = os.path.splitext(filename)
             
@@ -307,10 +325,11 @@ class PhotoProcessor:
                 progress = int((i / total_files) * 100)
                 self._progress(progress)
             
-            # AI检测
+            # 优化流程：YOLO → 关键点检测(在crop上) → 条件NIMA
+            # Phase 1: 先做YOLO检测（跳过NIMA），获取鸟的位置和bbox
             try:
                 result = detect_and_draw_birds(
-                    filepath, model, None, self.dir_path, ui_settings, None
+                    filepath, model, None, self.dir_path, ui_settings, None, skip_nima=True
                 )
                 if result is None:
                     self._log(f"  ⚠️  无法处理(AI推理失败)", "error")
@@ -319,23 +338,94 @@ class PhotoProcessor:
                 self._log(f"  ❌ 处理异常: {e}", "error")
                 continue
             
-            # 解构 AI 结果（忽略 selected，由 RatingEngine 重新计算）
-            detected, _, confidence, sharpness, nima, brisque = result
+            # 解构 AI 结果 (包含bbox和图像尺寸用于缩放)
+            detected, _, confidence, sharpness, _, _, bird_bbox, img_dims = result
+            
+            # Phase 2: 关键点检测（在裁剪区域上执行，更准确）
+            both_eyes_hidden = False
+            head_sharpness = 0.0
+            has_visible_eye = False
+            has_visible_beak = False
+            left_eye_vis = 0.0
+            right_eye_vis = 0.0
+            beak_vis = 0.0
+            
+            if use_keypoints and detected and bird_bbox is not None and img_dims is not None:
+                try:
+                    import cv2
+                    img = cv2.imread(filepath)
+                    if img is not None:
+                        h_orig, w_orig = img.shape[:2]
+                        # 获取YOLO处理时的图像尺寸
+                        w_resized, h_resized = img_dims
+                        
+                        # 计算缩放比例：原图 / 缩放图
+                        scale_x = w_orig / w_resized
+                        scale_y = h_orig / h_resized
+                        
+                        # 将bbox从缩放尺寸转换到原图尺寸
+                        x, y, w, h = bird_bbox
+                        x_orig = int(x * scale_x)
+                        y_orig = int(y * scale_y)
+                        w_orig_box = int(w * scale_x)
+                        h_orig_box = int(h * scale_y)
+                        
+                        # 确保边界有效
+                        x_orig = max(0, min(x_orig, w_orig - 1))
+                        y_orig = max(0, min(y_orig, h_orig - 1))
+                        w_orig_box = min(w_orig_box, w_orig - x_orig)
+                        h_orig_box = min(h_orig_box, h_orig - y_orig)
+                        
+                        # 裁剪鸟的区域
+                        bird_crop = img[y_orig:y_orig+h_orig_box, x_orig:x_orig+w_orig_box]
+                        if bird_crop.size > 0:
+                            crop_rgb = cv2.cvtColor(bird_crop, cv2.COLOR_BGR2RGB)
+                            # 在裁剪区域上进行关键点检测
+                            kp_result = keypoint_detector.detect(crop_rgb, box=(x_orig, y_orig, w_orig_box, h_orig_box))
+                            if kp_result is not None:
+                                both_eyes_hidden = kp_result.both_eyes_hidden
+                                has_visible_eye = kp_result.visible_eye is not None
+                                has_visible_beak = kp_result.beak_vis >= 0.5
+                                left_eye_vis = kp_result.left_eye_vis
+                                right_eye_vis = kp_result.right_eye_vis
+                                beak_vis = kp_result.beak_vis
+                                head_sharpness = kp_result.head_sharpness
+                except Exception as e:
+                    self._log(f"  ⚠️  关键点检测失败: {e}", "warning")
+            
+            # Phase 3: 根据眼睛可见性决定是否计算NIMA
+            nima = None
+            if detected and not both_eyes_hidden:
+                # 双眼可见，需要计算NIMA以进行星级判定
+                try:
+                    from iqa_scorer import get_iqa_scorer
+                    import time as time_module
+                    step_start = time_module.time()
+                    scorer = get_iqa_scorer(device='mps')
+                    nima = scorer.calculate_nima(filepath)
+                    nima_time = (time_module.time() - step_start) * 1000
+                    if nima is not None:
+                        self._log(f"🎨 NIMA 美学评分: {nima:.2f} / 10")
+                        self._log(f"  ⏱️  [补充] NIMA评分: {nima_time:.1f}ms")
+                except Exception as e:
+                    self._log(f"  ⚠️  NIMA计算失败: {e}", "warning")
+            elif detected and both_eyes_hidden:
+                self._log(f"⚡ NIMA 已跳过（双眼不可见）")
             
             # 使用 RatingEngine 计算评分
             rating_result = self.rating_engine.calculate(
                 detected=detected,
                 confidence=confidence,
-                sharpness=sharpness,
+                sharpness=head_sharpness,  # 使用头部锐度
                 nima=nima,
-                brisque=brisque
+                both_eyes_hidden=both_eyes_hidden
             )
             rating_value = rating_result.rating
             pick = rating_result.pick
             reason = rating_result.reason
             
-            # 显示结果
-            self._log_photo_result(rating_value, reason, confidence, sharpness, nima, brisque)
+            # 显示结果（使用头部锐度）
+            self._log_photo_result(rating_value, reason, confidence, head_sharpness, nima)
             
             # 记录统计
             self._update_stats(rating_value)
@@ -351,22 +441,44 @@ class PhotoProcessor:
                         'file': raw_file_path,
                         'rating': rating_value if rating_value >= 0 else 0,
                         'pick': pick,
-                        'sharpness': sharpness,
-                        'nima_score': nima,
-                        'brisque_score': brisque
+                        'sharpness': head_sharpness,  # 使用头部锐度
+                        'nima_score': nima
                     }]
                     exiftool_mgr.batch_set_metadata(single_batch)
+                    
+                    # 更新CSV中的关键点数据
+                    self._update_csv_keypoint_data(
+                        file_prefix, 
+                        head_sharpness, 
+                        has_visible_eye, 
+                        has_visible_beak,
+                        left_eye_vis,
+                        right_eye_vis,
+                        beak_vis,
+                        rating_value
+                    )
                     
                     # 收集3星照片
                     if rating_value == 3 and nima is not None:
                         self.star_3_photos.append({
                             'file': raw_file_path,
                             'nima': nima,
-                            'sharpness': sharpness
+                            'sharpness': head_sharpness
                         })
                     
                     # 记录评分
                     self.file_ratings[file_prefix] = rating_value
+                    
+                    # 记录2星原因（用于分目录）
+                    if rating_value == 2:
+                        sharpness_ok = head_sharpness >= self.settings.sharpness_threshold
+                        nima_ok = nima is not None and nima >= self.settings.nima_threshold
+                        if sharpness_ok and not nima_ok:
+                            self.star2_reasons[file_prefix] = 'sharpness'
+                        elif nima_ok and not sharpness_ok:
+                            self.star2_reasons[file_prefix] = 'nima'
+                        else:
+                            self.star2_reasons[file_prefix] = 'both'  # 两者都达标
         
         ai_total_time = time.time() - ai_total_start
         avg_ai_time = ai_total_time / total_files if total_files > 0 else 0
@@ -381,22 +493,21 @@ class PhotoProcessor:
         reason: str, 
         conf: float, 
         sharp: float, 
-        nima: Optional[float], 
-        brisque: Optional[float]
+        nima: Optional[float]
     ):
         """记录照片处理结果"""
         iqa_text = ""
         if nima is not None:
             iqa_text += f", 美学:{nima:.2f}"
-        if brisque is not None:
-            iqa_text += f", 失真:{brisque:.2f}"
         
         if rating == 3:
             self._log(f"  ⭐⭐⭐ 优选照片 (AI:{conf:.2f}, 锐度:{sharp:.1f}{iqa_text})", "success")
         elif rating == 2:
             self._log(f"  ⭐⭐ 良好照片 (AI:{conf:.2f}, 锐度:{sharp:.1f}{iqa_text})", "info")
+        elif rating == 1:
+            self._log(f"  ⭐ 普通照片 (AI:{conf:.2f}, 锐度:{sharp:.1f}{iqa_text})", "warning")
         elif rating == 0:
-            self._log(f"  普通照片 (AI:{conf:.2f}, 锐度:{sharp:.1f}{iqa_text})", "warning")
+            self._log(f"  普通照片 - {reason}", "warning")
         else:  # -1
             self._log(f"  ❌ 无鸟 - {reason}", "error")
     
@@ -407,10 +518,74 @@ class PhotoProcessor:
             self.stats['star_3'] += 1
         elif rating == 2:
             self.stats['star_2'] += 1
+        elif rating == 1:
+            self.stats['star_1'] += 1  # 普通照片（合格）
         elif rating == 0:
-            self.stats['star_0'] += 1  # 普通照片
+            self.stats['star_0'] += 1  # 普通照片（问题）
         else:  # -1
             self.stats['no_bird'] += 1
+    
+    def _update_csv_keypoint_data(
+        self, 
+        filename: str, 
+        head_sharpness: float,
+        has_visible_eye: bool,
+        has_visible_beak: bool,
+        left_eye_vis: float,
+        right_eye_vis: float,
+        beak_vis: float,
+        rating: int
+    ):
+        """更新CSV中的关键点数据和评分"""
+        import csv
+        
+        csv_path = os.path.join(self.dir_path, "_tmp", "report.csv")
+        if not os.path.exists(csv_path):
+            return
+        
+        try:
+            # 读取现有CSV
+            rows = []
+            fieldnames = None
+            with open(csv_path, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f)
+                fieldnames = list(reader.fieldnames) if reader.fieldnames else []
+                
+                # 确保新字段存在
+                new_fields = ['head_sharpness', 'left_eye_vis', 'right_eye_vis', 'beak_vis', 'has_visible_eye', 'has_visible_beak']
+                for field in new_fields:
+                    if field not in fieldnames:
+                        # 在 'nima_score' 之前插入新字段
+                        if 'nima_score' in fieldnames:
+                            idx = fieldnames.index('nima_score')
+                            fieldnames.insert(idx, field)
+                        else:
+                            fieldnames.append(field)
+                
+                for row in reader:
+                    if row.get('filename') == filename:
+                        # 更新关键点数据和评分
+                        row['head_sharpness'] = f"{head_sharpness:.0f}" if head_sharpness > 0 else "-"
+                        row['left_eye_vis'] = f"{left_eye_vis:.2f}"
+                        row['right_eye_vis'] = f"{right_eye_vis:.2f}"
+                        row['beak_vis'] = f"{beak_vis:.2f}"
+                        row['has_visible_eye'] = "yes" if has_visible_eye else "no"
+                        row['has_visible_beak'] = "yes" if has_visible_beak else "no"
+                        row['rating'] = str(rating)
+                    # 为缺失字段设置默认值
+                    for field in new_fields:
+                        if field not in row:
+                            row[field] = "-"
+                    rows.append(row)
+            
+            # 写回CSV（使用新的字段列表）
+            if fieldnames and rows:
+                with open(csv_path, 'w', newline='', encoding='utf-8-sig') as f:
+                    writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction='ignore')
+                    writer.writeheader()
+                    writer.writerows(rows)
+        except Exception as e:
+            self._log(f"  ⚠️  更新CSV失败: {e}", "warning")
     
     def _calculate_picked_flags(self):
         """计算精选旗标 - 3星照片中美学+锐度双排名交集"""
@@ -467,10 +642,22 @@ class PhotoProcessor:
                 raw_ext = raw_dict[prefix]
                 raw_path = os.path.join(self.dir_path, prefix + raw_ext)
                 if os.path.exists(raw_path):
+                    # 确定目标文件夹
+                    if rating == 2 and prefix in self.star2_reasons:
+                        reason = self.star2_reasons[prefix]
+                        if reason == 'sharpness':
+                            folder = RATING_FOLDER_NAMES["2_sharpness"]
+                        elif reason == 'nima':
+                            folder = RATING_FOLDER_NAMES["2_nima"]
+                        else:
+                            folder = RATING_FOLDER_NAMES[2]  # both - 用默认
+                    else:
+                        folder = RATING_FOLDER_NAMES.get(rating, str(rating))
+                    
                     files_to_move.append({
                         'filename': prefix + raw_ext,
                         'rating': rating,
-                        'folder': RATING_FOLDER_NAMES[rating]
+                        'folder': folder
                     })
         
         if not files_to_move:
@@ -479,10 +666,9 @@ class PhotoProcessor:
         
         self._log(f"\n📂 移动 {len(files_to_move)} 张照片到分类文件夹...")
         
-        # 创建文件夹
-        ratings_in_use = set(f['rating'] for f in files_to_move)
-        for rating in ratings_in_use:
-            folder_name = RATING_FOLDER_NAMES[rating]
+        # 创建文件夹（使用实际的目录名）
+        folders_in_use = set(f['folder'] for f in files_to_move)
+        for folder_name in folders_in_use:
             folder_path = os.path.join(self.dir_path, folder_name)
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)

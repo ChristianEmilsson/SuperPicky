@@ -7,16 +7,18 @@ import csv
 from datetime import datetime
 
 
-def log_message(message: str, directory: str = None):
+def log_message(message: str, directory: str = None, file_only: bool = False):
     """
     记录日志消息到控制台和日志文件
 
     Args:
         message: 日志消息
         directory: 工作目录（可选，如果提供则写入该目录/_tmp/process_log.txt）
+        file_only: 仅写入文件，不打印到控制台（避免重复输出）
     """
-    # 打印到控制台
-    print(message)
+    # 打印到控制台（除非指定只写文件）
+    if not file_only:
+        print(message)
 
     # 如果提供了目录，写入日志文件到_tmp子目录
     if directory:
@@ -62,6 +64,12 @@ def write_to_csv(data: dict, directory: str, header: bool = False):
         "sharpness_raw",    # 原始锐度（拉普拉斯方差）
         "sharpness_norm",   # 归一化锐度
         "norm_method",      # 归一化方法 (log_compression/sqrt/linear等)
+        "head_sharpness",   # 头部区域锐度（关键点检测）
+        "left_eye_vis",     # 左眼可见性置信度 (0-1)
+        "right_eye_vis",    # 右眼可见性置信度 (0-1)
+        "beak_vis",         # 喙可见性置信度 (0-1)
+        "has_visible_eye",  # 是否有可见鸟眼 (yes/no)
+        "has_visible_beak", # 是否有可见鸟喙 (yes/no)
         "nima_score",       # NIMA美学评分 (1-10)
         "brisque_score",    # BRISQUE技术质量 (越低越好)
         "rating"            # 最终评分 (-1/0/1/2/3)

@@ -43,7 +43,7 @@ class PostAdjustmentEngine:
 
                 # 验证必需字段
                 required_fields = ['filename', 'has_bird', 'confidence', 'sharpness_norm',
-                                  'nima_score', 'brisque_score', 'rating']
+                                  'nima_score', 'rating']
 
                 if not all(field in reader.fieldnames for field in required_fields):
                     return False, "CSV文件格式不正确，缺少必需字段"
@@ -95,21 +95,17 @@ class PostAdjustmentEngine:
         min_confidence: float,
         min_sharpness: float,
         min_nima: float,
-        max_brisque: float,
         sharpness_threshold: float,
         nima_threshold: float
     ) -> List[Dict]:
         """
         根据新阈值重新计算所有照片的星级
 
-        实现与 ai_model.py:347-378 相同的评分逻辑
-
         Args:
             photos: 照片数据列表
             min_confidence: 0星阈值 - 置信度
             min_sharpness: 0星阈值 - 锐度
             min_nima: 0星阈值 - 美学
-            max_brisque: 0星阈值 - 失真
             sharpness_threshold: 2/3星阈值 - 锐度
             nima_threshold: 2/3星阈值 - 美学
 
@@ -124,22 +120,18 @@ class PostAdjustmentEngine:
                 conf = float(photo['confidence'])
                 sharpness = float(photo['sharpness_norm'])
 
-                # 处理 "-" 值（某些照片可能没有美学/失真评分）
+                # 处理 "-" 值（某些照片可能没有美学评分）
                 nima_str = photo['nima_score']
-                brisque_str = photo['brisque_score']
-
                 nima_score = float(nima_str) if nima_str != '-' else None
-                brisque_score = float(brisque_str) if brisque_str != '-' else None
 
             except (ValueError, KeyError) as e:
                 # 数据格式错误，跳过该照片
                 print(f"警告: 照片 {photo.get('filename', 'unknown')} 数据格式错误: {e}")
                 continue
 
-            # 判定星级（与 ai_model.py:357-378 完全一致）
+            # 判定星级
             # 0星判定（技术质量差）
             if conf < min_confidence or \
-               (brisque_score is not None and brisque_score > max_brisque) or \
                (nima_score is not None and nima_score < min_nima) or \
                sharpness < min_sharpness:
                 rating = 0

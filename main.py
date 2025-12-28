@@ -451,10 +451,10 @@ class SuperPickyApp:
         sharp_frame = ttk.Frame(settings_frame)
         sharp_frame.pack(fill=tk.X, pady=5)
         ttk.Label(sharp_frame, text=self.i18n.t("labels.sharpness"), width=14, font=("Arial", 11)).pack(side=tk.LEFT)
-        self.sharp_var = tk.IntVar(value=7500)
-        self.sharp_slider = ttk.Scale(sharp_frame, from_=6000, to=9000, variable=self.sharp_var, orient=tk.HORIZONTAL)
+        self.sharp_var = tk.IntVar(value=500)
+        self.sharp_slider = ttk.Scale(sharp_frame, from_=100, to=1000, variable=self.sharp_var, orient=tk.HORIZONTAL)
         self.sharp_slider.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        self.sharp_label = ttk.Label(sharp_frame, text="7500", width=6, font=("Arial", 11))
+        self.sharp_label = ttk.Label(sharp_frame, text="500", width=6, font=("Arial", 11))
         self.sharp_label.pack(side=tk.LEFT)
         self.sharp_slider.configure(command=lambda v: self._update_sharp_label(v))
 
@@ -572,8 +572,8 @@ class SuperPickyApp:
         self.log("✅ 二次选鸟完成！评分已更新到EXIF元数据\n")
 
     def _update_sharp_label(self, value):
-        """更新锐度滑块标签（步长500）"""
-        rounded_value = round(float(value) / 500) * 500
+        """更新锐度滑块标签（步长50）"""
+        rounded_value = round(float(value) / 50) * 50
         self.sharp_var.set(int(rounded_value))
         self.sharp_label.configure(text=f"{int(rounded_value)}")
 

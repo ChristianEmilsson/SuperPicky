@@ -140,7 +140,20 @@
       "Read(//Volumes/990PRO4TB/2025/**)",
       "Read(//Users/jameszhenyu/Library/**)",
       "Bash(xargs:*)",
-      "Bash(../../../exiftool -if '$Rating eq 3' -Rating -XMP:Pick -filename *.NEF)"
+      "Bash(../../../exiftool -if '$Rating eq 3' -Rating -XMP:Pick -filename *.NEF)",
+      "Read(//Users/jameszhenyu/.cache/torch/hub/pyiqa/**)",
+      "Bash(source .venv/bin/activate)",
+      "Bash(.venv/bin/pyinstaller:*)",
+      "Bash(.venv/bin/pip show:*)",
+      "Bash(.venv/bin/pip:*)",
+      "Bash(./quick_test.sh)",
+      "Bash(./test_with_debug.sh:*)",
+      "Bash(\"/Users/jameszhenyu/PycharmProjects/SuperPicky_SandBox/dist/SuperPicky.app/Contents/Frameworks/exiftool_bundle/exiftool\" -ver)",
+      "Bash(plutil:*)",
+      "Bash(dist/SuperPicky.app/Contents/Frameworks/exiftool_bundle/exiftool -ver)",
+      "WebFetch(domain:mmpose.readthedocs.io)",
+      "Bash(pip uninstall:*)",
+      "Bash(mim install:*)"
     ],
     "deny": [],
     "ask": []

@@ -72,8 +72,8 @@ def create_parser() -> argparse.ArgumentParser:
     process_parser.add_argument(
         "--sharpness",
         type=int,
-        default=7500,
-        help="锐度阈值 (默认: 7500)"
+        default=500,
+        help="头部锐度阈值 (默认: 500)"
     )
     process_parser.add_argument(
         "--nima",
@@ -289,6 +289,17 @@ def cmd_reset(args):
     except Exception as e:
         print(f"❌ 重置失败: {e}")
         return 1
+    
+    # 清理 _tmp 目录
+    tmp_dir = os.path.join(args.directory, "_tmp")
+    if os.path.exists(tmp_dir):
+        print("\n🧹 清理临时目录...")
+        try:
+            import shutil
+            shutil.rmtree(tmp_dir)
+            print(f"  ✅ 已删除 _tmp 目录")
+        except Exception as e:
+            print(f"  ⚠️  清理失败: {e}")
     
     print("\n✅ 重置完成！")
     return 0

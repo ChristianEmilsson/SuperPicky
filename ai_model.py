@@ -70,7 +70,7 @@ def _get_iqa_scorer():
     return _iqa_scorer
 
 
-def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n=None):
+def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n=None, skip_nima=False):
     """
     检测并标记鸟类（V3.1 - 简化版，移除预览功能）
 
@@ -81,6 +81,7 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
         dir: 工作目录
         ui_settings: [ai_confidence, sharpness_threshold, nima_threshold, save_crop, normalization_mode]
         i18n: I18n instance for internationalization (optional)
+        skip_nima: 如果为True，跳过NIMA计算（用于双眼不可见的情况）
     """
     # V3.1: 从 ui_settings 获取参数
     ai_confidence = ui_settings[0] / 100  # AI置信度：50-100 -> 0.5-1.0（仅用于过滤）
@@ -154,7 +155,7 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
                 "rating": -1
             }
             write_to_csv(data, dir, False)
-            return found_bird, bird_result, 0.0, 0.0, None, None
+            return found_bird, bird_result, 0.0, 0.0, None, None, None, None  # 最后两个是bbox和图像尺寸
 
     yolo_time = (time.time() - step_start) * 1000
     if i18n:
@@ -211,11 +212,11 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
             "rating": -1
         }
         write_to_csv(data, dir, False)
-        return found_bird, bird_result, 0.0, 0.0, None, None
+        return found_bird, bird_result, 0.0, 0.0, None, None, None, None
 
     # Step 4: 计算 NIMA 美学评分（使用全图，只计算一次）
     nima_time = 0
-    if bird_idx != -1:
+    if bird_idx != -1 and not skip_nima:
         step_start = time.time()
         try:
             scorer = _get_iqa_scorer()
@@ -237,6 +238,10 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
                 log_message(f"⚠️  NIMA 计算失败: {e}", dir)
                 log_message(f"  ⏱️  [4/7] NIMA评分(失败): {nima_time:.1f}ms", dir)
             nima_score = None
+    elif skip_nima and bird_idx != -1:
+        # 跳过NIMA计算（双眼不可见时）
+        log_message(f"⚡ NIMA 已跳过（双眼不可见，耗时: 0.0ms）", dir)
+        log_message(f"  ⏱️  [4/7] NIMA评分: 0.0ms (已跳过)", dir)
 
     # 只处理面积最大的那只鸟
     for idx, (detection, conf, class_id) in enumerate(zip(detections, confidences, class_ids)):
@@ -431,6 +436,9 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
                 "sharpness_raw": float(f"{real_sharpness:.2f}"),
                 "sharpness_norm": float(f"{sharpness:.2f}"),
                 "norm_method": normalization_mode if normalization_mode else "none",
+                "head_sharpness": "-",          # 将由 photo_processor 填充
+                "has_visible_eye": "-",         # 将由 photo_processor 填充
+                "has_visible_beak": "-",        # 将由 photo_processor 填充
                 "nima_score": float(f"{nima_score:.2f}") if nima_score is not None else "-",
                 "brisque_score": float(f"{brisque_score:.2f}") if brisque_score is not None else "-",
                 "rating": rating_value
@@ -452,7 +460,11 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
     total_time = (time.time() - total_start) * 1000
     log_message(f"  ⏱️  ========== 总耗时: {total_time:.1f}ms ==========", dir)
 
-    # 返回 found_bird, bird_result, AI置信度, 归一化锐度, NIMA分数, BRISQUE分数（用于日志显示）
+    # 返回 found_bird, bird_result, AI置信度, 归一化锐度, NIMA分数, BRISQUE分数, bbox, 图像尺寸
     bird_confidence = float(confidences[bird_idx]) if bird_idx != -1 else 0.0
     bird_sharpness = sharpness if bird_idx != -1 else 0.0
-    return found_bird, bird_result, bird_confidence, bird_sharpness, nima_score, brisque_score
+    # bbox 格式: (x, y, w, h) - 在缩放后的图像上
+    # img_dims 格式: (width, height) - 缩放后图像的尺寸，用于计算缩放比例
+    bird_bbox = (x, y, w, h) if found_bird else None
+    img_dims = (width, height) if found_bird else None
+    return found_bird, bird_result, bird_confidence, bird_sharpness, nima_score, brisque_score, bird_bbox, img_dims

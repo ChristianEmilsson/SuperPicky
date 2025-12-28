@@ -17,7 +17,7 @@ from i18n import get_i18n
 class PostAdjustmentDialog:
     """二次选鸟对话框"""
 
-    def __init__(self, parent, directory: str, current_sharpness: int = 7500,
+    def __init__(self, parent, directory: str, current_sharpness: int = 500,
                  current_nima: float = 4.8, on_complete_callback=None):
         """
         初始化对话框
@@ -49,7 +49,6 @@ class PostAdjustmentDialog:
         self.min_confidence_var = tk.DoubleVar(value=self.config.min_confidence)
         self.min_sharpness_var = tk.IntVar(value=self.config.min_sharpness)
         self.min_nima_var = tk.DoubleVar(value=self.config.min_nima)
-        self.max_brisque_var = tk.IntVar(value=self.config.max_brisque)
 
         # 2/3星阈值变量（从主界面当前设置加载）
         self.sharpness_threshold_var = tk.IntVar(value=current_sharpness)
@@ -371,7 +370,6 @@ class PostAdjustmentDialog:
         min_confidence = self.min_confidence_var.get()
         min_sharpness = self.min_sharpness_var.get()
         min_nima = self.min_nima_var.get()
-        max_brisque = self.max_brisque_var.get()
         sharpness_threshold = self.sharpness_threshold_var.get()
         nima_threshold = self.nima_threshold_var.get()
         picked_percentage = self.picked_percentage_var.get()
@@ -382,7 +380,6 @@ class PostAdjustmentDialog:
             min_confidence=min_confidence,
             min_sharpness=min_sharpness,
             min_nima=min_nima,
-            max_brisque=max_brisque,
             sharpness_threshold=sharpness_threshold,
             nima_threshold=nima_threshold
         )
