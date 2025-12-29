@@ -664,6 +664,9 @@ class PostAdjustmentDialog:
                 result_msg = f"✅ 成功: {success_count} 张\n❌ 失败: {failed_count} 张\n⏭️ 跳过(未找到): {not_found_count} 张"
             else:
                 result_msg = f"✅ 成功: {success_count} 张\n❌ 失败: {failed_count} 张"
+            
+            # Bug 5: 添加 Lightroom 提示
+            result_msg += "\n\n💡 提示：如已导入Lightroom，请「从文件读取元数据」以同步新星级"
 
             messagebox.showinfo(self.i18n.t("post_adjustment.apply_success_title"), result_msg)
 

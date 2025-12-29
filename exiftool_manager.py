@@ -435,7 +435,7 @@ class ExifToolManager:
                     log(f"  ❌ 批次 {batch_start+1}-{batch_end} 错误: {e}")
 
         if i18n:
-            log(f"\n{i18n.t('logs.batch_complete', success=stats['success'], failed=stats['failed'])}")
+            log(f"\n{i18n.t('logs.batch_complete', success=stats['success'], skipped=0, failed=stats['failed'])}")
         else:
             log(f"\n✅ 批量重置完成: {stats['success']} 成功, {stats['failed']} 失败")
         return stats
