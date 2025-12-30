@@ -31,14 +31,7 @@ from core.rating_engine import RatingEngine, create_rating_engine_from_config
 from core.keypoint_detector import KeypointDetector, get_keypoint_detector
 from core.flight_detector import FlightDetector, get_flight_detector, FlightResult
 
-# 文件夹名称映射（V3.3: 简化 2 星目录）
-RATING_FOLDER_NAMES = {
-    3: "3星_优选",
-    2: "2星_良好",
-    1: "1星_普通",
-    0: "0星_放弃",  # 0星和-1星都放这里
-    -1: "0星_放弃",  # 无鸟照片
-}
+from constants import RATING_FOLDER_NAMES
 
 
 @dataclass

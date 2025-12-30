@@ -37,15 +37,6 @@ except ImportError:
     PIL_AVAILABLE = False
     print("提示: 需要安装 Pillow 才能显示图标 (pip install Pillow)")
 
-# V3.3: 文件夹名称映射（支持所有星级）
-RATING_FOLDER_NAMES = {
-    3: "3星_优选",
-    2: "2星_良好",
-    1: "1星_普通",
-    0: "0星_放弃",
-    -1: "0星_放弃"
-}
-
 
 
 class WorkerThread(threading.Thread):

@@ -10,6 +10,7 @@ import subprocess
 import sys
 from typing import Optional, List, Dict
 from pathlib import Path
+from constants import RATING_FOLDER_NAMES
 
 
 class ExifToolManager:
@@ -456,15 +457,6 @@ class ExifToolManager:
         """
         import json
         import shutil
-        
-        # 评分文件夹名称（支持所有星级）
-        RATING_FOLDER_NAMES = {
-            3: "3星_优选",
-            2: "2星_良好",
-            1: "1星_普通",
-            0: "0星_放弃",
-            -1: "0星_放弃"
-        }
         
         def log(msg):
             if log_callback:

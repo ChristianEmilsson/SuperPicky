@@ -17,14 +17,7 @@ from exiftool_manager import get_exiftool_manager
 from advanced_config import get_advanced_config
 from i18n import get_i18n
 
-# V3.4: 文件夹名称映射
-RATING_FOLDER_NAMES = {
-    3: "3星_优选",
-    2: "2星_良好",
-    1: "1星_普通",
-    0: "0星_放弃",
-    -1: "0星_放弃"
-}
+from constants import RATING_FOLDER_NAMES
 
 
 class PostAdjustmentDialog:
