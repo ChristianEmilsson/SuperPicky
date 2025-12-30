@@ -13,3 +13,17 @@ RATING_FOLDER_NAMES = {
     0: "0星_放弃",
     -1: "0星_放弃"  # 无鸟照片也放入0星目录
 }
+
+# 支持的 RAW 文件扩展名（小写）
+RAW_EXTENSIONS = ['.nef', '.cr2', '.cr3', '.arw', '.raf', '.orf', '.rw2', '.pef', '.dng', '.3fr', '.iiq']
+
+# 支持的 JPG 文件扩展名（小写）
+JPG_EXTENSIONS = ['.jpg', '.jpeg']
+
+# 所有支持的图片扩展名（用于文件查找，包含大小写）
+IMAGE_EXTENSIONS = (
+    [ext.lower() for ext in RAW_EXTENSIONS] +
+    [ext.upper() for ext in RAW_EXTENSIONS] +
+    [ext.lower() for ext in JPG_EXTENSIONS] +
+    [ext.upper() for ext in JPG_EXTENSIONS]
+)

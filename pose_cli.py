@@ -23,6 +23,7 @@ import sys
 import os
 from pathlib import Path
 from datetime import datetime
+from constants import RAW_EXTENSIONS
 
 # 版本信息
 __version__ = "0.1.0"
@@ -268,13 +269,12 @@ def cmd_reset(args):
     print("🧹 清除EXIF评分...")
     try:
         # 扫描目录中的所有RAW文件（包括子文件夹）
-        raw_extensions = ['.nef', '.cr2', '.cr3', '.arw', '.raf', '.orf', '.rw2', '.pef', '.dng', '.3fr', '.iiq']
         raw_files = []
         
         # 递归扫描（包括子文件夹）
         for root, dirs, files in os.walk(args.directory):
             for filename in files:
-                if any(filename.lower().endswith(ext) for ext in raw_extensions):
+                if any(filename.lower().endswith(ext) for ext in RAW_EXTENSIONS):
                     raw_files.append(os.path.join(root, filename))
         
         if not raw_files:

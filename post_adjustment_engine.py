@@ -9,6 +9,7 @@ SuperPicky V3.3 - Re-Star Engine
 import os
 import csv
 from typing import List, Dict, Set, Optional, Tuple
+from constants import RAW_EXTENSIONS, JPG_EXTENSIONS, IMAGE_EXTENSIONS
 
 
 def safe_float(value, default=0.0) -> float:
@@ -62,8 +63,7 @@ class PostAdjustmentEngine:
         self.directory = directory
         self.report_path = os.path.join(directory, ".superpicky", "report.csv")
         self.photos_data: List[Dict] = []
-        self.image_extensions = ['.nef', '.NEF', '.cr2', '.CR2', '.arw', '.ARW',
-                                '.jpg', '.JPG', '.jpeg', '.JPEG', '.dng', '.DNG']
+        self.image_extensions = IMAGE_EXTENSIONS
 
     def load_report(self) -> Tuple[bool, str]:
         """
@@ -108,12 +108,13 @@ class PostAdjustmentEngine:
         Returns:
             完整文件路径，或None（如果文件不存在）
         """
-        # 优先级：NEF/CR2/ARW（RAW） > JPG/JPEG > DNG
-        priority_extensions = ['.nef', '.NEF', '.cr2', '.CR2', '.arw', '.ARW']
-        secondary_extensions = ['.jpg', '.JPG', '.jpeg', '.JPEG']
+        # 优先级：RAW > JPG > DNG
+        raw_priority = [ext.lower() for ext in RAW_EXTENSIONS if ext.lower() not in ['.dng']]
+        raw_priority += [ext.upper() for ext in RAW_EXTENSIONS if ext.lower() not in ['.dng']]
+        secondary_extensions = [ext.lower() for ext in JPG_EXTENSIONS] + [ext.upper() for ext in JPG_EXTENSIONS]
         tertiary_extensions = ['.dng', '.DNG']
 
-        all_extensions = priority_extensions + secondary_extensions + tertiary_extensions
+        all_extensions = raw_priority + secondary_extensions + tertiary_extensions
 
         # 先在根目录查找
         for ext in all_extensions:

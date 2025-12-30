@@ -31,7 +31,7 @@ from core.rating_engine import RatingEngine, create_rating_engine_from_config
 from core.keypoint_detector import KeypointDetector, get_keypoint_detector
 from core.flight_detector import FlightDetector, get_flight_detector, FlightResult
 
-from constants import RATING_FOLDER_NAMES
+from constants import RATING_FOLDER_NAMES, RAW_EXTENSIONS, JPG_EXTENSIONS
 
 
 @dataclass
@@ -197,10 +197,6 @@ class PhotoProcessor:
         """扫描目录文件"""
         scan_start = time.time()
         
-        raw_extensions = ['.nef', '.cr2', '.cr3', '.arw', '.raf', '.orf', 
-                         '.rw2', '.pef', '.dng', '.3fr', '.iiq']
-        jpg_extensions = ['.jpg', '.jpeg']
-        
         raw_dict = {}
         jpg_dict = {}
         files_tbr = []
@@ -208,11 +204,12 @@ class PhotoProcessor:
         for filename in os.listdir(self.dir_path):
             if filename.startswith('.'):
                 continue
+
             
             file_prefix, file_ext = os.path.splitext(filename)
-            if file_ext.lower() in raw_extensions:
+            if file_ext.lower() in RAW_EXTENSIONS:
                 raw_dict[file_prefix] = file_ext
-            if file_ext.lower() in jpg_extensions:
+            if file_ext.lower() in JPG_EXTENSIONS:
                 jpg_dict[file_prefix] = file_ext
                 files_tbr.append(filename)
         
