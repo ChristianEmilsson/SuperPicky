@@ -262,9 +262,36 @@ header {
     border-color: var(--text-tertiary);
 }
 
+/* === Hero Preview (Software Interface) === */
+.hero-preview {
+    margin-top: var(--space-xl);
+    padding-bottom: var(--space-lg);
+}
+
+.hero-preview-frame {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: transparent;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.hero-preview-frame img {
+    width: 100%;
+    display: block;
+}
+
+.hero-preview-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center top, var(--accent-glow) 0%, transparent 50%);
+    pointer-events: none;
+}
+
 /* === Showcase Section === */
 .showcase {
-    padding: 0 0 var(--space-2xl);
+    padding: var(--space-xl) 0 var(--space-2xl);
 }
 
 .showcase-frame {
@@ -689,9 +716,91 @@ header {
     color: var(--text-secondary);
 }
 
+/* === Guide Section === */
+.guide-section {
+    padding: var(--space-2xl) 0;
+    background: var(--bg-void);
+}
+
+.guide-gallery {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+}
+
+.guide-item {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.guide-item:hover {
+    border-color: var(--border);
+    transform: translateY(-2px);
+}
+
+.guide-item img {
+    width: 100%;
+    display: block;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.guide-item-info {
+    padding: var(--space-md);
+}
+
+.guide-step {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: var(--space-xs);
+}
+
+.guide-item h4 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.guide-item p {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+    .guide-gallery {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* === Download Section === */
 .download-section {
     padding: var(--space-2xl) 0;
+}
+
+.download-cards {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.download-card.windows {
+    background: linear-gradient(135deg, var(--bg-elevated), #1a1a2e);
+}
+
+.platform-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--bg-card);
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-left: var(--space-sm);
 }
 
 .download-card {
@@ -1047,6 +1156,38 @@ footer {
     display: inline;
 }
 
+/* Guide section inline language */
+.guide-item h4 .lang-cn,
+.guide-item h4 .lang-en,
+.guide-item p .lang-cn,
+.guide-item p .lang-en {
+    display: none;
+}
+
+[data-lang="cn"] .guide-item h4 .lang-cn,
+[data-lang="cn"] .guide-item p .lang-cn {
+    display: inline;
+}
+
+[data-lang="en"] .guide-item h4 .lang-en,
+[data-lang="en"] .guide-item p .lang-en {
+    display: inline;
+}
+
+/* Download button inline language */
+.download-links .btn .lang-cn,
+.download-links .btn .lang-en {
+    display: none;
+}
+
+[data-lang="cn"] .download-links .btn .lang-cn {
+    display: inline;
+}
+
+[data-lang="en"] .download-links .btn .lang-en {
+    display: inline;
+}
+
 /* === Responsive === */
 @media (max-width: 768px) {
     .container {
@@ -1075,6 +1216,14 @@ footer {
         width: 100%;
         max-width: 280px;
         justify-content: center;
+    }
+
+    .hero-preview {
+        margin-top: var(--space-lg);
+    }
+
+    .hero-preview-frame {
+        border-radius: var(--radius-md);
     }
 
     .features-grid {
