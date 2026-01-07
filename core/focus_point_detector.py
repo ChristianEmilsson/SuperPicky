@@ -46,12 +46,15 @@ class FocusPointDetector:
     """
     对焦点检测器
     
-    从 Nikon Z8/Z9 的 NEF 文件中提取对焦点数据
+    支持相机:
+    - Nikon Z8/Z9 (NEF)
+    - Sony A1/A7R5/A7M4/A9 (ARW)
     """
     
-    # Nikon Z8/Z9 使用的 EXIF 标签
-    EXIF_TAGS = [
-        'FocusMode',
+    # 通用标签 + 各品牌特有标签
+    COMMON_TAGS = ['Make', 'Model', 'FocusMode', 'Orientation']
+    
+    NIKON_TAGS = [
         'AFAreaMode',
         'AFAreaXPosition',
         'AFAreaYPosition',
@@ -60,8 +63,13 @@ class FocusPointDetector:
         'AFImageWidth',
         'AFImageHeight',
         'FocusResult',
-        'Orientation',
         'CropArea',
+    ]
+    
+    SONY_TAGS = [
+        'FocusLocation',
+        'AFAreaMode',
+        'FocusFrameSize',
     ]
     
     def __init__(self, exiftool_path: str = 'exiftool'):
@@ -78,15 +86,32 @@ class FocusPointDetector:
         检测对焦点
         
         Args:
-            raw_path: RAW 文件路径 (NEF)
+            raw_path: RAW 文件路径 (NEF/ARW)
             
         Returns:
             FocusPointResult 或 None (无对焦数据)
         """
-        # 读取 EXIF 数据
-        exif_data = self._read_exif(raw_path)
+        # 先读取通用标签确定相机品牌
+        exif_data = self._read_exif(raw_path, self.COMMON_TAGS)
         if exif_data is None:
             return None
+        
+        make = str(exif_data.get('Make', '')).upper()
+        
+        # 根据品牌选择解析方法
+        if 'NIKON' in make:
+            return self._detect_nikon(raw_path, exif_data)
+        elif 'SONY' in make:
+            return self._detect_sony(raw_path, exif_data)
+        else:
+            return None  # 不支持的相机品牌
+    
+    def _detect_nikon(self, raw_path: str, common_data: dict) -> Optional[FocusPointResult]:
+        """Nikon Z8/Z9 对焦点检测"""
+        exif_data = self._read_exif(raw_path, self.NIKON_TAGS)
+        if exif_data is None:
+            return None
+        exif_data.update(common_data)
         
         # 检查是否为 AF 模式
         focus_mode = str(exif_data.get('FocusMode', '')).strip()
@@ -102,7 +127,6 @@ class FocusPointDetector:
         if af_x is None or af_y is None or af_img_w is None or af_img_h is None:
             return None  # 缺少关键数据
         
-        # 转换为数值
         try:
             raw_x = int(af_x)
             raw_y = int(af_y)
@@ -128,7 +152,7 @@ class FocusPointDetector:
         area_w = int(exif_data.get('AFAreaWidth', 0))
         area_h = int(exif_data.get('AFAreaHeight', 0))
         area_mode = str(exif_data.get('AFAreaMode', 'Unknown'))
-        focus_result = exif_data.get('FocusResult', 'Unknown')  # 保持原始类型 (可能是 int 或 str)
+        focus_result = exif_data.get('FocusResult', 1)  # Nikon: 1=Focus
         
         return FocusPointResult(
             x=norm_x,
@@ -143,10 +167,76 @@ class FocusPointDetector:
             is_valid=True
         )
     
-    def _read_exif(self, file_path: str) -> Optional[dict]:
-        """读取 EXIF 数据"""
+    def _detect_sony(self, raw_path: str, common_data: dict) -> Optional[FocusPointResult]:
+        """Sony A1/A7R5/A7M4 对焦点检测"""
+        exif_data = self._read_exif(raw_path, self.SONY_TAGS)
+        if exif_data is None:
+            return None
+        exif_data.update(common_data)
+        
+        # 检查是否为 AF 模式
+        focus_mode = str(exif_data.get('FocusMode', '')).strip()
+        # Sony FocusMode: 1=MF, 2=AF-S, 3=AF-C, 4=AF-A 等
+        if focus_mode == '1' or 'MF' in focus_mode.upper() or 'MANUAL' in focus_mode.upper():
+            return None  # 手动对焦无数据
+        
+        # Sony FocusLocation 格式: "imgW imgH focusX focusY"
+        focus_location = exif_data.get('FocusLocation', '')
+        if not focus_location:
+            return None
+        
+        try:
+            parts = str(focus_location).split()
+            if len(parts) >= 4:
+                img_w = int(parts[0])
+                img_h = int(parts[1])
+                raw_x = int(parts[2])
+                raw_y = int(parts[3])
+            else:
+                return None
+        except (ValueError, IndexError):
+            return None
+        
+        # 归一化坐标
+        norm_x = raw_x / img_w if img_w > 0 else 0.5
+        norm_y = raw_y / img_h if img_h > 0 else 0.5
+        
+        # 处理竖拍旋转
+        orientation = exif_data.get('Orientation', 1)
+        norm_x, norm_y = self._apply_orientation_correction(norm_x, norm_y, orientation)
+        
+        # 获取对焦框大小
+        frame_size = exif_data.get('FocusFrameSize', '')
+        area_w, area_h = 0, 0
+        if frame_size:
+            try:
+                fs_parts = str(frame_size).split()
+                if len(fs_parts) >= 2:
+                    area_w = int(fs_parts[0])
+                    area_h = int(fs_parts[1])
+            except (ValueError, IndexError):
+                pass
+        
+        # Sony 没有 FocusResult 标签，假设 AF 模式下都是合焦的
+        area_mode = str(exif_data.get('AFAreaMode', 'Unknown'))
+        
+        return FocusPointResult(
+            x=norm_x,
+            y=norm_y,
+            raw_x=raw_x,
+            raw_y=raw_y,
+            area_width=area_w,
+            area_height=area_h,
+            af_mode=focus_mode,
+            area_mode=area_mode,
+            focus_result=1,  # 假设 AF 模式下合焦
+            is_valid=True
+        )
+    
+    def _read_exif(self, file_path: str, tags: list) -> Optional[dict]:
+        """读取指定的 EXIF 标签"""
         cmd = [self.exiftool_path, '-j', '-n']
-        for tag in self.EXIF_TAGS:
+        for tag in tags:
             cmd.append(f'-{tag}')
         cmd.append(file_path)
         
