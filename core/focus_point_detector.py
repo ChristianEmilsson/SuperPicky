@@ -148,14 +148,15 @@ class FocusPointDetector:
     ]
     
     # Fujifilm: 基于 Focus-Points 仓库分析
-    # Focus Pixel: 像素坐标 "x y"
+    # Focus Pixel: 像素坐标 "x y" (基于 RawImageCroppedSize)
     FUJIFILM_TAGS = [
         'FocusPixel',           # 像素坐标 "x y"
         'FocusMode',
         'AFMode',
         'AFAreaMode',
-        'ExifImageWidth',
-        'ExifImageHeight',
+        'RawImageCroppedSize',  # V3.9: 正确尺寸 (如 7728x5152)
+        'ExifImageWidth',       # 备用
+        'ExifImageHeight',      # 备用
     ]
     
     # Panasonic: 基于 Focus-Points 仓库分析  
@@ -578,9 +579,35 @@ class FocusPointDetector:
         except (ValueError, IndexError):
             return None
         
-        # 获取图像尺寸
-        img_w = exif_data.get('ExifImageWidth')
-        img_h = exif_data.get('ExifImageHeight')
+        # 获取图像尺寸 (V3.9: 优先使用 RawImageCroppedSize)
+        raw_cropped = exif_data.get('RawImageCroppedSize', '')
+        if raw_cropped:
+            # 格式: "7728 5152" (空格分隔) 或 "7728x5152"
+            try:
+                raw_str = str(raw_cropped)
+                # 尝试空格分隔（exiftool 默认格式）
+                if ' ' in raw_str:
+                    parts = raw_str.split()
+                elif 'x' in raw_str.lower():
+                    parts = raw_str.lower().split('x')
+                else:
+                    parts = []
+                
+                if len(parts) == 2:
+                    img_w = int(parts[0])
+                    img_h = int(parts[1])
+                else:
+                    img_w = img_h = None
+            except (ValueError, IndexError):
+                img_w = img_h = None
+        else:
+            img_w = img_h = None
+        
+        # 备用: ExifImageWidth/Height
+        if img_w is None or img_h is None:
+            img_w = exif_data.get('ExifImageWidth')
+            img_h = exif_data.get('ExifImageHeight')
+        
         if img_w is None or img_h is None:
             return None
         img_w, img_h = int(img_w), int(img_h)
