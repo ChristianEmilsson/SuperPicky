@@ -838,15 +838,15 @@ def verify_focus_in_bbox(
     seg_mask: np.ndarray = None,
     head_center: Tuple[int, int] = None,
     head_radius: int = None,
-) -> float:
+) -> Tuple[float, float]:
     """
-    验证对焦点位置，返回锐度权重因子
+    验证对焦点位置，返回锐度权重和美学权重
     
-    采用 4 层检测策略：
-    1. 头部区域内 → 1.2 (最佳)
-    2. SEG 掩码内 → 1.0 (正常)
-    3. BBox 内 → 0.8 (轻微惩罚)
-    4. BBox 外 → 0.6 (较大惩罚)
+    V4.0: 采用 4 层检测策略，返回两个权重：
+    1. 头部区域内 → 锐度 1.1, 美学 1.0 (最佳)
+    2. SEG 掩码内 → 锐度 1.0, 美学 1.0 (正常)
+    3. BBox 内 → 锐度 0.7, 美学 0.9 (中度惩罚)
+    4. BBox 外 → 锐度 0.5, 美学 0.8 (严重惩罚)
     
     Args:
         focus: 对焦点检测结果
@@ -857,18 +857,18 @@ def verify_focus_in_bbox(
         head_radius: 头部区域半径（像素），可选
         
     Returns:
-        权重因子 (乘以锐度值):
-        - 1.2: 对焦点在头部区域内
-        - 1.0: 对焦点在 SEG 掩码内（但不在头部）
-        - 0.8: 对焦点在 BBox 内（但不在 SEG）
-        - 0.6: 对焦点在 BBox 外
-        - 1.0: 无对焦数据
+        (sharpness_weight, topiq_weight) 权重因子元组:
+        - (1.1, 1.0): 对焦点在头部区域内
+        - (1.0, 1.0): 对焦点在 SEG 掩码内（但不在头部）
+        - (0.7, 0.9): 对焦点在 BBox 内（但不在 SEG）
+        - (0.5, 0.8): 对焦点在 BBox 外
+        - (1.0, 1.0): 无对焦数据
     """
     if focus is None or not focus.is_valid:
-        return 1.0  # 无数据，不影响评分
+        return (1.0, 1.0)  # 无数据，不影响评分
     
     if not focus.is_focused:
-        return 0.8  # 未合焦，轻微惩罚
+        return (0.8, 0.9)  # 未合焦，轻微惩罚
     
     # 转换对焦点为像素坐标
     img_w, img_h = img_dims
@@ -878,7 +878,7 @@ def verify_focus_in_bbox(
     if head_center is not None and head_radius is not None:
         dist = np.sqrt((focus_px[0] - head_center[0])**2 + (focus_px[1] - head_center[1])**2)
         if dist <= head_radius:
-            return 1.05  # 对焦在头部区域，轻微奖励
+            return (1.1, 1.0)  # V4.0: 对焦在头部区域，锐度+10%奖励
     
     # 检查是否在 SEG 掩码内
     if seg_mask is not None:
@@ -886,16 +886,16 @@ def verify_focus_in_bbox(
         fx, fy = focus_px
         if 0 <= fy < seg_mask.shape[0] and 0 <= fx < seg_mask.shape[1]:
             if seg_mask[fy, fx] > 0:
-                return 1.0  # 对焦在鸟身上（但不在头部），正常
+                return (1.0, 1.0)  # 对焦在鸟身上（但不在头部），正常
     
     # 检查是否在 BBox 内
     bx, by, bw, bh = bbox
     in_bbox = (bx <= focus_px[0] <= bx + bw) and (by <= focus_px[1] <= by + bh)
     
     if in_bbox:
-        return 0.7  # 对焦在 BBox 内但不在鸟身上（背景），中度惩罚
+        return (0.7, 0.9)  # V4.0: BBox内，锐度×0.7，美学×0.9
     else:
-        return 0.5  # 对焦完全在 BBox 外，严重惩罚
+        return (0.5, 0.8)  # V4.0: BBox外，锐度×0.5，美学×0.8
 
 
 # 全局单例

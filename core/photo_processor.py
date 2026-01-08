@@ -525,23 +525,26 @@ class PhotoProcessor:
                 if topiq is not None:
                     rating_topiq = topiq + 0.5
             
-            # V3.9 优化: 先计算初步评分（不考虑对焦），只对 1 星以上做对焦检测
+            # V4.0 优化: 先计算初步评分（不考虑对焦），只对 1 星以上做对焦检测
             # 这样 0 星和 -1 星照片不需要调用 exiftool，节省大量时间
             preliminary_result = self.rating_engine.calculate(
                 detected=detected,
                 confidence=confidence,
-                sharpness=rating_sharpness,
-                topiq=rating_topiq,
+                sharpness=head_sharpness,   # V4.0: 原始锐度（飞鸟加成在引擎内）
+                topiq=topiq,                # V4.0: 原始美学（飞鸟加成在引擎内）
                 all_keypoints_hidden=all_keypoints_hidden,
                 best_eye_visibility=best_eye_visibility,
                 is_overexposed=is_overexposed,
                 is_underexposed=is_underexposed,
-                focus_weight=1.0,  # 初步评分不考虑对焦
+                focus_sharpness_weight=1.0,  # 初步评分不考虑对焦
+                focus_topiq_weight=1.0,
+                is_flying=False,             # 初步评分不考虑飞鸟加成
             )
             
-            # Phase 6: V3.9 对焦点验证（仅对 1 星以上照片）
-            # 4 层检测: 头部(1.05) > SEG(1.0) > BBox(0.7) > 外部(0.5)
-            focus_weight = 1.0  # 默认无影响
+            # Phase 6: V4.0 对焦点验证（仅对 1 星以上照片）
+            # 4 层检测返回两个权重: 锐度权重 + 美学权重
+            focus_sharpness_weight = 1.0  # 默认无影响
+            focus_topiq_weight = 1.0      # 默认无影响
             focus_x, focus_y = None, None
             
             # 只对 1 星以上照片做对焦检测（0 星和 -1 星跳过，节省时间）
@@ -559,7 +562,8 @@ class PhotoProcessor:
                                     # V3.9 修复：使用原图尺寸而非 resize 后的 img_dims
                                     # head_center_orig 和 bird_mask_orig 都是原图坐标系
                                     orig_dims = (w_orig, h_orig) if 'w_orig' in dir() and 'h_orig' in dir() else img_dims
-                                    focus_weight = verify_focus_in_bbox(
+                                    # V4.0: 返回元组 (锐度权重, 美学权重)
+                                    focus_sharpness_weight, focus_topiq_weight = verify_focus_in_bbox(
                                         focus_result, 
                                         bird_bbox, 
                                         orig_dims,  # 使用原图尺寸！
@@ -571,23 +575,21 @@ class PhotoProcessor:
                             except Exception as e:
                                 pass  # 对焦检测失败不影响处理
             
-            # 最终评分计算（使用实际对焦权重）
-            if focus_weight != 1.0:
-                # 对焦权重有变化，重新计算评分
-                rating_result = self.rating_engine.calculate(
-                    detected=detected,
-                    confidence=confidence,
-                    sharpness=rating_sharpness,
-                    topiq=rating_topiq,
-                    all_keypoints_hidden=all_keypoints_hidden,
-                    best_eye_visibility=best_eye_visibility,
-                    is_overexposed=is_overexposed,
-                    is_underexposed=is_underexposed,
-                    focus_weight=focus_weight,
-                )
-            else:
-                # 对焦权重无变化，直接使用初步评分
-                rating_result = preliminary_result
+            # V4.0: 最终评分计算（传入对焦权重和飞鸟状态）
+            # 注意: 现在总是重新计算，因为需要传入 is_flying 参数
+            rating_result = self.rating_engine.calculate(
+                detected=detected,
+                confidence=confidence,
+                sharpness=head_sharpness,  # V4.0: 使用原始锐度，权重在引擎内应用
+                topiq=topiq,              # V4.0: 使用原始美学，权重在引擎内应用
+                all_keypoints_hidden=all_keypoints_hidden,
+                best_eye_visibility=best_eye_visibility,
+                is_overexposed=is_overexposed,
+                is_underexposed=is_underexposed,
+                focus_sharpness_weight=focus_sharpness_weight,  # V4.0: 锐度权重
+                focus_topiq_weight=focus_topiq_weight,          # V4.0: 美学权重
+                is_flying=is_flying,                            # V4.0: 飞鸟乘法加成
+            )
             
             rating_value = rating_result.rating
             pick = rating_result.pick
@@ -659,13 +661,20 @@ class PhotoProcessor:
                 
                 # 写入 EXIF（仅限 RAW 文件）
                 if os.path.exists(target_file_path):
+                    # V4.0: 标签逻辑 - 飞鸟绿色优先，头部对焦红色
+                    label = None
+                    if is_flying:
+                        label = 'Green'
+                    elif focus_sharpness_weight > 1.0:  # 头部对焦 (1.1)
+                        label = 'Red'
+                    
                     single_batch = [{
                         'file': target_file_path,
                         'rating': rating_value if rating_value >= 0 else 0,
                         'pick': pick,
                         'sharpness': head_sharpness,
                         'nima_score': topiq,  # V3.8: 实际是 TOPIQ 分数
-                        'label': 'Green' if is_flying else None,  # V3.4: 飞鸟标绿色
+                        'label': label,
                         'focus_status': focus_status  # V3.9: 对焦状态写入 Country 字段
                     }]
                     exiftool_mgr.batch_set_metadata(single_batch)

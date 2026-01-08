@@ -66,7 +66,7 @@ class RatingEngine:
         # 最低标准阈值（低于此为 0 星）
         min_confidence: float = 0.50,
         min_sharpness: float = 100,    # 头部区域锐度最低阈值
-        min_nima: float = 4.0,
+        min_nima: float = 3.5,         # V4.0: 降低美学最低阈值
         # 2/3星达标阈值
         sharpness_threshold: float = 400,  # 头部区域锐度达标阈值（2星和3星共用）
         nima_threshold: float = 5.0,  # TOPIQ 美学达标阈值
@@ -100,7 +100,9 @@ class RatingEngine:
         best_eye_visibility: float = 1.0,  # V3.8: 眼睛最高置信度
         is_overexposed: bool = False,      # V3.8: 是否过曝
         is_underexposed: bool = False,     # V3.8: 是否欠曝
-        focus_weight: float = 1.0,         # V3.9: 对焦权重 (1.5=对焦在鸟上, 0.8=对焦不在鸟上)
+        focus_sharpness_weight: float = 1.0,  # V4.0: 对焦锐度权重
+        focus_topiq_weight: float = 1.0,      # V4.0: 对焦美学权重
+        is_flying: bool = False,              # V4.0: 是否飞鸟（用于乘法加成）
     ) -> RatingResult:
         """
         计算评分
@@ -114,10 +116,16 @@ class RatingEngine:
             best_eye_visibility: 双眼中较高的置信度，用于封顶逻辑
             is_overexposed: 是否过曝（V3.8）
             is_underexposed: 是否欠曝（V3.8）
-            focus_weight: 对焦权重（V3.9）
-                - 1.5: 对焦点在鸟身上，锐度阈值降低 10%
-                - 1.0: 无对焦数据，不影响评分
-                - 0.8: 对焦不在鸟身上，最多给 2 星
+            focus_sharpness_weight: 对焦锐度权重（V4.0）
+                - 1.1: 对焦在头部圈内
+                - 1.0: 对焦在SEG鸟身内
+                - 0.7: 对焦在BBox内
+                - 0.5: 对焦在BBox外
+            focus_topiq_weight: 对焦美学权重（V4.0）
+                - 1.0: 头部/SEG
+                - 0.9: BBox内
+                - 0.8: BBox外
+            is_flying: 是否飞鸟（V4.0 乘法加成: 锐度×1.2, 美学×1.1）
             
         Returns:
             RatingResult 包含评分、旗标和原因
@@ -145,12 +153,12 @@ class RatingEngine:
                 reason=f"美学太差({topiq:.1f}<{self.min_nima:.1f})"
             )
         
-        # 第三步：关键点可见性检查（双眼+鸟喙都不可见才判 0 星）
+        # 第三步：关键点可见性检查（V4.0: 改为 1 星而非 0 星）
         if all_keypoints_hidden:
             return RatingResult(
-                rating=0,
+                rating=1,
                 pick=0,
-                reason="所有关键点不可见（角度不佳）"
+                reason="角度不佳（关键点不可见，但有鸟）"
             )
         
         # 第四步：锐度检查（只有眼睛可见时才有意义）
@@ -161,10 +169,7 @@ class RatingEngine:
                 reason=f"锐度太低({sharpness:.0f}<{self.min_sharpness})"
             )
         
-        # V3.8: 判断是否需要封顶（眼睛可见度在 0.3-0.5 之间）
-        needs_cap = 0.3 <= best_eye_visibility < 0.5
-        
-        # V3.8: 曝光问题标记
+        # V4.0: 曝光问题标记
         has_exposure_issue = is_overexposed or is_underexposed
         exposure_suffix = ""
         if is_overexposed and is_underexposed:
@@ -174,89 +179,73 @@ class RatingEngine:
         elif is_underexposed:
             exposure_suffix = "，欠曝"
         
-        # V3.9: 对焦权重处理 - 直接乘以锐度值
-        # 权重: 1.05(头部) / 1.0(SEG) / 0.7(BBox) / 0.5(外部)
-        adjusted_sharpness = sharpness * focus_weight
+        # V4.0: 对焦权重处理 - 先应用对焦权重
+        # 锐度权重: 1.1(头部) / 1.0(SEG) / 0.7(BBox) / 0.5(外部)
+        # 美学权重: 1.0(头部/SEG) / 0.9(BBox) / 0.8(外部)
+        adjusted_sharpness = sharpness * focus_sharpness_weight
+        adjusted_topiq = topiq * focus_topiq_weight if topiq is not None else None
+        
+        # V4.0: 飞鸟乘法加成 - 后应用
+        if is_flying:
+            adjusted_sharpness = adjusted_sharpness * 1.2
+            if adjusted_topiq is not None:
+                adjusted_topiq = adjusted_topiq * 1.1
         
         # 设置对焦状态后缀
         focus_suffix = ""
-        if focus_weight > 1.0:
+        if focus_sharpness_weight > 1.0:
             focus_suffix = "，对焦头部"
-        elif focus_weight >= 1.0:
+        elif focus_sharpness_weight >= 1.0:
             pass  # 对焦在鸟身上，正常，不显示后缀
-        elif focus_weight >= 0.7:
+        elif focus_sharpness_weight >= 0.7:
             focus_suffix = "，对焦偏移"
         else:  # 0.5
             focus_suffix = "，对焦错误"
         
-        # 第五步：3 星判定（锐度 >= 阈值 AND TOPIQ >= 阈值）
+        # 第五步：基础星级判定（锐度 >= 阈值 AND/OR TOPIQ >= 阈值）
         sharpness_ok = adjusted_sharpness >= self.sharpness_threshold
-        topiq_ok = topiq is not None and topiq >= self.nima_threshold
+        topiq_ok = adjusted_topiq is not None and adjusted_topiq >= self.nima_threshold
         
+        # 计算基础星级
         if sharpness_ok and topiq_ok:
-            if needs_cap:
-                # 眼睛可见度中等，3星降为2星
-                rating = 2
-                if has_exposure_issue:
-                    rating = max(0, rating - 1)  # 曝光问题再降一星
-                return RatingResult(
-                    rating=rating,
-                    pick=0,
-                    reason=f"良好照片（双达标但眼睛可见度中等{exposure_suffix}{focus_suffix}）"
-                )
-            rating = 3
-            if has_exposure_issue:
-                rating = max(0, rating - 1)  # 3→2
-            return RatingResult(
-                rating=rating,
-                pick=0,  # 精选旗标由 PhotoProcessor 后续计算
-                reason=f"{'优选' if rating == 3 else '良好'}照片（锐度+TOPIQ双达标{exposure_suffix}{focus_suffix}）"
-            )
+            base_rating = 3
+            base_reason = "双达标"
+        elif sharpness_ok:
+            base_rating = 2
+            base_reason = "锐度达标"
+        elif topiq_ok:
+            base_rating = 2
+            base_reason = "TOPIQ达标"
+        else:
+            base_rating = 1
+            base_reason = "锐度和美学均未达标"
         
-        # 第六步：2 星判定（锐度达标 OR TOPIQ达标）
-        if sharpness_ok or topiq_ok:
-            if needs_cap:
-                # 眼睛可见度中等，2星降为1星
-                rating = 1
-                if has_exposure_issue:
-                    rating = max(0, rating - 1)  # 曝光问题再降一星
-                if sharpness_ok:
-                    return RatingResult(
-                        rating=rating,
-                        pick=0,
-                        reason=f"普通照片（锐度达标但眼睛可见度中等{exposure_suffix}{focus_suffix}）"
-                    )
-                else:
-                    return RatingResult(
-                        rating=rating,
-                        pick=0,
-                        reason=f"普通照片（TOPIQ达标但眼睛可见度中等{exposure_suffix}{focus_suffix}）"
-                    )
-            # 正常情况
-            rating = 2
-            if has_exposure_issue:
-                rating = max(0, rating - 1)  # 2→1
-            if sharpness_ok:
-                return RatingResult(
-                    rating=rating,
-                    pick=0,
-                    reason=f"{'良好' if rating == 2 else '普通'}照片（锐度达标{exposure_suffix}{focus_suffix}）"
-                )
-            else:
-                return RatingResult(
-                    rating=rating,
-                    pick=0,
-                    reason=f"{'良好' if rating == 2 else '普通'}照片（TOPIQ达标{exposure_suffix}{focus_suffix}）"
-                )
+        # V4.0: 渐进式眼睛可见度降权
+        # visibility_weight = max(0.5, min(1.0, best_eye_visibility * 2))
+        # 即: visibility 0.5 时权重 1.0，0.25 时权重 0.5
+        visibility_weight = max(0.5, min(1.0, best_eye_visibility * 2))
+        rating = round(base_rating * visibility_weight)
         
-        # 第七步：1 = 普通（通过最低标准但未达标）
-        rating = 1
+        # 曝光问题降级
         if has_exposure_issue:
-            rating = max(0, rating - 1)  # 1→0
+            rating = max(0, rating - 1)
+        
+        # 构建理由
+        rating_names = {3: '优选', 2: '良好', 1: '普通', 0: '问题'}
+        rating_name = rating_names.get(rating, '普通')
+        
+        # 可见度降权说明
+        visibility_suffix = ""
+        if visibility_weight < 1.0:
+            visibility_suffix = f"，眼睛可见度{best_eye_visibility:.0%}"
+        
+        # 飞鸟标记
+        flying_suffix = "，飞鸟加成" if is_flying else ""
+        
         return RatingResult(
             rating=rating,
             pick=0,
-            reason=f"普通照片（锐度和美学均未达标{exposure_suffix}{focus_suffix}）"
+            reason=f"{rating_name}照片（{base_reason}{exposure_suffix}{focus_suffix}{visibility_suffix}{flying_suffix}）"
         )
     
     def update_thresholds(
