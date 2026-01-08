@@ -515,36 +515,6 @@ class PhotoProcessor:
                 except Exception as e:
                     pass  # 曝光检测失败不影响处理
             
-            # Phase 6: V3.9 对焦点验证（6 大相机品牌全支持）
-            # 4 层检测: 头部(1.05) > SEG(1.0) > BBox(0.7) > 外部(0.5)
-            focus_weight = 1.0  # 默认无影响
-            focus_x, focus_y = None, None  # V3.9: 对焦点归一化坐标
-            if detected and bird_bbox is not None and img_dims is not None:
-                if file_prefix in raw_dict:
-                    raw_ext = raw_dict[file_prefix]
-                    raw_path = os.path.join(self.dir_path, file_prefix + raw_ext)
-                    # Nikon, Sony, Canon, Olympus, Fujifilm, Panasonic 全支持
-                    if raw_ext.lower() in ['.nef', '.nrw', '.arw', '.cr3', '.cr2', '.orf', '.raf', '.rw2']:
-                        try:
-                            focus_detector = get_focus_detector()
-                            focus_result = focus_detector.detect(raw_path)
-                            if focus_result is not None:
-                                # V3.9: 传入 seg_mask 和头部区域信息
-                                focus_weight = verify_focus_in_bbox(
-                                    focus_result, 
-                                    bird_bbox, 
-                                    img_dims,
-                                    seg_mask=bird_mask_orig,  # 原图尺寸的分割掩码
-                                    head_center=head_center_orig,  # 头部圆心（原图坐标）
-                                    head_radius=head_radius_val,  # 头部半径
-                                )
-                                # 保存对焦点坐标
-                                focus_x, focus_y = focus_result.x, focus_result.y
-                                # DEBUG: 输出对焦验证结果
-                                # self._log(f"  📍 对焦点: ({focus_result.x:.2f}, {focus_result.y:.2f}), 权重: {focus_weight}")
-                        except Exception as e:
-                            pass  # 对焦检测失败不影响处理
-            
             # V3.8: 飞版加成（仅当 confidence >= 0.5 且 is_flying 时）
             # 锐度+100，美学+0.5，加成后的值用于评分
             rating_sharpness = head_sharpness
@@ -553,20 +523,69 @@ class PhotoProcessor:
                 rating_sharpness = head_sharpness + 100
                 if topiq is not None:
                     rating_topiq = topiq + 0.5
-                # self._log(f"  🦅 飞版加成: 锐度 {head_sharpness:.0f} → {rating_sharpness:.0f}, 美学 {topiq:.2f} → {rating_topiq:.2f}")
             
-            # 使用 RatingEngine 计算评分（使用加成后的值）
-            rating_result = self.rating_engine.calculate(
+            # V3.9 优化: 先计算初步评分（不考虑对焦），只对 1 星以上做对焦检测
+            # 这样 0 星和 -1 星照片不需要调用 exiftool，节省大量时间
+            preliminary_result = self.rating_engine.calculate(
                 detected=detected,
                 confidence=confidence,
-                sharpness=rating_sharpness,  # 使用加成后的锐度
-                topiq=rating_topiq,  # V3.8: 参数名改为 topiq
-                all_keypoints_hidden=all_keypoints_hidden,  # V3.8: 使用新属性
-                best_eye_visibility=best_eye_visibility,  # V3.8: 眼睛可见度封顶
-                is_overexposed=is_overexposed,  # V3.8: 曝光检测
-                is_underexposed=is_underexposed,  # V3.8: 曝光检测
-                focus_weight=focus_weight,  # V3.9: 对焦权重
+                sharpness=rating_sharpness,
+                topiq=rating_topiq,
+                all_keypoints_hidden=all_keypoints_hidden,
+                best_eye_visibility=best_eye_visibility,
+                is_overexposed=is_overexposed,
+                is_underexposed=is_underexposed,
+                focus_weight=1.0,  # 初步评分不考虑对焦
             )
+            
+            # Phase 6: V3.9 对焦点验证（仅对 1 星以上照片）
+            # 4 层检测: 头部(1.05) > SEG(1.0) > BBox(0.7) > 外部(0.5)
+            focus_weight = 1.0  # 默认无影响
+            focus_x, focus_y = None, None
+            
+            # 只对 1 星以上照片做对焦检测（0 星和 -1 星跳过，节省时间）
+            if preliminary_result.rating >= 1:
+                if detected and bird_bbox is not None and img_dims is not None:
+                    if file_prefix in raw_dict:
+                        raw_ext = raw_dict[file_prefix]
+                        raw_path = os.path.join(self.dir_path, file_prefix + raw_ext)
+                        # Nikon, Sony, Canon, Olympus, Fujifilm, Panasonic 全支持
+                        if raw_ext.lower() in ['.nef', '.nrw', '.arw', '.cr3', '.cr2', '.orf', '.raf', '.rw2']:
+                            try:
+                                focus_detector = get_focus_detector()
+                                focus_result = focus_detector.detect(raw_path)
+                                if focus_result is not None:
+                                    # 传入 seg_mask 和头部区域信息
+                                    focus_weight = verify_focus_in_bbox(
+                                        focus_result, 
+                                        bird_bbox, 
+                                        img_dims,
+                                        seg_mask=bird_mask_orig,
+                                        head_center=head_center_orig,
+                                        head_radius=head_radius_val,
+                                    )
+                                    focus_x, focus_y = focus_result.x, focus_result.y
+                            except Exception as e:
+                                pass  # 对焦检测失败不影响处理
+            
+            # 最终评分计算（使用实际对焦权重）
+            if focus_weight != 1.0:
+                # 对焦权重有变化，重新计算评分
+                rating_result = self.rating_engine.calculate(
+                    detected=detected,
+                    confidence=confidence,
+                    sharpness=rating_sharpness,
+                    topiq=rating_topiq,
+                    all_keypoints_hidden=all_keypoints_hidden,
+                    best_eye_visibility=best_eye_visibility,
+                    is_overexposed=is_overexposed,
+                    is_underexposed=is_underexposed,
+                    focus_weight=focus_weight,
+                )
+            else:
+                # 对焦权重无变化，直接使用初步评分
+                rating_result = preliminary_result
+            
             rating_value = rating_result.rating
             pick = rating_result.pick
             reason = rating_result.reason
