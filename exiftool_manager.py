@@ -445,12 +445,17 @@ class ExifToolManager:
                 continue
 
             # 构建ExifTool命令（移除-if条件，强制重置）
+            # V4.0: 添加 XMP 字段清除（City/State/Country/Description）
             cmd = [
                 self.exiftool_path,
                 '-Rating=',
                 '-XMP:Pick=',
                 '-XMP:Label=',
-                '-IPTC:City=',
+                '-XMP:City=',           # V4.0: 锐度
+                '-XMP:State=',          # V4.0: TOPIQ美学
+                '-XMP:Country=',        # V4.0: 对焦状态
+                '-XMP:Description=',    # V4.0: 详细评分说明
+                '-IPTC:City=',          # 旧版兼容
                 '-IPTC:Country-PrimaryLocationName=',
                 '-IPTC:Province-State=',
                 '-overwrite_original'
