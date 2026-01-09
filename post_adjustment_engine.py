@@ -157,10 +157,17 @@ class PostAdjustmentEngine:
         new_photos = []
 
         for photo in photos:
-            # 使用安全转换函数处理数据（V3.3: 使用新的英文列名）
+            # V4.1: 使用调整后的锐度和美学（如果存在），否则使用原始值
+            # 调整后的值包含对焦权重和飞鸟加成，确保重新评星与原始处理一致
             conf = safe_float(photo.get('confidence'), 0.0)
-            sharpness = safe_float(photo.get('head_sharp'), 0.0)  # 新列名
-            nima_score = safe_float(photo.get('nima_score'), None)
+            
+            # 优先使用 adj_sharpness，否则使用 head_sharp
+            adj_sharpness = safe_float(photo.get('adj_sharpness'), None)
+            sharpness = adj_sharpness if adj_sharpness else safe_float(photo.get('head_sharp'), 0.0)
+            
+            # 优先使用 adj_topiq，否则使用 nima_score
+            adj_topiq = safe_float(photo.get('adj_topiq'), None)
+            nima_score = adj_topiq if adj_topiq else safe_float(photo.get('nima_score'), None)
 
             # 判定星级
             # 0星判定（技术质量差）

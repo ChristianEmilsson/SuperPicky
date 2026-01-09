@@ -762,30 +762,40 @@ class PhotoProcessor:
             
             # V3.4: 以下操作对 RAW 和纯 JPEG 都执行
             if target_file_path and os.path.exists(target_file_path):
-                # 更新 CSV 中的关键点数据（V3.9: 添加对焦状态和坐标）
+                # V4.1: 计算调整后锐度（用于 CSV，保证重新评星一致性）
+                adj_sharpness_csv = head_sharpness * focus_sharpness_weight if head_sharpness else 0
+                if is_flying and head_sharpness:
+                    adj_sharpness_csv = adj_sharpness_csv * 1.2
+                adj_topiq_csv = topiq * focus_topiq_weight if topiq else None
+                if is_flying and adj_topiq_csv:
+                    adj_topiq_csv = adj_topiq_csv * 1.1
+                
+                # 更新 CSV 中的关键点数据（V4.1: 添加 adj_sharpness, adj_topiq）
                 self._update_csv_keypoint_data(
                     file_prefix, 
-                    rating_sharpness,  # 使用加成后的锐度
+                    head_sharpness,  # V4.1: 原始头部锐度
                     has_visible_eye, 
                     has_visible_beak,
                     left_eye_vis,
                     right_eye_vis,
                     beak_vis,
-                    rating_topiq,  # V3.8: 改为 rating_topiq
+                    topiq,  # V4.1: 原始美学分数
                     rating_value,
                     is_flying,
                     flight_confidence,
                     focus_status,  # V3.9: 对焦状态
                     focus_x,  # V3.9: 对焦点X坐标
-                    focus_y   # V3.9: 对焦点Y坐标
+                    focus_y,  # V3.9: 对焦点Y坐标
+                    adj_sharpness_csv,  # V4.1: 调整后锐度
+                    adj_topiq_csv,  # V4.1: 调整后美学
                 )
                 
-                # 收集3星照片（V3.8: 使用加成后的值）
-                if rating_value == 3 and rating_topiq is not None:
+                # 收集3星照片（V4.1: 使用调整后的值）
+                if rating_value == 3 and adj_topiq_csv is not None:
                     self.star_3_photos.append({
                         'file': target_file_path,
-                        'nima': rating_topiq,  # V3.8: 实际是 TOPIQ，保留字段名兼容
-                        'sharpness': rating_sharpness  # 加成后的锐度
+                        'nima': adj_topiq_csv,  # V4.1: 调整后美学
+                        'sharpness': adj_sharpness_csv  # V4.1: 调整后锐度
                     })
                 
                 # 记录评分（用于文件移动）
@@ -972,9 +982,11 @@ class PhotoProcessor:
         flight_confidence: float = 0.0,
         focus_status: str = None,  # V3.9: 对焦状态
         focus_x: float = None,  # V3.9: 对焦点X坐标
-        focus_y: float = None   # V3.9: 对焦点Y坐标
+        focus_y: float = None,  # V3.9: 对焦点Y坐标
+        adj_sharpness: float = None,  # V4.1: 调整后锐度
+        adj_topiq: float = None  # V4.1: 调整后美学
     ):
-        """更新CSV中的关键点数据和评分（V3.9: 添加对焦状态和坐标）"""
+        """更新CSV中的关键点数据和评分（V4.1: 添加 adj_sharpness, adj_topiq）"""
         import csv
         
         csv_path = os.path.join(self.dir_path, ".superpicky", "report.csv")
@@ -998,6 +1010,13 @@ class PhotoProcessor:
                 if 'focus_y' not in fieldnames:
                     focus_x_idx = fieldnames.index('focus_x') if 'focus_x' in fieldnames else len(fieldnames)
                     fieldnames.insert(focus_x_idx + 1, 'focus_y')
+                # V4.1: 添加调整后锐度和美学字段
+                if 'adj_sharpness' not in fieldnames:
+                    focus_y_idx = fieldnames.index('focus_y') if 'focus_y' in fieldnames else len(fieldnames)
+                    fieldnames.insert(focus_y_idx + 1, 'adj_sharpness')
+                if 'adj_topiq' not in fieldnames:
+                    adj_sharp_idx = fieldnames.index('adj_sharpness') if 'adj_sharpness' in fieldnames else len(fieldnames)
+                    fieldnames.insert(adj_sharp_idx + 1, 'adj_topiq')
                 
                 for row in reader:
                     if row.get('filename') == filename:
@@ -1015,6 +1034,9 @@ class PhotoProcessor:
                         row['focus_status'] = focus_status if focus_status else "-"
                         row['focus_x'] = f"{focus_x:.3f}" if focus_x is not None else "-"
                         row['focus_y'] = f"{focus_y:.3f}" if focus_y is not None else "-"
+                        # V4.1: 调整后锐度和美学（用于重新评星一致性）
+                        row['adj_sharpness'] = f"{adj_sharpness:.2f}" if adj_sharpness else "-"
+                        row['adj_topiq'] = f"{adj_topiq:.2f}" if adj_topiq else "-"
                     rows.append(row)
             
             # 写回CSV
