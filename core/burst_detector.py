@@ -85,11 +85,18 @@ class BurstDetector:
     
     def _find_exiftool(self) -> str:
         """查找 ExifTool 路径"""
-        # 优先使用项目内置的 exiftool
+        # V3.9: 优先检查 PyInstaller 打包环境
+        if hasattr(sys, '_MEIPASS'):
+            bundled = os.path.join(sys._MEIPASS, 'exiftool_bundle', 'exiftool')
+            if os.path.exists(bundled):
+                return bundled
+        
+        # 开发环境: 优先使用项目内置的 exiftool
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         builtin = os.path.join(project_root, 'exiftool')
         if os.path.exists(builtin):
             return builtin
+        
         # 否则使用系统 exiftool
         return 'exiftool'
     
