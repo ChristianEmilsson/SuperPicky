@@ -56,7 +56,7 @@ class BurstDetector:
     
     # 检测参数
     TIME_THRESHOLD_MS = 250  # V4.0: 放宽到 250ms，用 pHash 过滤误判
-    MIN_BURST_COUNT = 3      # 最少连拍张数
+    MIN_BURST_COUNT = 4      # V4.0: 最少 4 张才算连拍（更保守）
     MIN_RATING = 2           # 只处理 >= 2 星的照片
     
     # pHash 参数

@@ -679,8 +679,8 @@ Examples:
     # ===== burst 命令 =====
     p_burst = subparsers.add_parser('burst', help='连拍检测与分组')
     p_burst.add_argument('directory', help='照片目录路径')
-    p_burst.add_argument('-m', '--min-count', type=int, default=3,
-                         help='最小连拍张数 (默认: 3)')
+    p_burst.add_argument('-m', '--min-count', type=int, default=4,
+                         help='最小连拍张数 (默认: 4)')
     p_burst.add_argument('-t', '--threshold', type=int, default=250,
                          help='时间阈值(ms) (默认: 250)')
     p_burst.add_argument('--no-phash', action='store_false', dest='phash',
