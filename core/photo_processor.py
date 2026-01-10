@@ -867,8 +867,8 @@ class PhotoProcessor:
         # V3.4: 飞鸟标识
         flight_tag = "【飞鸟】" if is_flying else ""
         
-        # V3.8: 曝光问题标识
-        exposure_tag = "【曝光】" if has_exposure_issue else ""
+        # V3.8: 曝光问题标识（已在reason中显示"欠曝/过曝"，故不再单独显示标签）
+        # exposure_tag = "【曝光】" if has_exposure_issue else ""
         
         # V3.9: 对焦状态标识
         focus_tag = ""
@@ -884,8 +884,8 @@ class PhotoProcessor:
         else:
             time_text = f"{time_ms:.0f}ms"
         
-        # 输出简化格式
-        self._log(f"[{index:03d}/{total}] {filename} | {star_text} ({reason_short}) {flight_tag}{exposure_tag}{focus_tag}| {time_text}")
+        # 输出简化格式（移除了exposure_tag，因为reason中已有欠曝/过曝信息）
+        self._log(f"[{index:03d}/{total}] {filename} | {star_text} ({reason_short}) {flight_tag}{focus_tag}| {time_text}")
     
     def _save_debug_crop(
         self,
