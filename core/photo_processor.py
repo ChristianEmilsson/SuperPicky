@@ -110,8 +110,8 @@ class PhotoProcessor:
         self._log(f"  🔧 归一化模式: {settings.normalization_mode}")
         self._log(f"  🦅 飞鸟检测: {'开启' if settings.detect_flight else '关闭'}")
         self._log(f"  📸 曝光检测: {'开启' if settings.detect_exposure else '关闭'}")
-        self._log(f"  ⚙️  高级配置 - min_sharpness: {self.config.min_sharpness}")
-        self._log(f"  ⚙️  高级配置 - min_nima: {self.config.min_nima}\n")
+        self._log(f"  ⚙️  高级配置 - 最低锐度: {self.config.min_sharpness}")
+        self._log(f"  ⚙️  高级配置 - 最低美学: {self.config.min_nima}\n")
         
         # 统计数据（支持 0/1/2/3 星）
         self.stats = {
