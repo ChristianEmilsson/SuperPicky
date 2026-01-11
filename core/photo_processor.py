@@ -605,7 +605,11 @@ class PhotoProcessor:
                                 if focus_result is not None:
                                     # V3.9 修复：使用原图尺寸而非 resize 后的 img_dims
                                     # head_center_orig 和 bird_mask_orig 都是原图坐标系
-                                    orig_dims = (w_orig, h_orig) if 'w_orig' in dir() and 'h_orig' in dir() else img_dims
+                                    # V3.9.3: 修复 dir() 无法检测局部变量的 bug
+                                    try:
+                                        orig_dims = (w_orig, h_orig)
+                                    except NameError:
+                                        orig_dims = img_dims
                                     # V4.0: 返回元组 (锐度权重, 美学权重)
                                     focus_sharpness_weight, focus_topiq_weight = verify_focus_in_bbox(
                                         focus_result, 
@@ -668,11 +672,13 @@ class PhotoProcessor:
                 focus_point_crop = None
                 if focus_x is not None and focus_y is not None:
                     # 对焦点从归一化坐标转换为裁剪区域坐标
-                    # 使用原图尺寸 (w_orig, h_orig) 而不是 resize 后的 img_dims
-                    if 'w_orig' in dir() and 'h_orig' in dir():
+                    # w_orig, h_orig 在第 414 行已定义，直接使用
+                    try:
                         fx_px = int(focus_x * w_orig) - x_orig
                         fy_px = int(focus_y * h_orig) - y_orig
                         focus_point_crop = (fx_px, fy_px)
+                    except NameError:
+                        pass  # 变量未定义时跳过
                 
                 try:
                     self._save_debug_crop(
