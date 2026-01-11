@@ -938,12 +938,15 @@ class PhotoProcessor:
             cv2.circle(debug_img, (cx, cy), head_radius, (255, 0, 0), 2)  # 蓝色圆圈
             cv2.circle(debug_img, (cx, cy), 3, (255, 0, 0), -1)  # 圆心
         
-        # 3. 绘制对焦点（红色十字）
+        # 3. 绘制对焦点（红色十字）- V3.9.3 加大加粗更醒目
         if focus_point_crop is not None:
             fx, fy = focus_point_crop
-            cross_size = 15
-            cv2.line(debug_img, (fx - cross_size, fy), (fx + cross_size, fy), (0, 0, 255), 2)
-            cv2.line(debug_img, (fx, fy - cross_size), (fx, fy + cross_size), (0, 0, 255), 2)
+            cross_size = 30  # 原来15，加大到30
+            thickness = 4    # 原来2，加粗到4
+            cv2.line(debug_img, (fx - cross_size, fy), (fx + cross_size, fy), (0, 0, 255), thickness)
+            cv2.line(debug_img, (fx, fy - cross_size), (fx, fy + cross_size), (0, 0, 255), thickness)
+            # 额外画一个红色圆点作为中心标记
+            cv2.circle(debug_img, (fx, fy), 6, (0, 0, 255), -1)
         
         # 4. 添加状态文字
         if focus_status:

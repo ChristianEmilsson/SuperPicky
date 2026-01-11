@@ -24,3 +24,4 @@ PySide6>=6.6.0
 # - PySide6: Qt6 GUI 框架，替代 Tkinter
 # - Pillow: 必需，用于图片处理
 
+imagehash
