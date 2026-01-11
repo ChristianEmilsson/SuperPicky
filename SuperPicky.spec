@@ -44,6 +44,10 @@ all_datas = [
     # 国际化语言包
     (os.path.join(base_path, 'locales'), 'locales'),
     
+    # V3.9.3: 本地化资源（应用名称中英文显示）
+    (os.path.join(base_path, 'Resources/zh-Hans.lproj'), 'Resources/zh-Hans.lproj'),
+    (os.path.join(base_path, 'Resources/en.lproj'), 'Resources/en.lproj'),
+    
     # Ultralytics 配置（手动添加完整 cfg 目录）
     (os.path.join(ultralytics_base, 'ultralytics/cfg'), 'ultralytics/cfg'),
 ]
@@ -84,6 +88,24 @@ a = Analysis(
         # V3.9.3: 图像处理依赖
         'imageio',
         'rawpy',
+        # V3.9.3: 连拍检测和 pHash
+        'imagehash',
+        'pywt',  # imagehash 依赖
+        # V3.9.3: core 模块包（PyInstaller 需要显式包含）
+        'core',
+        'core.burst_detector',
+        'core.config_manager',
+        'core.exposure_detector',
+        'core.file_manager',
+        'core.flight_detector',
+        'core.focus_point_detector',
+        'core.keypoint_detector',
+        'core.photo_processor',
+        'core.rating_engine',
+        'core.stats_formatter',
+        # V3.9.3: multiprocessing spawn 模式支持
+        'multiprocessing',
+        'multiprocessing.spawn',
     ],
     hookspath=[],
     hooksconfig={},

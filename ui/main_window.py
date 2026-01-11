@@ -5,9 +5,19 @@ PySide6 版本 - 极简艺术风格
 """
 
 import os
+import sys
 import threading
 import subprocess
 from pathlib import Path
+
+
+def get_resource_path(relative_path):
+    """获取资源文件路径（兼容 PyInstaller 打包环境）"""
+    # PyInstaller 打包后会设置 _MEIPASS
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    # 开发环境
+    return os.path.join(os.path.dirname(os.path.dirname(__file__)), relative_path)
 
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
@@ -295,7 +305,7 @@ class SuperPickyMainWindow(QMainWindow):
         self.setStyleSheet(GLOBAL_STYLE)
 
         # 设置图标
-        icon_path = os.path.join(os.path.dirname(__file__), "..", "img", "icon.png")
+        icon_path = get_resource_path("img/icon.png")
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
 
@@ -358,7 +368,7 @@ class SuperPickyMainWindow(QMainWindow):
         brand_layout.setSpacing(16)
 
         # 品牌图标
-        icon_path = os.path.join(os.path.dirname(__file__), "..", "img", "icon.png")
+        icon_path = get_resource_path("img/icon.png")
         if os.path.exists(icon_path):
             icon_container = QFrame()
             icon_container.setFixedSize(48, 48)
