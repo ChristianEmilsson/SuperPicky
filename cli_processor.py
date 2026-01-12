@@ -42,7 +42,8 @@ class CLIProcessor:
             nima_threshold=ui_settings[2],
             save_crop=ui_settings[3] if len(ui_settings) > 3 else False,
             normalization_mode=ui_settings[4] if len(ui_settings) > 4 else 'log_compression',
-            detect_flight=detect_flight
+            detect_flight=detect_flight,
+            detect_exposure=True  # V3.9.3: CLI 默认开启曝光检测，与 GUI 一致
         )
         
         # 创建核心处理器
