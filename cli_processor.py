@@ -31,9 +31,10 @@ class CLIProcessor:
         self.verbose = verbose
         self.dir_path = dir_path  # 保存目录路径用于日志
         
-        # GUI默认设置: [50, 500, 4.8, False, 'log_compression']
+        # V3.9.4: 修正默认值，与 GUI 保持完全一致
+        # GUI 默认: sharpness=400, nima=5.0, exposure=True, burst=True
         if ui_settings is None:
-            ui_settings = [50, 500, 4.8, False, 'log_compression']
+            ui_settings = [50, 400, 5.0, False, 'log_compression']
         
         # 转换为 ProcessingSettings
         settings = ProcessingSettings(
@@ -43,7 +44,8 @@ class CLIProcessor:
             save_crop=ui_settings[3] if len(ui_settings) > 3 else False,
             normalization_mode=ui_settings[4] if len(ui_settings) > 4 else 'log_compression',
             detect_flight=detect_flight,
-            detect_exposure=True  # V3.9.3: CLI 默认开启曝光检测，与 GUI 一致
+            detect_exposure=True,   # V3.9.4: 默认开启曝光检测，与 GUI 一致
+            detect_burst=True       # V3.9.4: 默认开启连拍检测，与 GUI 一致
         )
         
         # 创建核心处理器

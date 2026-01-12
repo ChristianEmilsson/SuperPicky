@@ -42,13 +42,13 @@ class ProcessingSettings:
     """处理参数配置"""
     ai_confidence: int = 50
     sharpness_threshold: int = 400   # 头部区域锐度达标阈值 (200-600)
-    nima_threshold: float = 5.2  # TOPIQ 美学达标阈值 (4.0-7.0)
+    nima_threshold: float = 5.0      # V3.9.4: TOPIQ 美学达标阈值，与 GUI 滑块默认值一致
     save_crop: bool = False
     normalization_mode: str = 'log_compression'  # 默认使用log_compression，与GUI一致
-    detect_flight: bool = True  # V3.4: 飞版检测开关
-    detect_exposure: bool = False  # V3.8: 曝光检测开关（默认关闭）
-    exposure_threshold: float = 0.10  # V3.8: 曝光阈值 (0.05-0.20)
-    detect_burst: bool = True  # V4.0: 连拍检测开关（默认开启）
+    detect_flight: bool = True       # V3.4: 飞版检测开关
+    detect_exposure: bool = True     # V3.9.4: 曝光检测开关（默认开启，与 GUI 一致）
+    exposure_threshold: float = 0.10 # V3.8: 曝光阈值 (0.05-0.20)
+    detect_burst: bool = True        # V4.0: 连拍检测开关（默认开启）
 
 
 @dataclass
