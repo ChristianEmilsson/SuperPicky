@@ -29,6 +29,10 @@ class ExifToolManager:
 
     def _get_exiftool_path(self) -> str:
         """获取exiftool可执行文件路径"""
+        # V3.9.4: 处理 Windows 平台的可执行文件后缀
+        is_windows = sys.platform.startswith('win')
+        exe_name = 'exiftool.exe' if is_windows else 'exiftool'
+
         if hasattr(sys, '_MEIPASS'):
             # PyInstaller打包后的路径
             base_path = sys._MEIPASS
@@ -36,19 +40,24 @@ class ExifToolManager:
             print(f"   base_path (sys._MEIPASS): {base_path}")
 
             # 直接使用 exiftool_bundle/exiftool 路径（唯一打包位置）
-            exiftool_path = os.path.join(base_path, 'exiftool_bundle', 'exiftool')
+            exiftool_path = os.path.join(base_path, 'exiftool_bundle', exe_name)
             abs_path = os.path.abspath(exiftool_path)
 
-            print(f"   正在检查 exiftool...")
+            print(f"   正在检查 {exe_name}...")
             print(f"   路径: {abs_path}")
             print(f"   存在: {os.path.exists(abs_path)}")
-            print(f"   可执行: {os.access(abs_path, os.X_OK) if os.path.exists(abs_path) else False}")
-
-            if os.path.exists(abs_path) and os.access(abs_path, os.X_OK):
-                print(f"   ✅ 找到 exiftool")
+            
+            if os.path.exists(abs_path):
+                print(f"   ✅ 找到 {exe_name}")
                 return abs_path
             else:
-                print(f"   ⚠️  未找到可执行的 exiftool")
+                # 尝试不带后缀的路径（以防打包逻辑有变）
+                fallback_path = os.path.join(base_path, 'exiftool_bundle', 'exiftool')
+                if os.path.exists(fallback_path):
+                    print(f"   ✅ 找到 exiftool (fallback)")
+                    return fallback_path
+                
+                print(f"   ⚠️  未找到可执行的 {exe_name}")
                 return abs_path
         else:
             # 开发环境路径
@@ -61,6 +70,13 @@ class ExifToolManager:
             
             # 回退到项目目录下的 exiftool
             project_root = os.path.dirname(os.path.abspath(__file__))
+            
+            # 优先检查带 .exe 的路径 (Windows 开发环境可能手动放了 exiftool.exe)
+            if is_windows:
+                win_path = os.path.join(project_root, 'exiftool.exe')
+                if os.path.exists(win_path):
+                    return win_path
+            
             return os.path.join(project_root, 'exiftool')
 
     def _verify_exiftool(self) -> bool:
@@ -70,11 +86,15 @@ class ExifToolManager:
         print(f"   测试命令: {self.exiftool_path} -ver")
 
         try:
+            # V3.9.4: 在 Windows 上隐藏控制台窗口
+            creationflags = subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0
+            
             result = subprocess.run(
                 [self.exiftool_path, '-ver'],
                 capture_output=True,
                 text=True,
-                timeout=5
+                timeout=5,
+                creationflags=creationflags
             )
             print(f"   返回码: {result.returncode}")
             print(f"   stdout: {result.stdout.strip()}")
@@ -145,11 +165,15 @@ class ExifToolManager:
         cmd.extend(['-overwrite_original', file_path])
 
         try:
+            # V3.9.4: 在 Windows 上隐藏控制台窗口
+            creationflags = subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0
+            
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
+                creationflags=creationflags
             )
 
             if result.returncode == 0:
@@ -260,11 +284,15 @@ class ExifToolManager:
             if len(files_metadata) > 1:
                 print(f"📦 批量处理 {len(files_metadata)} 个文件...")
 
+            # V3.9.4: 在 Windows 上隐藏控制台窗口
+            creationflags = subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0
+            
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=300  # 5分钟超时
+                timeout=300,  # 5分钟超时
+                creationflags=creationflags
             )
 
             if result.returncode == 0:
@@ -315,7 +343,10 @@ class ExifToolManager:
                     '-TagsFromFile', file_path,
                     '-XMP:all<XMP:all'
                 ]
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                # V3.9.4: 在 Windows 上隐藏控制台窗口
+                creationflags = subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0
+                
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, creationflags=creationflags)
                 # 不需要打印成功消息，避免刷屏
             except Exception:
                 pass  # 侧车文件创建失败不影响主流程
@@ -346,11 +377,15 @@ class ExifToolManager:
         ]
 
         try:
+            # V3.9.4: 在 Windows 上隐藏控制台窗口
+            creationflags = subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0
+            
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=10,
+                creationflags=creationflags
             )
 
             if result.returncode == 0:
@@ -392,11 +427,15 @@ class ExifToolManager:
         ]
 
         try:
+            # V3.9.4: 在 Windows 上隐藏控制台窗口
+            creationflags = subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0
+            
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
+                creationflags=creationflags
             )
 
             if result.returncode == 0:
@@ -473,11 +512,15 @@ class ExifToolManager:
             ] + valid_files
 
             try:
+                # V3.9.4: 在 Windows 上隐藏控制台窗口
+                creationflags = subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0
+                
                 result = subprocess.run(
                     cmd,
                     capture_output=True,
                     text=True,
-                    timeout=120
+                    timeout=120,
+                    creationflags=creationflags
                 )
 
                 if result.returncode == 0:
