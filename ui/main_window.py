@@ -605,8 +605,11 @@ class SuperPickyMainWindow(QMainWindow):
         # 创建托盘图标
         self.tray_icon = QSystemTrayIcon(self)
         
-        # 设置图标
-        icon_path = get_resource_path("img/icon.png")
+        # 设置图标（使用裁剪后的托盘专用图标）
+        icon_path = get_resource_path("img/icon_tray.png")
+        if not os.path.exists(icon_path):
+            # 回退到原始图标
+            icon_path = get_resource_path("img/icon.png")
         if os.path.exists(icon_path):
             self.tray_icon.setIcon(QIcon(icon_path))
         else:
