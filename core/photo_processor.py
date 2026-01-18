@@ -146,6 +146,7 @@ class PhotoProcessor:
         self.file_ratings = {}
         self.star2_reasons = {}  # 记录2星原因: 'sharpness' 或 'nima'
         self.star_3_photos = []
+        self.temp_converted_jpegs = set()  # V4.0: 跟踪从 RAW 转换的临时 JPEG，避免误删用户原始 JPEG
     
     def _log(self, msg: str, level: str = "info"):
         """内部日志方法"""
@@ -279,7 +280,9 @@ class PhotoProcessor:
             for future in as_completed(future_to_raw):
                 key, success, error = future.result()
                 if success:
-                    files_tbr.append(key + ".jpg")
+                    jpeg_filename = key + ".jpg"
+                    files_tbr.append(jpeg_filename)
+                    self.temp_converted_jpegs.add(jpeg_filename)  # V4.0: 标记为临时转换的 JPEG
                     converted_count += 1
                     if converted_count % 5 == 0 or converted_count == len(raw_files_to_convert):
                         self._log(f"  ✅ 已转换 {converted_count}/{len(raw_files_to_convert)} 张")
@@ -1319,12 +1322,15 @@ class PhotoProcessor:
             self._log(f"  ⚠️  保存manifest失败: {e}", "warning")
     
     def _cleanup_temp_files(self, files_tbr, raw_dict):
-        """清理临时JPG文件"""
+        """清理临时JPG文件（V4.0: 只删除从 RAW 转换的临时 JPEG，保护用户原始 JPEG）"""
         self._log("\n🧹 清理临时文件...")
         deleted_count = 0
         for filename in files_tbr:
             file_prefix, file_ext = os.path.splitext(filename)
-            if file_prefix in raw_dict and file_ext.lower() in ['.jpg', '.jpeg']:
+            # V4.0: 只删除临时转换的 JPEG，不删除用户原始的 RAW+JPEG
+            if (file_prefix in raw_dict and 
+                file_ext.lower() in ['.jpg', '.jpeg'] and
+                filename in self.temp_converted_jpegs):
                 jpg_path = os.path.join(self.dir_path, filename)
                 try:
                     if os.path.exists(jpg_path):
