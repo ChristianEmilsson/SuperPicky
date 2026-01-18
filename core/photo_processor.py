@@ -147,6 +147,7 @@ class PhotoProcessor:
         self.star2_reasons = {}  # 记录2星原因: 'sharpness' 或 'nima'
         self.star_3_photos = []
         self.temp_converted_jpegs = set()  # V4.0: 跟踪从 RAW 转换的临时 JPEG，避免误删用户原始 JPEG
+        self.file_bird_species = {}  # V4.0: 跟踪每个文件识别出的鸟种（中文名），用于按鸟种分目录
     
     def _log(self, msg: str, level: str = "info"):
         """内部日志方法"""
@@ -870,6 +871,9 @@ class PhotoProcessor:
                                     # V4.2: 收集识别的鸟种名称
                                     if cn_name and cn_name not in self.stats['bird_species']:
                                         self.stats['bird_species'].append(cn_name)
+                                    # V4.0: 记录文件对应的鸟种（用于按鸟种分目录）
+                                    if cn_name:
+                                        self.file_bird_species[file_prefix] = cn_name
                                 else:
                                     self._log(f"  🐦 识别置信度不足: {top_result.get('cn_name', '?')} ({confidence:.0f}% < {self.settings.birdid_confidence_threshold}%)")
                         except Exception as e:
@@ -1242,12 +1246,24 @@ class PhotoProcessor:
             self.stats['picked'] = 0
     
     def _move_files_to_rating_folders(self, raw_dict):
-        """移动文件到分类文件夹（V3.4: 支持纯 JPEG）"""
+        """移动文件到分类文件夹（V4.0: 2星和3星按鸟种分目录）"""
         # 筛选需要移动的文件（包括所有星级，确保原目录为空）
         files_to_move = []
         for prefix, rating in self.file_ratings.items():
             if rating in [-1, 0, 1, 2, 3]:
-                folder = RATING_FOLDER_NAMES.get(rating, "0星_放弃")
+                base_folder = RATING_FOLDER_NAMES.get(rating, "0星_放弃")
+                
+                # V4.0: 2星和3星按鸟种分子目录
+                if rating >= 2 and prefix in self.file_bird_species:
+                    # 有识别结果的照片
+                    bird_name = self.file_bird_species[prefix]
+                    folder = os.path.join(base_folder, bird_name)
+                elif rating >= 2:
+                    # 2星/3星但未识别的照片，放入"其他鸟类"
+                    folder = os.path.join(base_folder, "其他鸟类")
+                else:
+                    # 0星、1星、-1星直接放入星级目录
+                    folder = base_folder
                 
                 if prefix in raw_dict:
                     # 有对应的 RAW 文件
@@ -1257,7 +1273,8 @@ class PhotoProcessor:
                         files_to_move.append({
                             'filename': prefix + raw_ext,
                             'rating': rating,
-                            'folder': folder
+                            'folder': folder,
+                            'bird_species': self.file_bird_species.get(prefix, '')  # V4.0: 记录鸟种用于 manifest
                         })
                     
                     # V4.0: 同时移动同名 JPEG（如果存在）
@@ -1267,7 +1284,8 @@ class PhotoProcessor:
                             files_to_move.append({
                                 'filename': prefix + jpg_ext,
                                 'rating': rating,
-                                'folder': folder
+                                'folder': folder,
+                                'bird_species': self.file_bird_species.get(prefix, '')
                             })
                             break  # 只找一个 JPEG
                 else:
@@ -1278,7 +1296,8 @@ class PhotoProcessor:
                             files_to_move.append({
                                 'filename': prefix + jpg_ext,
                                 'rating': rating,
-                                'folder': folder
+                                'folder': folder,
+                                'bird_species': self.file_bird_species.get(prefix, '')
                             })
                             break  # 找到就跳出
         
@@ -1288,13 +1307,17 @@ class PhotoProcessor:
         
         self._log(f"\n📂 移动 {len(files_to_move)} 张照片到分类文件夹...")
         
-        # 创建文件夹（使用实际的目录名）
+        # 创建文件夹（使用实际的目录名，支持多层）
         folders_in_use = set(f['folder'] for f in files_to_move)
         for folder_name in folders_in_use:
             folder_path = os.path.join(self.dir_path, folder_name)
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
-                self._log(f"  📁 创建文件夹: {folder_name}/")
+                # V4.0: 显示更清晰的目录创建日志
+                if os.path.sep in folder_name or '/' in folder_name:
+                    self._log(f"  📁 创建文件夹: {folder_name}/")
+                else:
+                    self._log(f"  📁 创建文件夹: {folder_name}/")
         
         # 移动文件
         moved_count = 0
@@ -1311,13 +1334,14 @@ class PhotoProcessor:
             except Exception as e:
                 self._log(f"  ⚠️  移动失败: {file_info['filename']} - {e}", "warning")
         
-        # 生成manifest
+        # 生成manifest（V4.0: 增加鸟种分类信息）
         manifest = {
-            "version": "1.0",
+            "version": "2.0",  # V4.0: 更新版本号
             "created": datetime.now().isoformat(),
-            "app_version": "Refactored-Core",
+            "app_version": "V4.0.0",
             "original_dir": self.dir_path,
             "folder_structure": RATING_FOLDER_NAMES,
+            "bird_species_dirs": True,  # V4.0: 标记使用了鸟种分目录
             "files": files_to_move,
             "stats": {"total_moved": moved_count}
         }

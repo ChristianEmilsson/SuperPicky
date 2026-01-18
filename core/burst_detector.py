@@ -523,6 +523,7 @@ class BurstDetector:
     ) -> Dict[str, any]:
         """
         运行完整的连拍检测流程
+        V4.0: 支持递归扫描鸟种子目录
         
         Args:
             directory: 主目录路径
@@ -541,20 +542,32 @@ class BurstDetector:
             'groups_by_dir': {}
         }
         
+        extensions = {'.nef', '.rw2', '.arw', '.cr2', '.cr3', '.orf', '.dng'}
+        
+        def collect_files_recursive(dir_path: str) -> List[str]:
+            """V4.0: 递归收集目录下所有 RAW 文件（包括鸟种子目录）"""
+            filepaths = []
+            if not os.path.exists(dir_path):
+                return filepaths
+            
+            for entry in os.scandir(dir_path):
+                if entry.is_file():
+                    ext = os.path.splitext(entry.name)[1].lower()
+                    if ext in extensions:
+                        filepaths.append(entry.path)
+                elif entry.is_dir() and not entry.name.startswith('burst_'):
+                    # 递归扫描鸟种子目录，但跳过已有的 burst 目录
+                    filepaths.extend(collect_files_recursive(entry.path))
+            return filepaths
+        
         # 遍历评分目录
         for rating_dir in rating_dirs:
             subdir = os.path.join(directory, rating_dir)
             if not os.path.exists(subdir):
                 continue
             
-            # 获取文件列表
-            extensions = {'.nef', '.rw2', '.arw', '.cr2', '.cr3', '.orf', '.dng'}
-            filepaths = []
-            for entry in os.scandir(subdir):
-                if entry.is_file():
-                    ext = os.path.splitext(entry.name)[1].lower()
-                    if ext in extensions:
-                        filepaths.append(entry.path)
+            # V4.0: 递归获取文件列表（包括鸟种子目录）
+            filepaths = collect_files_recursive(subdir)
             
             if not filepaths:
                 continue

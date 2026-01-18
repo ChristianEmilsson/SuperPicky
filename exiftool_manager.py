@@ -575,6 +575,7 @@ class ExifToolManager:
         """
         V3.3: 根据 manifest 将文件恢复到原始位置
         V3.3.1: 增强版 - 也处理不在 manifest 中的文件
+        V4.0: 支持多层目录恢复（鸟种子目录、连拍子目录）
         
         Args:
             dir_path: str, 原始目录路径
@@ -613,7 +614,12 @@ class ExifToolManager:
                         src_path = os.path.join(dir_path, folder, filename)
                         dst_path = os.path.join(dir_path, filename)
                         
+                        # V4.0: 记录所有涉及的目录（包括多层）
                         folders_to_check.add(os.path.join(dir_path, folder))
+                        # 添加父目录（如 3星_优选/红嘴蓝鹊 → 也需要检查 3星_优选）
+                        parts = folder.split(os.sep)
+                        if len(parts) > 1:
+                            folders_to_check.add(os.path.join(dir_path, parts[0]))
                         
                         if not os.path.exists(src_path):
                             stats['not_found'] += 1
@@ -643,48 +649,58 @@ class ExifToolManager:
         else:
             log("ℹ️  未找到 manifest 文件")
         
-        # 第二步：扫描评分子目录，恢复任何剩余文件
+        # 第二步：递归扫描评分子目录，恢复任何剩余文件（V4.0: 支持多层）
         log("\n📂 扫描评分子目录...")
         
         # V3.3: 添加旧版目录到扫描列表（兼容旧版本）
         legacy_folders = ["2星_良好_锐度", "2星_良好_美学"]
         all_folders = list(RATING_FOLDER_NAMES.values()) + legacy_folders
         
+        def restore_from_folder(folder_path: str, relative_path: str = ""):
+            """递归恢复文件夹中的文件"""
+            nonlocal stats
+            
+            if not os.path.exists(folder_path):
+                return
+            
+            for entry in os.listdir(folder_path):
+                entry_path = os.path.join(folder_path, entry)
+                
+                if os.path.isdir(entry_path):
+                    # V4.0: 递归处理子目录（鸟种目录、连拍目录）
+                    folders_to_check.add(entry_path)
+                    restore_from_folder(entry_path, os.path.join(relative_path, entry) if relative_path else entry)
+                else:
+                    # 移动文件回主目录
+                    dst_path = os.path.join(dir_path, entry)
+                    
+                    if os.path.exists(dst_path):
+                        log(f"  ⚠️  目标已存在，跳过: {entry}")
+                        continue
+                    
+                    try:
+                        shutil.move(entry_path, dst_path)
+                        stats['restored'] += 1
+                        display_path = os.path.join(relative_path, entry) if relative_path else entry
+                        log(f"  ✅ 恢复: {os.path.basename(folder_path)}/{entry}")
+                    except Exception as e:
+                        stats['failed'] += 1
+                        log(f"  ❌ 恢复失败: {entry} - {e}")
+        
         for folder_name in set(all_folders):  # 使用 set 去重
             folder_path = os.path.join(dir_path, folder_name)
             folders_to_check.add(folder_path)
-            
-            if not os.path.exists(folder_path):
-                continue
-            
-            # 移动所有文件回主目录
-            for filename in os.listdir(folder_path):
-                src_path = os.path.join(folder_path, filename)
-                dst_path = os.path.join(dir_path, filename)
-                
-                # 跳过子目录
-                if os.path.isdir(src_path):
-                    continue
-                
-                if os.path.exists(dst_path):
-                    log(f"  ⚠️  目标已存在，跳过: {filename}")
-                    continue
-                
-                try:
-                    shutil.move(src_path, dst_path)
-                    stats['restored'] += 1
-                    log(f"  ✅ 恢复: {folder_name}/{filename}")
-                except Exception as e:
-                    stats['failed'] += 1
-                    log(f"  ❌ 恢复失败: {filename} - {e}")
+            restore_from_folder(folder_path, folder_name)
         
-        # 第三步：删除空的分类文件夹
-        for folder_path in folders_to_check:
+        # 第三步：删除空的分类文件夹（从最深层开始删除）
+        # V4.0: 按路径深度排序，确保子目录先于父目录删除
+        sorted_folders = sorted(folders_to_check, key=lambda x: x.count(os.sep), reverse=True)
+        for folder_path in sorted_folders:
             if os.path.exists(folder_path):
                 try:
                     if not os.listdir(folder_path):
                         os.rmdir(folder_path)
-                        folder_name = os.path.basename(folder_path)
+                        folder_name = os.path.relpath(folder_path, dir_path)
                         log(f"  🗑️  删除空文件夹: {folder_name}/")
                 except Exception as e:
                     log(f"  ⚠️  删除文件夹失败: {e}")
