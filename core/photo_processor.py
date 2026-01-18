@@ -49,6 +49,12 @@ class ProcessingSettings:
     detect_exposure: bool = True     # V3.9.4: 曝光检测开关（默认开启，与 GUI 一致）
     exposure_threshold: float = 0.10 # V3.8: 曝光阈值 (0.05-0.20)
     detect_burst: bool = True        # V4.0: 连拍检测开关（默认开启）
+    # BirdID 自动识别设置
+    auto_identify: bool = False       # 选片时自动识别鸟种（默认关闭）
+    birdid_use_ebird: bool = True     # 使用 eBird 过滤
+    birdid_country_code: str = None   # eBird 国家代码
+    birdid_region_code: str = None    # eBird 区域代码
+    birdid_confidence_threshold: float = 80.0  # 置信度阈值（80%+才写入）
 
 
 @dataclass
@@ -110,6 +116,9 @@ class PhotoProcessor:
         self._log(f"  🔧 归一化模式: {settings.normalization_mode}")
         self._log(f"  🦅 飞鸟检测: {'开启' if settings.detect_flight else '关闭'}")
         self._log(f"  📸 曝光检测: {'开启' if settings.detect_exposure else '关闭'}")
+        self._log(f"  🐦 自动识鸟: {'开启' if settings.auto_identify else '关闭'}")
+        if settings.auto_identify:
+            self._log(f"     └─ 国家: {settings.birdid_country_code or '自动(GPS)'}, 区域: {settings.birdid_region_code or '整个国家'}")
         self._log(f"  ⚙️  高级配置 - 最低锐度: {self.config.min_sharpness}")
         self._log(f"  ⚙️  高级配置 - 最低美学: {self.config.min_nima}\n")
         
@@ -284,33 +293,25 @@ class PhotoProcessor:
     
     def _process_images(self, files_tbr, raw_dict):
         """处理所有图片 - AI检测、关键点检测与评分"""
-        # 加载模型
-        model_start = time.time()
-        self._log("🤖 加载AI模型...")
+        # 获取模型（已在启动时预加载，此处仅获取引用）
         model = load_yolo_model()
-        model_time = (time.time() - model_start) * 1000
-        self._log(f"⏱️  模型加载耗时: {model_time:.0f}ms")
         
-        # 加载关键点检测模型
-        self._log("👁️  加载关键点模型...")
+        # 获取关键点检测模型
         keypoint_detector = get_keypoint_detector()
         try:
             keypoint_detector.load_model()
-            self._log("✅ 关键点模型加载成功")
             use_keypoints = True
         except FileNotFoundError:
             self._log("⚠️  关键点模型未找到，使用传统锐度计算", "warning")
             use_keypoints = False
         
-        # V3.4: 加载飞版检测模型
+        # V3.4: 飞版检测模型
         use_flight = False
         flight_detector = None
         if self.settings.detect_flight:
-            self._log("🦅 加载飞版检测模型...")
             flight_detector = get_flight_detector()
             try:
                 flight_detector.load_model()
-                self._log("✅ 飞版检测模型加载成功")
                 use_flight = True
             except FileNotFoundError:
                 self._log("⚠️  飞版检测模型未找到，跳过飞版检测", "warning")
@@ -826,6 +827,46 @@ class PhotoProcessor:
                     
                     caption = "\n".join(caption_lines)
                     
+                    # V4.2: 自动鸟种识别（仅在启用且锐度+美学双达标时执行）
+                    bird_title = None
+                    if self.settings.auto_identify:
+                        # 检查是否达到3星标准（锐度+美学双达标）
+                        adj_sharpness_val = adj_sharpness if 'adj_sharpness' in dir() else head_sharpness
+                        adj_topiq_val = adj_topiq if 'adj_topiq' in dir() else topiq
+                        
+                        sharpness_ok = adj_sharpness_val >= self.settings.sharpness_threshold
+                        topiq_ok = adj_topiq_val is not None and adj_topiq_val >= self.settings.nima_threshold
+                        
+                        if sharpness_ok and topiq_ok:
+                            try:
+                                from birdid.bird_identifier import identify_bird
+                                
+                                # 使用裁剪图片进行识别（如果可用）
+                                birdid_result = identify_bird(
+                                    filepath,  # 原始文件路径
+                                    use_yolo=True,
+                                    use_gps=True,
+                                    use_ebird=self.settings.birdid_use_ebird,
+                                    country_code=self.settings.birdid_country_code,
+                                    region_code=self.settings.birdid_region_code,
+                                    top_k=1
+                                )
+                                
+                                if birdid_result.get('success') and birdid_result.get('results'):
+                                    top_result = birdid_result['results'][0]
+                                    confidence = top_result.get('confidence', 0)
+                                    
+                                    # 置信度阈值检查（80%+）
+                                    if confidence >= self.settings.birdid_confidence_threshold:
+                                        cn_name = top_result.get('cn_name', '')
+                                        en_name = top_result.get('en_name', '')
+                                        bird_title = f"{cn_name} ({en_name})"
+                                        self._log(f"  🐦 识别: {cn_name} ({confidence:.0f}%)")
+                                    else:
+                                        self._log(f"  🐦 识别置信度不足: {top_result.get('cn_name', '?')} ({confidence:.0f}% < {self.settings.birdid_confidence_threshold}%)")
+                            except Exception as e:
+                                self._log(f"  ⚠️ 鸟种识别失败: {e}", "warning")
+                    
                     single_batch = [{
                         'file': target_file_path,
                         'rating': rating_value if rating_value >= 0 else 0,
@@ -835,6 +876,7 @@ class PhotoProcessor:
                         'label': label,
                         'focus_status': focus_status,  # V3.9: 对焦状态写入 Country 字段
                         'caption': caption,  # V4.0: 详细评分说明
+                        'title': bird_title,  # V4.2: 鸟种名称写入 Title
                     }]
                     exiftool_mgr.batch_set_metadata(single_batch)
             else:

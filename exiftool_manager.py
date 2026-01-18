@@ -271,6 +271,11 @@ class ExifToolManager:
                 # V4.1: 将换行符替换为点号，避免 subprocess 命令解析问题
                 caption_safe = caption.replace('\n', '.')
                 cmd.append(f'-XMP:Description={caption_safe}')
+            
+            # V4.2: 鸟种名称 → XMP:Title（标题）
+            title = item.get('title', None)
+            if title is not None:
+                cmd.append(f'-XMP:Title={title}')
 
             cmd.append(file_path)
             cmd.append('-overwrite_original')  # 放在每个文件之后
@@ -496,6 +501,7 @@ class ExifToolManager:
 
             # 构建ExifTool命令（移除-if条件，强制重置）
             # V4.0: 添加 XMP 字段清除（City/State/Country/Description）
+            # V4.2: 添加 XMP:Title 清除（鸟种名称）
             cmd = [
                 self.exiftool_path,
                 '-Rating=',
@@ -505,6 +511,7 @@ class ExifToolManager:
                 '-XMP:State=',          # V4.0: TOPIQ美学
                 '-XMP:Country=',        # V4.0: 对焦状态
                 '-XMP:Description=',    # V4.0: 详细评分说明
+                '-XMP:Title=',          # V4.2: 鸟种名称
                 '-IPTC:City=',          # 旧版兼容
                 '-IPTC:Country-PrimaryLocationName=',
                 '-IPTC:Province-State=',

@@ -162,6 +162,60 @@ class WorkerThread(threading.Thread):
             ProcessingSettings,
             ProcessingCallbacks
         )
+        
+        # 读取 BirdID 设置
+        # V4.2: 从 ui_settings 读取识鸟开关状态（索引 8），而不是从文件
+        birdid_auto_identify = self.ui_settings[8] if len(self.ui_settings) > 8 else False
+        birdid_use_ebird = True
+        birdid_country_code = None
+        birdid_region_code = None
+        
+        # 从设置文件读取国家/区域配置
+        try:
+            import json
+            import sys as sys_module
+            if sys_module.platform == 'darwin':
+                birdid_settings_dir = os.path.expanduser('~/Documents/SuperPicky_Data')
+            else:
+                birdid_settings_dir = os.path.join(os.path.expanduser('~'), 'Documents', 'SuperPicky_Data')
+            birdid_settings_path = os.path.join(birdid_settings_dir, 'birdid_dock_settings.json')
+            
+            print(f"[DEBUG] 检查设置文件: {birdid_settings_path}, 存在: {os.path.exists(birdid_settings_path)}")
+            
+            if os.path.exists(birdid_settings_path):
+                with open(birdid_settings_path, 'r', encoding='utf-8') as f:
+                    birdid_settings = json.load(f)
+                    # 只从文件读取国家/区域配置，auto_identify 从 ui_settings 读取
+                    birdid_use_ebird = birdid_settings.get('use_ebird', True)
+                    
+                    # 解析国家代码
+                    selected_country = birdid_settings.get('selected_country', '自动检测 (GPS)')
+                    if selected_country and selected_country != '自动检测 (GPS)':
+                        # 从 "澳大利亚 (AU)" 格式中提取代码
+                        import re
+                        match = re.search(r'\(([A-Z]{2,3})\)', selected_country)
+                        if match:
+                            birdid_country_code = match.group(1)
+                        else:
+                            # 没有括号，尝试从名称映射
+                            country_map = {
+                                '澳大利亚': 'AU', '中国': 'CN', '美国': 'US',
+                                '日本': 'JP', '英国': 'GB', '新西兰': 'NZ',
+                                '加拿大': 'CA', '印度': 'IN', '德国': 'DE',
+                            }
+                            birdid_country_code = country_map.get(selected_country.strip())
+                    
+                    # 解析区域代码
+                    selected_region = birdid_settings.get('selected_region', '整个国家')
+                    if selected_region and selected_region != '整个国家':
+                        # 从 "Queensland (AU-QLD)" 格式中提取代码
+                        match = re.search(r'\(([A-Z]{2}-[A-Z0-9]+)\)', selected_region)
+                        if match:
+                            birdid_region_code = match.group(1)
+            print(f"[DEBUG] BirdID 设置读取: auto_identify={birdid_auto_identify}, country={birdid_country_code}, region={birdid_region_code}")
+        except Exception as e:
+            print(f"[DEBUG] BirdID 设置读取失败: {e}")
+            pass  # BirdID 设置读取失败不影响主流程
 
         settings = ProcessingSettings(
             ai_confidence=self.ui_settings[0],
@@ -171,7 +225,12 @@ class WorkerThread(threading.Thread):
             normalization_mode=self.ui_settings[4] if len(self.ui_settings) > 4 else 'log_compression',
             detect_flight=self.ui_settings[5] if len(self.ui_settings) > 5 else True,
             detect_exposure=self.ui_settings[6] if len(self.ui_settings) > 6 else False,  # V3.8: 默认关闭
-            detect_burst=self.ui_settings[7] if len(self.ui_settings) > 7 else True  # V4.0: 默认开启
+            detect_burst=self.ui_settings[7] if len(self.ui_settings) > 7 else True,  # V4.0: 默认开启
+            # BirdID 设置
+            auto_identify=birdid_auto_identify,
+            birdid_use_ebird=birdid_use_ebird,
+            birdid_country_code=birdid_country_code,
+            birdid_region_code=birdid_region_code,
         )
 
         def log_callback(msg, level="info"):
@@ -283,8 +342,11 @@ class SuperPickyMainWindow(QMainWindow):
         self._birdid_server_process = None
         QTimer.singleShot(1000, self._auto_start_birdid_server)
 
-        # V3.9.5: 启动时检查更新（延迟2秒，避免阻塞UI）
+        # V4.0.0: 启动时检查更新（延迟2秒，避免阻塞UI）
         QTimer.singleShot(2000, self._check_for_updates)
+        
+        # V4.2: 启动时预加载所有模型（延迟3秒，后台加载不阻塞UI）
+        QTimer.singleShot(3000, self._preload_all_models)
 
     def keyPressEvent(self, event):
         """全局键盘事件 - 粘贴图片自动识鸟"""
@@ -459,6 +521,36 @@ class SuperPickyMainWindow(QMainWindow):
         """识鸟面板可见性变化"""
         if hasattr(self, 'birdid_dock_action'):
             self.birdid_dock_action.setChecked(visible)
+    
+    def _on_birdid_check_changed(self, state):
+        """识鸟开关状态变化 - 同步到 BirdID Dock 设置"""
+        import json
+        try:
+            if sys.platform == 'darwin':
+                settings_dir = os.path.expanduser('~/Documents/SuperPicky_Data')
+            else:
+                settings_dir = os.path.join(os.path.expanduser('~'), 'Documents', 'SuperPicky_Data')
+            os.makedirs(settings_dir, exist_ok=True)
+            settings_path = os.path.join(settings_dir, 'birdid_dock_settings.json')
+            
+            # 读取现有设置
+            settings = {}
+            if os.path.exists(settings_path):
+                with open(settings_path, 'r', encoding='utf-8') as f:
+                    settings = json.load(f)
+            
+            # 更新 auto_identify
+            settings['auto_identify'] = (state == 2)  # Qt.Checked = 2
+            
+            # 保存设置
+            with open(settings_path, 'w', encoding='utf-8') as f:
+                json.dump(settings, f, ensure_ascii=False, indent=2)
+            
+            # 同步到 BirdID Dock（如果存在）
+            if hasattr(self, 'birdid_dock') and self.birdid_dock:
+                self.birdid_dock.auto_identify_checkbox.setChecked(state == 2)
+        except Exception as e:
+            print(f"同步识鸟设置失败: {e}")
 
     def _create_header_section(self, parent_layout):
         """创建头部区域 - 品牌展示"""
@@ -509,12 +601,12 @@ class SuperPickyMainWindow(QMainWindow):
         header_layout.addStretch()
 
         # 右侧: 版本号 + commit hash
-        version_text = "V3.9.5"
+        version_text = "V4.0.0"
         try:
             # V3.9.3: 优先从构建信息读取（发布版本）
             from core.build_info import COMMIT_HASH
             if COMMIT_HASH:
-                version_text = f"V3.9.5\n{COMMIT_HASH}"
+                version_text = f"V4.0.0\n{COMMIT_HASH}"
             else:
                 # 回退到 git 命令（开发环境）
                 import subprocess
@@ -525,7 +617,7 @@ class SuperPickyMainWindow(QMainWindow):
                 )
                 if result.returncode == 0:
                     commit_hash = result.stdout.strip()
-                    version_text = f"V3.9.5\n{commit_hash}"
+                    version_text = f"V4.0.0\n{commit_hash}"
         except:
             pass  # 使用默认版本号
         version_label = QLabel(version_text)
@@ -629,6 +721,36 @@ class SuperPickyMainWindow(QMainWindow):
         exposure_layout.addWidget(self.exposure_check)
         
         header_layout.addLayout(exposure_layout)
+        
+        # V4.2: 自动识鸟开关
+        birdid_layout = QHBoxLayout()
+        birdid_layout.setSpacing(10)
+        
+        birdid_label = QLabel("识鸟")
+        birdid_label.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 12px;")
+        birdid_layout.addWidget(birdid_label)
+        
+        self.birdid_check = QCheckBox()
+        # 从保存的设置中读取状态
+        birdid_saved_state = False
+        try:
+            import json
+            if sys.platform == 'darwin':
+                settings_dir = os.path.expanduser('~/Documents/SuperPicky_Data')
+            else:
+                settings_dir = os.path.join(os.path.expanduser('~'), 'Documents', 'SuperPicky_Data')
+            settings_path = os.path.join(settings_dir, 'birdid_dock_settings.json')
+            if os.path.exists(settings_path):
+                with open(settings_path, 'r', encoding='utf-8') as f:
+                    birdid_settings = json.load(f)
+                    birdid_saved_state = birdid_settings.get('auto_identify', False)
+        except Exception:
+            pass
+        self.birdid_check.setChecked(birdid_saved_state)
+        self.birdid_check.stateChanged.connect(self._on_birdid_check_changed)
+        birdid_layout.addWidget(self.birdid_check)
+        
+        header_layout.addLayout(birdid_layout)
         
         params_layout.addLayout(header_layout)
 
@@ -946,7 +1068,8 @@ class SuperPickyMainWindow(QMainWindow):
             self.norm_mode,
             self.flight_check.isChecked(),
             self.exposure_check.isChecked(),  # V3.8: 曝光检测开关
-            self.burst_check.isChecked()      # V4.0: 连拍检测开关
+            self.burst_check.isChecked(),     # V4.0: 连拍检测开关
+            self.birdid_check.isChecked(),    # V4.2: 识鸟开关
         ]
 
         # 创建信号
@@ -1523,7 +1646,48 @@ class SuperPickyMainWindow(QMainWindow):
             self._stop_birdid_server()  # V4.0: 停止识鸟 API 服务
             event.accept()
 
-    # ========== V3.9.5: 更新检测功能 ==========
+    # ========== V4.2: 模型预加载功能 ==========
+
+    def _preload_all_models(self):
+        """后台预加载所有AI模型（不阻塞UI）"""
+        import threading
+        
+        def preload_task():
+            try:
+                self._log("🔄 正在预加载AI模型...")
+                
+                # 1. YOLO 检测模型
+                from ai_model import load_yolo_model
+                load_yolo_model()
+                self._log("✅ YOLO检测模型已加载")
+                
+                # 2. 关键点检测模型
+                from core.keypoint_detector import get_keypoint_detector
+                kp_detector = get_keypoint_detector()
+                kp_detector.load_model()
+                self._log("✅ 关键点模型已加载")
+                
+                # 3. 飞版检测模型
+                from core.flight_detector import get_flight_detector
+                flight_detector = get_flight_detector()
+                flight_detector.load_model()
+                self._log("✅ 飞版检测模型已加载")
+                
+                # 4. 识鸟模型
+                from birdid.bird_identifier import get_bird_model
+                get_bird_model()
+                self._log("✅ 识鸟模型已加载")
+                
+                self._log("🎉 所有模型预加载完成！\n")
+                
+            except Exception as e:
+                self._log(f"⚠️ 模型预加载失败: {e}", "warning")
+        
+        # 在后台线程中执行，不阻塞UI
+        thread = threading.Thread(target=preload_task, daemon=True)
+        thread.start()
+
+    # ========== V4.0.0: 更新检测功能 ==========
 
     def _check_for_updates(self):
         """后台检查更新（不阻塞UI）"""

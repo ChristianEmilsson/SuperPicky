@@ -379,6 +379,7 @@ class BirdIDDockWidget(QDockWidget):
                 pass
         return {
             'use_ebird': True,
+            'auto_identify': False,  # 选片时自动识别，默认关闭
             'selected_country': '自动检测 (GPS)',
             'selected_region': '整个国家'
         }
@@ -387,6 +388,7 @@ class BirdIDDockWidget(QDockWidget):
         """保存设置"""
         self.settings = {
             'use_ebird': self.ebird_checkbox.isChecked(),
+            'auto_identify': self.auto_identify_checkbox.isChecked(),
             'selected_country': self.country_combo.currentText(),
             'selected_region': self.region_combo.currentText()
         }
@@ -400,6 +402,7 @@ class BirdIDDockWidget(QDockWidget):
     def _apply_settings(self):
         """应用保存的设置"""
         self.ebird_checkbox.setChecked(self.settings.get('use_ebird', True))
+        self.auto_identify_checkbox.setChecked(self.settings.get('auto_identify', False))
         
         saved_country = self.settings.get('selected_country', '自动检测 (GPS)')
         idx = self.country_combo.findText(saved_country)
@@ -618,24 +621,16 @@ class BirdIDDockWidget(QDockWidget):
         region_row.addWidget(self.region_combo, 1)
         filter_layout.addLayout(region_row)
         
-        # eBird 过滤开关
-        self.ebird_checkbox = QCheckBox("启用 eBird 过滤")
-        self.ebird_checkbox.setStyleSheet(f"""
-            QCheckBox {{
-                color: {COLORS['text_tertiary']};
-                font-size: 11px;
-            }}
-            QCheckBox::indicator {{
-                width: 14px;
-                height: 14px;
-            }}
-            QCheckBox::indicator:checked {{
-                background-color: {COLORS['accent']};
-                border-radius: 3px;
-            }}
-        """)
-        self.ebird_checkbox.stateChanged.connect(self._save_settings)
-        filter_layout.addWidget(self.ebird_checkbox)
+        # V4.2: 移除 eBird 过滤开关（默认启用，选择"全球"可禁用）
+        # V4.2: 移除自动识别开关（已移到主界面的"识鸟"按钮）
+        # 保留隐藏的 checkbox 以兼容设置保存/加载
+        self.ebird_checkbox = QCheckBox()
+        self.ebird_checkbox.setChecked(True)  # 默认启用
+        self.ebird_checkbox.hide()
+        
+        self.auto_identify_checkbox = QCheckBox()
+        self.auto_identify_checkbox.setChecked(False)
+        self.auto_identify_checkbox.hide()
         
         layout.addWidget(filter_frame)
 

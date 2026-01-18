@@ -155,6 +155,11 @@ def get_classifier():
     return _classifier
 
 
+def get_bird_model():
+    """获取识鸟模型（get_classifier 的别名，用于模型预加载）"""
+    return get_classifier()
+
+
 def get_bird_info() -> List:
     """懒加载鸟类信息"""
     global _bird_info
