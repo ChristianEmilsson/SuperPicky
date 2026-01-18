@@ -1247,24 +1247,34 @@ class PhotoProcessor:
         files_to_move = []
         for prefix, rating in self.file_ratings.items():
             if rating in [-1, 0, 1, 2, 3]:
-                # V3.4: 优先使用 RAW，没有则使用 JPEG
+                folder = RATING_FOLDER_NAMES.get(rating, "0星_放弃")
+                
                 if prefix in raw_dict:
                     # 有对应的 RAW 文件
                     raw_ext = raw_dict[prefix]
-                    file_path = os.path.join(self.dir_path, prefix + raw_ext)
-                    if os.path.exists(file_path):
-                        folder = RATING_FOLDER_NAMES.get(rating, "0星_放弃")
+                    raw_path = os.path.join(self.dir_path, prefix + raw_ext)
+                    if os.path.exists(raw_path):
                         files_to_move.append({
                             'filename': prefix + raw_ext,
                             'rating': rating,
                             'folder': folder
                         })
+                    
+                    # V4.0: 同时移动同名 JPEG（如果存在）
+                    for jpg_ext in ['.jpg', '.jpeg', '.JPG', '.JPEG']:
+                        jpg_path = os.path.join(self.dir_path, prefix + jpg_ext)
+                        if os.path.exists(jpg_path):
+                            files_to_move.append({
+                                'filename': prefix + jpg_ext,
+                                'rating': rating,
+                                'folder': folder
+                            })
+                            break  # 只找一个 JPEG
                 else:
                     # V3.4: 纯 JPEG 文件
                     for jpg_ext in ['.jpg', '.jpeg', '.JPG', '.JPEG']:
                         jpg_path = os.path.join(self.dir_path, prefix + jpg_ext)
                         if os.path.exists(jpg_path):
-                            folder = RATING_FOLDER_NAMES.get(rating, "0星_放弃")
                             files_to_move.append({
                                 'filename': prefix + jpg_ext,
                                 'rating': rating,
