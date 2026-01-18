@@ -669,6 +669,17 @@ class SuperPickyMainWindow(QMainWindow):
     
     def _show_main_window(self):
         """显示主窗口"""
+        # macOS: 恢复 Dock 图标
+        if sys.platform == 'darwin':
+            try:
+                from AppKit import NSApp, NSApplicationActivationPolicyRegular
+                NSApp.setActivationPolicy_(NSApplicationActivationPolicyRegular)
+                print("✅ 已恢复 Dock 图标")
+            except ImportError:
+                pass
+            except Exception as e:
+                print(f"⚠️ 恢复 Dock 图标失败: {e}")
+        
         self.show()
         self.raise_()
         self.activateWindow()
@@ -707,22 +718,36 @@ class SuperPickyMainWindow(QMainWindow):
         # 隐藏托盘图标
         if hasattr(self, 'tray_icon') and self.tray_icon:
             self.tray_icon.hide()
-        
         event.accept()
     
     def _minimize_to_tray(self):
         """V4.0: 最小化到系统托盘（后台运行）"""
-        if hasattr(self, 'tray_icon') and self.tray_icon:
-            self.hide()
-            self.tray_icon.showMessage(
-                "慧眼选鸟",
-                "应用已最小化到菜单栏，识鸟服务继续运行\n点击托盘图标可恢复窗口",
-                QSystemTrayIcon.MessageIcon.Information,
-                3000
-            )
-            print("✅ 已最小化到系统托盘")
-        else:
+        if not (hasattr(self, 'tray_icon') and self.tray_icon):
             print("⚠️ 系统托盘不可用")
+            return
+        
+        # 隐藏主窗口
+        self.hide()
+        
+        # macOS: 隐藏 Dock 图标（变成纯后台应用）
+        if sys.platform == 'darwin':
+            try:
+                from AppKit import NSApp, NSApplicationActivationPolicyAccessory
+                NSApp.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
+                print("✅ 已隐藏 Dock 图标")
+            except ImportError:
+                print("⚠️ PyObjC 未安装，无法隐藏 Dock 图标")
+            except Exception as e:
+                print(f"⚠️ 隐藏 Dock 图标失败: {e}")
+        
+        # 显示通知
+        self.tray_icon.showMessage(
+            "慧眼选鸟",
+            "应用已进入后台模式\n识鸟服务继续运行\n点击菜单栏图标可恢复",
+            QSystemTrayIcon.MessageIcon.Information,
+            3000
+        )
+        print("✅ 已进入后台模式")
     
     def _on_birdid_check_changed(self, state):
         """识鸟开关状态变化 - 同步到 BirdID Dock 设置"""
