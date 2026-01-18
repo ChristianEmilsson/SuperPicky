@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>慧眼选鸟 SuperPicky V4.0.0 安装与使用指南</title>
+    <style>
+        @media print { body { -webkit-print-color-adjust: exact; } }
+        body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.8; color: #333; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; border-left: 4px solid #3498db; padding-left: 10px; }
+        h3 { color: #7f8c8d; }
+        .version { color: #7f8c8d; font-size: 0.9em; }
+        .highlight { background: #e8f4f8; padding: 2px 6px; border-radius: 4px; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; }
+        .info { background: #e8f4f8; border-left: 4px solid #3498db; padding: 15px; margin: 15px 0; }
+        .success { background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 15px 0; }
+        code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; font-family: Monaco, Consolas, monospace; }
+        ul, ol { padding-left: 25px; }
+        li { margin: 8px 0; }
+        .step { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 15px 0; }
+        .step-num { display: inline-block; width: 30px; height: 30px; background: #3498db; color: white; text-align: center; line-height: 30px; border-radius: 50%; margin-right: 10px; }
+        footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; color: #7f8c8d; font-size: 0.9em; text-align: center; }
+        .new-badge { background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <h1>🦅 慧眼选鸟 SuperPicky</h1>
+    <p class="version">版本 4.0.0 · 安装与使用指南</p>
+
+    <h2>📦 安装步骤</h2>
+    
+    <div class="step">
+        <p><span class="step-num">1</span><strong>双击安装包</strong></p>
+        <p>双击 <code>SuperPicky_v4.0.0_Installer.pkg</code> 开始安装</p>
+    </div>
+    
+    <div class="step">
+        <p><span class="step-num">2</span><strong>按向导完成安装</strong></p>
+        <p>点击「继续」→「同意」→「安装」</p>
+    </div>
+    
+    <div class="step">
+        <p><span class="step-num">3</span><strong>安装完成</strong></p>
+        <p>安装器会自动完成以下操作：</p>
+        <ul>
+            <li>安装主程序到 <code>/Applications/慧眼选鸟.app</code></li>
+            <li>安装 Lightroom 插件到 <code>~/Library/Application Support/Adobe/Lightroom/Modules/</code></li>
+        </ul>
+    </div>
+
+    <h2>🚀 快速开始</h2>
+    
+    <h3>主程序使用</h3>
+    <ol>
+        <li>从「启动台」或「应用程序」文件夹打开<span class="highlight">慧眼选鸟</span></li>
+        <li>拖入包含鸟类照片的文件夹</li>
+        <li>点击「开始处理」</li>
+        <li>等待 AI 评分完成，照片会自动按星级分类</li>
+    </ol>
+
+    <h3>Lightroom 插件使用 <span class="new-badge">NEW</span></h3>
+    <ol>
+        <li>先启动「慧眼选鸟」主程序，确保<span class="highlight">识鸟 API</span>开关已开启</li>
+        <li>打开 Lightroom，选中一张鸟类照片</li>
+        <li>菜单：<code>图库 → 增效工具 → 慧眼选鸟 - 识别当前照片</code></li>
+        <li>选择识别结果，点击「写入 EXIF」</li>
+    </ol>
+
+    <div class="info">
+        <strong>💡 提示：</strong>使用 Lightroom 插件前，必须先启动「慧眼选鸟」主程序！
+    </div>
+
+    <h2>🔧 手动安装 Lightroom 插件</h2>
+    <p>如果自动安装失败，可以手动安装：</p>
+    <ol>
+        <li>将 DMG 中的 <code>SuperBirdIDPlugin.lrplugin</code> 文件夹复制到：
+            <br><code>~/Library/Application Support/Adobe/Lightroom/Modules/</code></li>
+        <li>重新打开 Lightroom</li>
+    </ol>
+    
+    <div class="warning">
+        <strong>⚠️ 找不到 Modules 文件夹？</strong><br>
+        打开 Finder → 前往 → 前往文件夹 → 粘贴上述路径
+    </div>
+
+    <h2>⭐ 评分说明</h2>
+    <table style="width:100%; border-collapse: collapse; margin: 15px 0;">
+        <tr style="background: #f5f5f5;">
+            <th style="padding: 10px; border: 1px solid #ddd;">星级</th>
+            <th style="padding: 10px; border: 1px solid #ddd;">含义</th>
+        </tr>
+        <tr><td style="padding: 10px; border: 1px solid #ddd; text-align: center;">⭐⭐⭐</td><td style="padding: 10px; border: 1px solid #ddd;">优选照片，值得后期处理</td></tr>
+        <tr><td style="padding: 10px; border: 1px solid #ddd; text-align: center;">⭐⭐</td><td style="padding: 10px; border: 1px solid #ddd;">良好照片，可考虑保留</td></tr>
+        <tr><td style="padding: 10px; border: 1px solid #ddd; text-align: center;">⭐</td><td style="padding: 10px; border: 1px solid #ddd;">普通照片，通常可删除</td></tr>
+        <tr><td style="padding: 10px; border: 1px solid #ddd; text-align: center;">0</td><td style="padding: 10px; border: 1px solid #ddd;">无鸟/质量差，建议删除</td></tr>
+    </table>
+
+    <h2>❓ 常见问题</h2>
+    
+    <h3>首次打开提示"无法验证开发者"</h3>
+    <div class="info">
+        右键点击应用 → 选择「打开」→ 在弹出窗口中点击「打开」
+    </div>
+
+    <h3>Lightroom 插件无法连接</h3>
+    <div class="info">
+        确保「慧眼选鸟」主程序正在运行，且「识鸟 API」开关已开启
+    </div>
+
+    <footer>
+        <p>慧眼选鸟 SuperPicky V4.0.0</p>
+        <p>© 2026 James Zhen Yu · <a href="https://github.com/jamesphotography/SuperPicky">GitHub</a></p>
+    </footer>
+</body>
+</html>

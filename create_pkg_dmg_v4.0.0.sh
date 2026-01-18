@@ -366,6 +366,28 @@ cp "${PKG_NAME}" "${TEMP_DMG_DIR}/"
 log_info "复制 Lightroom 插件副本..."
 cp -R "SuperBirdIDPlugin.lrplugin" "${TEMP_DMG_DIR}/"
 
+# 生成 PDF 安装指南
+log_info "生成 PDF 安装指南..."
+if [ -f "docs/安装指南_v4.0.0.html" ]; then
+    # 使用 cupsfilter 或 wkhtmltopdf 生成 PDF（如果可用）
+    # 备选：直接复制 HTML，用户可用浏览器打印为 PDF
+    cp "docs/安装指南_v4.0.0.html" "${TEMP_DMG_DIR}/安装指南.html"
+    log_info "  已复制 HTML 安装指南（可在浏览器中打印为 PDF）"
+fi
+
+# 创建网站使用教程快捷方式
+log_info "创建网站快捷方式..."
+cat > "${TEMP_DMG_DIR}/在线使用教程.webloc" << 'WEBLOC_EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>URL</key>
+    <string>https://github.com/jamesphotography/SuperPicky</string>
+</dict>
+</plist>
+WEBLOC_EOF
+
 # 创建插件安装说明
 cat > "${TEMP_DMG_DIR}/Lightroom插件手动安装说明.txt" << 'PLUGIN_README_EOF'
 慧眼选鸟 Lightroom 插件 - 手动安装说明
