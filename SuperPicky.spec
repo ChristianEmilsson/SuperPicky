@@ -104,6 +104,7 @@ a = Analysis(
         'birdid.bird_identifier',
         'birdid.ebird_country_filter',
         'birdid_server',
+        'server_manager',  # V4.0.0: 服务器管理模块
         'flask',
         'flask.json',
         'cryptography',
