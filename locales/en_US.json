@@ -428,8 +428,8 @@
     "release_notes": "Release Notes"
   },
   "about": {
-    "window_title": "About",
+    "window_title": "About James",
     "subtitle": "AI Photo Selector",
-    "content": "Developer\nJames Yu (詹姆斯·于震)\nAustralian-Chinese Professional Photographer\nAuthor of \"James' Landscape Photography Notes\" Trilogy\n\nContact\njames@jamesphotography.com.au\njamesphotography.com.au\nYouTube: @JamesZhenYu\n\nModel Training\nBird Eye Detection: Jordan Yu\nBird Flight Pose: Jordan Yu\n\nOpen Source Models\nYOLO11 - Bird Detection (AGPL-3.0)\nTOPIQ - Aesthetic Scoring\n  by Chaofeng Chen et al. (IEEE TIP 2024)\n  github.com/chaofengc/IQA-PyTorch\n  License: CC BY-NC-SA 4.0\n\nFree Tools by James\n• SuperPicky - AI Bird Photo Selector\n• BirdID - AI Species Recognition (Lightroom)\n• BirdFind - eBird Search (Web)\n• StarRemover - AI Milky Way Processing (Photoshop)\n• PhotoMemory - Bird Collection (iOS)\n• TravelBook - AI Travel Journal (iOS)\n\n© 2024-2025 James Yu"
+    "content": "James Yu (詹姆斯·于震)\nAustralian-Chinese Professional Photographer, Author of \"James' Landscape Photography Notes\" Trilogy\n\nContact\njames@jamesphotography.com.au\nWeChat: jamesyz001 XiaoHongShu(小红书): 4916440495\n\nBird Eye Detection Model: Jordan Yu\n\nOpen Source Models\nYOLO11 - Bird Detection (AGPL-3.0)\nTOPIQ - Aesthetic Scoring by Chaofeng Chen et al. (IEEE TIP 2024)\n  github.com/chaofengc/IQA-PyTorch\n  License: CC BY-NC-SA 4.0\n\nFree Tools by James\n• SuperPicky - AI Bird Photo Selector\n• BirdID - AI Species Recognition (Lightroom)\n• BirdFind - eBird Search (Web)\n• StarRemover - AI Milky Way Processing (Photoshop)\n• PhotoMemory - Bird Collection (iOS)\n• TravelBook - AI Travel Journal (iOS)\n\n© 2024-2025 James Yu"
   }
 }

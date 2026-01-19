@@ -151,24 +151,18 @@ class AboutDialog(QDialog):
         """获取关于内容"""
         if self.i18n:
             return self.i18n.t("about.content")
-        return """Developer
-James Yu (詹姆斯·于震)
-Australian-Chinese Professional Photographer
-Author of "James' Landscape Photography Notes" Trilogy
+        return """James Yu (詹姆斯·于震)
+Australian-Chinese Professional Photographer, Author of "James' Landscape Photography Notes" Trilogy
 
 Contact
 james@jamesphotography.com.au
-jamesphotography.com.au
-YouTube: @JamesZhenYu
+WeChat: jamesyz001 XiaoHongShu(小红书): 4916440495
 
-Model Training
-Bird Eye Detection: Jordan Yu
-Bird Flight Pose: Jordan Yu
+Bird Eye Detection Model: Jordan Yu
 
 Open Source Models
 YOLO11 - Bird Detection (AGPL-3.0)
-TOPIQ - Aesthetic Scoring
-  by Chaofeng Chen et al. (IEEE TIP 2024)
+TOPIQ - Aesthetic Scoring by Chaofeng Chen et al. (IEEE TIP 2024)
   github.com/chaofengc/IQA-PyTorch
   License: CC BY-NC-SA 4.0
 
