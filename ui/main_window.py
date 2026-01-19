@@ -393,6 +393,7 @@ class SuperPickyMainWindow(QMainWindow):
         # V4.0: 设置系统托盘图标（关闭窗口时最小化到托盘）
         self._setup_system_tray()
         self._really_quit = False  # 标记是否真正退出
+        self._background_mode = False  # V4.0: 标记是否进入后台模式（不停止服务器）
         
         # V4.2: 默认最大化窗口
         self.showMaximized()
@@ -706,13 +707,18 @@ class SuperPickyMainWindow(QMainWindow):
         QApplication.quit()
     
     def closeEvent(self, event):
-        """V4.0: 正常关闭窗口时退出应用并停止服务器"""
-        # 使用服务器管理器停止服务器
-        try:
-            from server_manager import stop_server
-            stop_server()
-        except Exception as e:
-            print(f"⚠️ 停止服务器失败: {e}")
+        """V4.0: 正常关闭窗口时退出应用"""
+        # 后台模式：不停止服务器
+        if not getattr(self, '_background_mode', False):
+            # 正常退出时停止服务器
+            try:
+                from server_manager import stop_server
+                stop_server()
+                print("✅ 服务器已停止")
+            except Exception as e:
+                print(f"⚠️ 停止服务器失败: {e}")
+        else:
+            print("✅ 后台模式：服务器继续运行")
         
         # 隐藏托盘图标
         if hasattr(self, 'tray_icon') and self.tray_icon:
@@ -747,14 +753,15 @@ class SuperPickyMainWindow(QMainWindow):
             QMessageBox.Ok
         )
         
-        # 3. 完全退出 GUI（不停止服务器）
+        # 3. 设置后台模式标志，然后退出 GUI
+        self._background_mode = True  # 告诉 closeEvent 不要停止服务器
         print("✅ GUI 即将退出，服务器继续运行")
         
         # 隐藏托盘图标
         if hasattr(self, 'tray_icon') and self.tray_icon:
             self.tray_icon.hide()
         
-        # 退出应用（不调用 _quit_app，避免停止服务器）
+        # 退出应用
         QApplication.quit()
     
     def _on_birdid_check_changed(self, state):
