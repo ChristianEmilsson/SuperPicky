@@ -118,6 +118,7 @@ class FocusPointDetector:
         'AFImageHeight',
         'FocusResult',
         'CropArea',
+        'CropHiSpeed',  # V4.2: DX Crop 模式的正确偏移信息
     ]
     
     SONY_TAGS = [
@@ -803,8 +804,47 @@ class FocusPointDetector:
         """
         处理 DX 裁切修正
         
-        CropArea 格式: "left top width height"
+        V4.2: 优先使用 CropHiSpeed（包含正确的 DX 偏移）
+        CropHiSpeed 格式 (Nikon -n): "mode full_w full_h crop_w crop_h crop_left crop_top"
+        例如: "2 8280 5520 5408 3608 1436 956" 表示 DX 裁切
+        
+        CropArea 格式: "left top width height" (通常不准确，作为后备)
         """
+        # V4.2: 优先使用 CropHiSpeed（Nikon DX 裁切的正确偏移）
+        crop_hi_speed = exif_data.get('CropHiSpeed', '')
+        if crop_hi_speed:
+            try:
+                parts = str(crop_hi_speed).split()
+                # 格式: mode full_w full_h crop_w crop_h crop_left crop_top
+                if len(parts) >= 7:
+                    crop_mode = int(parts[0])
+                    full_w = int(parts[1])
+                    full_h = int(parts[2])
+                    crop_w = int(parts[3])
+                    crop_h = int(parts[4])
+                    crop_left = int(parts[5])
+                    crop_top = int(parts[6])
+                    
+                    # mode: 0=Off, 1=高速, 2=DX 1.3x, 3=DX 1.5x 等
+                    if crop_mode > 0 and crop_left > 0 and crop_top > 0:
+                        # 计算对焦点在裁切区域内的相对坐标
+                        # AF 坐标是基于 AFImageWidth/Height 的，需要缩放到 full_w/full_h
+                        scale_x = full_w / img_w if img_w > 0 else 1.0
+                        scale_y = full_h / img_h if img_h > 0 else 1.0
+                        
+                        # 将 AF 坐标转换到全尺寸图片坐标
+                        x_full = int(x * scale_x)
+                        y_full = int(y * scale_y)
+                        
+                        # 减去裁切偏移
+                        x_crop = x_full - crop_left
+                        y_crop = y_full - crop_top
+                        
+                        return x_crop, y_crop, crop_w, crop_h
+            except (ValueError, IndexError):
+                pass
+        
+        # 后备: 使用 CropArea
         crop_area = exif_data.get('CropArea', '')
         if not crop_area:
             return x, y, img_w, img_h
