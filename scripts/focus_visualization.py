@@ -68,7 +68,7 @@ def visualize_focus_test(nef_path: str, output_path: str = None):
         os.remove(temp_jpg)
         return
     
-    detected, _, confidence, sharpness, _, bird_bbox, img_dims, bird_mask = result
+    detected, _, confidence, sharpness, _, bird_bbox, img_dims, bird_mask, bird_count = result
     print(f"✅ 检测到鸟: confidence={confidence:.2f}, bbox={bird_bbox}")
     
     # ============================================

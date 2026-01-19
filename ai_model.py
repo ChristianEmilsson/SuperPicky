@@ -59,9 +59,9 @@ def _get_iqa_scorer():
     return _iqa_scorer
 
 
-def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n=None, skip_nima=False):
+def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n=None, skip_nima=False, focus_point=None):
     """
-    检测并标记鸟类（V3.1 - 简化版，移除预览功能）
+    检测并标记鸟类（V4.2 - 支持多鸟对焦点选择）
 
     Args:
         image_path: 图片路径
@@ -71,6 +71,11 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
         ui_settings: [ai_confidence, sharpness_threshold, nima_threshold, save_crop, normalization_mode]
         i18n: I18n instance for internationalization (optional)
         skip_nima: 如果为True，跳过NIMA计算（用于双眼不可见的情况）
+        focus_point: 对焦点坐标 (x, y)，归一化 0-1，用于多鸟时选择对焦的鸟
+    
+    Returns:
+        元组 (found_bird, bird_result, confidence, sharpness, nima_score, bird_bbox, img_dims, bird_mask, bird_count)
+        bird_count: 检测到的鸟的数量（V4.2 新增）
     """
     # V3.1: 从 ui_settings 获取参数
     ai_confidence = ui_settings[0] / 100  # AI置信度：50-100 -> 0.5-1.0（仅用于过滤）
@@ -136,7 +141,7 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
                 "rating": -1
             }
             write_to_csv(data, dir, False)
-            return found_bird, bird_result, 0.0, 0.0, None, None, None, None  # V3.7: 8 values including mask
+            return found_bird, bird_result, 0.0, 0.0, None, None, None, None, 0  # V4.2: 9 values including bird_count
 
     yolo_time = (time.time() - step_start) * 1000
     # V3.3: 简化日志，移除步骤详情
@@ -156,15 +161,43 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
     if hasattr(results[0], 'masks') and results[0].masks is not None:
         masks = results[0].masks.data.cpu().numpy()
 
-    # 只处理置信度最高的鸟
-    bird_idx = -1
-    max_conf = 0
-
+    # V4.2: 收集所有检测到的鸟
+    all_birds = []
     for idx, (detection, conf, class_id) in enumerate(zip(detections, confidences, class_ids)):
         if int(class_id) == config.ai.BIRD_CLASS_ID:
-            if conf > max_conf:
-                max_conf = conf
-                bird_idx = idx
+            x1, y1, x2, y2 = detection
+            all_birds.append({
+                'idx': idx,
+                'conf': float(conf),
+                'bbox': (int(x1), int(y1), int(x2), int(y2))
+            })
+    
+    bird_count = len(all_birds)
+    
+    # V4.2: 鸟选择策略
+    bird_idx = -1
+    if bird_count == 1:
+        # 只有一只鸟，直接选择
+        bird_idx = all_birds[0]['idx']
+    elif bird_count > 1 and focus_point is not None:
+        # 多只鸟，用对焦点选择
+        fx, fy = focus_point  # 归一化坐标 0-1
+        fx_px, fy_px = int(fx * width), int(fy * height)  # 转换为像素坐标
+        
+        found_by_focus = False
+        for bird in all_birds:
+            x1, y1, x2, y2 = bird['bbox']
+            if x1 <= fx_px <= x2 and y1 <= fy_px <= y2:
+                bird_idx = bird['idx']
+                found_by_focus = True
+                break
+        
+        if not found_by_focus:
+            # 对焦点不在任何鸟身上，回退到置信度最高
+            bird_idx = max(all_birds, key=lambda b: b['conf'])['idx']
+    elif bird_count > 1:
+        # 多只鸟但没有对焦点，选择置信度最高
+        bird_idx = max(all_birds, key=lambda b: b['conf'])['idx']
 
     parse_time = (time.time() - step_start) * 1000
     # V3.3: 简化日志，移除步骤详情
@@ -188,7 +221,7 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
             "rating": -1
         }
         write_to_csv(data, dir, False)
-        return found_bird, bird_result, 0.0, 0.0, None, None, None, None  # V3.7: 8 values including mask
+        return found_bird, bird_result, 0.0, 0.0, None, None, None, None, 0  # V4.2: 9 values including bird_count
     # V3.2: 移除 NIMA 计算（现在由 photo_processor 在裁剪区域上计算）
     # nima_score 设为 None，photo_processor 会重新计算
     nima_score = None
@@ -322,4 +355,4 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
             # Mask processing failed, ignore
             pass
 
-    return found_bird, bird_result, bird_confidence, bird_sharpness, nima_score, bird_bbox, img_dims, bird_mask
+    return found_bird, bird_result, bird_confidence, bird_sharpness, nima_score, bird_bbox, img_dims, bird_mask, bird_count

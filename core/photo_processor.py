@@ -366,8 +366,28 @@ class PhotoProcessor:
                 self._log(f"  ❌ 处理异常: {e}", "error")
                 continue
             
-            # 解构 AI 结果 (包含bbox, 图像尺寸, 分割掩码) - V3.2移除BRISQUE
-            detected, _, confidence, sharpness, _, bird_bbox, img_dims, bird_mask = result
+            # V4.2: 解构 AI 结果（现在有 9 个返回值，包含 bird_count）
+            detected, _, confidence, sharpness, _, bird_bbox, img_dims, bird_mask, bird_count = result
+            
+            # V4.2: 多鸟对焦点选择 - 如果检测到多只鸟，读取对焦点重新选择
+            if bird_count > 1 and file_prefix in raw_dict:
+                raw_ext = raw_dict[file_prefix]
+                raw_path = os.path.join(self.dir_path, file_prefix + raw_ext)
+                if raw_ext.lower() in ['.nef', '.nrw', '.arw', '.cr3', '.cr2', '.orf', '.raf', '.rw2']:
+                    try:
+                        focus_detector = get_focus_detector()
+                        focus_result = focus_detector.detect(raw_path)
+                        if focus_result is not None:
+                            focus_point_for_selection = (focus_result.x, focus_result.y)
+                            # 重新调用 YOLO，传入对焦点进行鸟选择
+                            result = detect_and_draw_birds(
+                                filepath, model, None, self.dir_path, ui_settings, None, 
+                                skip_nima=True, focus_point=focus_point_for_selection
+                            )
+                            if result is not None:
+                                detected, _, confidence, sharpness, _, bird_bbox, img_dims, bird_mask, bird_count = result
+                    except Exception as e:
+                        pass  # 对焦检测失败，使用原来的选择
             
             # V4.1: 早期退出 - 无鸟或置信度低，跳过所有后续检测
             # V4.2: 使用用户设置的 ai_confidence 阈值（百分比转小数）
