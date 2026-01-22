@@ -48,6 +48,12 @@
                 <span
                     style="padding: 6px 14px; background: #1a1a1a; border: 1px solid #1e1e1e; border-radius: 20px; font-size: 12px; color: #a1a1a1;">06
                     高级设置</span>
+                <span
+                    style="padding: 6px 14px; background: rgba(0, 212, 170, 0.2); border: 1px solid rgba(0, 212, 170, 0.3); border-radius: 20px; font-size: 12px; color: #00d4aa;">🆕 07
+                    鸟种识别</span>
+                <span
+                    style="padding: 6px 14px; background: rgba(0, 212, 170, 0.2); border: 1px solid rgba(0, 212, 170, 0.3); border-radius: 20px; font-size: 12px; color: #00d4aa;">🆕 08
+                    CLI工具</span>
             </div>
         </div>
 
@@ -439,6 +445,154 @@
             </div>
         </div>
 
+        <!-- ============ Part 7: AI Bird ID (V4.0.0 NEW) ============ -->
+        <div style="padding: 40px 24px; border-bottom: 1px solid #1e1e1e;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+                <span style="font-size: 28px; font-weight: 700; color: #00d4aa; font-family: monospace;">07</span>
+                <span style="font-size: 20px; font-weight: 600; color: #fafafa;">AI 鸟种识别 <span style="font-size: 12px; background: rgba(0, 212, 170, 0.2); padding: 2px 8px; border-radius: 10px; color: #00d4aa;">V4.0.0 新功能</span></span>
+            </div>
+            <p style="font-size: 14px; color: #666666; margin: 0 0 24px 0;">V4.0.0 新增全球 11,000+ 鸟种自动识别功能</p>
+
+            <!-- Step 7.1 -->
+            <div style="margin-bottom: 28px;">
+                <div style="display: flex; gap: 14px; align-items: flex-start;">
+                    <div
+                        style="width: 32px; height: 32px; background: #00d4aa; color: #0a0a0a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0;">
+                        1</div>
+                    <div style="flex: 1;">
+                        <h4 style="font-size: 16px; font-weight: 600; color: #fafafa; margin: 0 0 8px 0;">启用鸟种识别</h4>
+                        <p style="font-size: 15px; color: #a1a1a1; margin: 0 0 12px 0;">在主界面勾选<strong
+                                style="color: #fafafa;">「鸟种」</strong>选项，启用 AI 鸟种识别功能。支持识别全球 11,000+ 鸟种，覆盖中国所有常见鸟类。</p>
+                        <div
+                            style="background: rgba(0, 212, 170, 0.1); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #00d4aa;">
+                            🐦 识别结果会自动写入 IPTC 元数据，包括中文名、英文名、学名等。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 7.2 -->
+            <div style="margin-bottom: 28px;">
+                <div style="display: flex; gap: 14px; align-items: flex-start;">
+                    <div
+                        style="width: 32px; height: 32px; background: #00d4aa; color: #0a0a0a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0;">
+                        2</div>
+                    <div style="flex: 1;">
+                        <h4 style="font-size: 16px; font-weight: 600; color: #fafafa; margin: 0 0 8px 0;">eBird 地区过滤</h4>
+                        <p style="font-size: 15px; color: #a1a1a1; margin: 0 0 12px 0;">如果照片包含 GPS 信息，AI 会自动查询 eBird 数据库，过滤掉该地区不可能出现的鸟种，大幅提高识别准确率。</p>
+                        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #a1a1a1;">
+                            <li style="margin-bottom: 6px;">🌍 自动读取照片 GPS 坐标</li>
+                            <li style="margin-bottom: 6px;">📊 查询 eBird 观鸟记录数据</li>
+                            <li>✅ 只保留该地区有记录的鸟种</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 7.3 -->
+            <div style="margin-bottom: 28px;">
+                <div style="display: flex; gap: 14px; align-items: flex-start;">
+                    <div
+                        style="width: 32px; height: 32px; background: #00d4aa; color: #0a0a0a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0;">
+                        3</div>
+                    <div style="flex: 1;">
+                        <h4 style="font-size: 16px; font-weight: 600; color: #fafafa; margin: 0 0 8px 0;">查看识别结果</h4>
+                        <p style="font-size: 15px; color: #a1a1a1; margin: 0 0 12px 0;">处理完成后，在 Lightroom 中读取元数据，可以在以下字段看到识别结果：</p>
+                        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #a1a1a1;">
+                            <li style="margin-bottom: 6px;"><strong style="color: #fafafa;">标题 (Title)</strong> = 中文名</li>
+                            <li style="margin-bottom: 6px;"><strong style="color: #fafafa;">说明 (Caption)</strong> = 中文简介</li>
+                            <li style="margin-bottom: 6px;"><strong style="color: #fafafa;">关键字 (Keywords)</strong> = 中英文名、学名、科属</li>
+                            <li><strong style="color: #fafafa;">作者 (Creator)</strong> = 学名</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 7.4 -->
+            <div style="margin-bottom: 28px;">
+                <div style="display: flex; gap: 14px; align-items: flex-start;">
+                    <div
+                        style="width: 32px; height: 32px; background: #00d4aa; color: #0a0a0a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0;">
+                        4</div>
+                    <div style="flex: 1;">
+                        <h4 style="font-size: 16px; font-weight: 600; color: #fafafa; margin: 0 0 8px 0;">鸟种分类整理</h4>
+                        <p style="font-size: 15px; color: #a1a1a1; margin: 0 0 12px 0;">启用<strong style="color: #fafafa;">「整理」</strong>选项后，照片会自动按识别的鸟种创建子目录整理：</p>
+                        <div
+                            style="background: #1a1a1a; border: 1px solid #1e1e1e; border-radius: 10px; padding: 16px; font-family: monospace; font-size: 13px; color: #a1a1a1; line-height: 1.8;">
+                            <span style="color: #00d4aa;">📁 您的照片文件夹/</span><br>
+                            &nbsp;&nbsp;├── <span style="color: #00d4aa;">3星_优选/</span><br>
+                            &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span style="color: #00d4aa;">白鹭/</span><br>
+                            &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span style="color: #00d4aa;">翠鸟/</span><br>
+                            &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <span style="color: #00d4aa;">红隼/</span><br>
+                            &nbsp;&nbsp;├── <span style="color: #00d4aa;">2星_良好/</span><br>
+                            &nbsp;&nbsp;└── ...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 7.5 Lightroom Plugin -->
+            <div>
+                <div style="display: flex; gap: 14px; align-items: flex-start;">
+                    <div
+                        style="width: 32px; height: 32px; background: #00d4aa; color: #0a0a0a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0;">
+                        5</div>
+                    <div style="flex: 1;">
+                        <h4 style="font-size: 16px; font-weight: 600; color: #fafafa; margin: 0 0 8px 0;">Lightroom 插件</h4>
+                        <p style="font-size: 15px; color: #a1a1a1; margin: 0 0 12px 0;">V4.0.0 还提供了 Lightroom Classic 插件，无需离开 Lightroom 即可识别鸟种：</p>
+                        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #a1a1a1;">
+                            <li style="margin-bottom: 6px;">1. 安装时选择「同时安装 Lightroom 插件」</li>
+                            <li style="margin-bottom: 6px;">2. 在 Lightroom 中选中照片</li>
+                            <li style="margin-bottom: 6px;">3. 文件 → 导出 → 选择「BirdID」预设</li>
+                            <li>4. 识别结果自动写入元数据</li>
+                        </ul>
+                        <div
+                            style="background: rgba(0, 212, 170, 0.1); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #00d4aa; margin-top: 12px;">
+                            💡 使用插件时，主应用需要在后台运行（可最小化到系统托盘）。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ Part 8: CLI Tool (V4.0.0 NEW) ============ -->
+        <div style="padding: 40px 24px; border-bottom: 1px solid #1e1e1e; background: #0a0a0a;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+                <span style="font-size: 28px; font-weight: 700; color: #00d4aa; font-family: monospace;">08</span>
+                <span style="font-size: 20px; font-weight: 600; color: #fafafa;">CLI 命令行工具 <span style="font-size: 12px; background: rgba(0, 212, 170, 0.2); padding: 2px 8px; border-radius: 10px; color: #00d4aa;">V4.0.0 新功能</span></span>
+            </div>
+            <p style="font-size: 14px; color: #666666; margin: 0 0 24px 0;">命令行版本，支持脚本自动化和批量处理</p>
+
+            <div style="margin-bottom: 24px;">
+                <h4 style="font-size: 15px; font-weight: 600; color: #fafafa; margin: 0 0 12px 0;">⌨️ 基本命令</h4>
+                <div
+                    style="background: #1a1a1a; border: 1px solid #1e1e1e; border-radius: 10px; padding: 16px; font-family: monospace; font-size: 13px; color: #a1a1a1; line-height: 2; overflow-x: auto;">
+                    <span style="color: #666666;"># 处理照片（带鸟种识别）</span><br>
+                    <span style="color: #00d4aa;">birdid</span> process ~/Photos/Birds --birdid<br><br>
+                    <span style="color: #666666;"># 重置已处理的目录</span><br>
+                    <span style="color: #00d4aa;">birdid</span> reset ~/Photos/Birds<br><br>
+                    <span style="color: #666666;"># 连拍分组检测</span><br>
+                    <span style="color: #00d4aa;">birdid</span> burst ~/Photos/Birds
+                </div>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <h4 style="font-size: 15px; font-weight: 600; color: #fafafa; margin: 0 0 12px 0;">🔧 常用参数</h4>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #a1a1a1;">
+                    <li style="margin-bottom: 6px;"><code style="background: #1a1a1a; padding: 2px 6px; border-radius: 4px;">--birdid</code> 启用鸟种识别</li>
+                    <li style="margin-bottom: 6px;"><code style="background: #1a1a1a; padding: 2px 6px; border-radius: 4px;">--flight</code> 启用飞鸟检测</li>
+                    <li style="margin-bottom: 6px;"><code style="background: #1a1a1a; padding: 2px 6px; border-radius: 4px;">--burst</code> 启用连拍检测</li>
+                    <li style="margin-bottom: 6px;"><code style="background: #1a1a1a; padding: 2px 6px; border-radius: 4px;">--organize</code> 启用文件整理</li>
+                    <li><code style="background: #1a1a1a; padding: 2px 6px; border-radius: 4px;">--species-folder</code> 按鸟种创建子目录</li>
+                </ul>
+            </div>
+
+            <div
+                style="background: rgba(0, 212, 170, 0.1); border-radius: 8px; padding: 14px 16px; font-size: 13px; color: #00d4aa;">
+                💡 CLI 工具需要先安装主应用。安装后在终端输入 <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">birdid --help</code> 查看完整帮助。
+            </div>
+        </div>
+
         <!-- ============ Download Section ============ -->
         <div style="padding: 40px 24px; border-bottom: 1px solid #1e1e1e;">
             <div style="text-align: center; margin-bottom: 24px;">
@@ -446,6 +600,25 @@
                 <h3 style="font-size: 20px; font-weight: 600; color: #fafafa; margin: 0 0 8px 0;">立即免费下载</h3>
                 <p style="font-size: 14px; color: #666666; margin: 0;">完全免费 · 开源软件</p>
             </div>
+
+            <!-- macOS v4.0.0 NEW -->
+            <div
+                style="background: linear-gradient(135deg, rgba(0, 212, 170, 0.15) 0%, rgba(0, 160, 130, 0.05) 100%); border: 1px solid rgba(0, 212, 170, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+                <h4 style="font-size: 14px; font-weight: 600; color: #00d4aa; margin: 0 0 4px 0;">🍎 macOS 版本 v4.0.0 <span style="font-size: 11px; background: rgba(0, 212, 170, 0.3); padding: 2px 8px; border-radius: 8px; margin-left: 8px;">🆕 推荐</span></h4>
+                <p style="font-size: 12px; color: #666666; margin: 0 0 8px 0;">macOS 10.15+ · Apple Silicon (M1/M2/M3/M4)</p>
+                <p style="font-size: 12px; color: #00d4aa; margin: 0 0 16px 0;">✨ AI鸟种识别 · Lightroom插件 · eBird集成 · CLI工具</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <a href="https://github.com/jamesphotography/SuperPicky/releases/tag/v4.0.0"
+                        style="display: inline-block; padding: 8px 16px; background: #00d4aa; color: #0a0a0a; border-radius: 6px; font-size: 12px; font-weight: 500; text-decoration: none;">GitHub</a>
+                    <a href="https://drive.google.com/file/d/1xjsEIU-BEjRiQDt9-79lFRy8gsz9GrLV/view?usp=sharing"
+                        style="display: inline-block; padding: 8px 16px; background: #262626; color: #a1a1a1; border: 1px solid #333; border-radius: 6px; font-size: 12px; font-weight: 500; text-decoration: none;">Google Drive</a>
+                    <a href="https://pan.baidu.com/s/1MQw-sxdHYasBOGc34lFWrA?pwd=q14d"
+                        style="display: inline-block; padding: 8px 16px; background: #262626; color: #a1a1a1; border: 1px solid #333; border-radius: 6px; font-size: 12px; font-weight: 500; text-decoration: none;">百度网盘 (q14d)</a>
+                </div>
+            </div>
+
+            <!-- Stable Release Divider -->
+            <div style="text-align: center; margin: 24px 0; color: #404040; font-size: 12px;">── 稳定版 v3.9.4 ──</div>
 
             <!-- macOS v3.9.4 -->
             <div
@@ -563,7 +736,7 @@
             <div style="font-size: 18px; font-weight: 700; color: #00d4aa; margin-bottom: 8px;">拍片一时爽，选片照样爽！</div>
             <p style="font-size: 14px; color: #666666; margin: 0 0 20px 0;">让慧眼选鸟成为您鸟类摄影的得力助手</p>
             <div style="font-size: 12px; color: #404040;">
-                SuperPicky v3.9.4 · © 2024-2026 James Yu<br>
+                SuperPicky v4.0.0 · © 2024-2026 James Yu<br>
                 开发者：詹姆斯·于震 (澳籍华裔职业摄影师)
             </div>
         </div>
