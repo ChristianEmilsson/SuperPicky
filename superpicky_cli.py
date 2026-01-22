@@ -139,6 +139,7 @@ def cmd_burst(args):
 def cmd_process(args):
     """处理照片目录"""
     from cli_processor import CLIProcessor
+    from core.photo_processor import ProcessingSettings
     
     print_banner()
     print(f"\n📁 目标目录: {args.directory}")
@@ -148,25 +149,44 @@ def cmd_process(args):
     print(f"⚙️  连拍检测: {'是' if args.burst else '否'}")
     print(f"⚙️  整理文件: {'是' if args.organize else '否'}")
     print(f"⚙️  清理临时: {'是' if args.cleanup else '否'}")
+    
+    # V4.0: 显示自动识鸟设置
+    auto_identify = getattr(args, 'auto_identify', False)
+    if auto_identify:
+        print(f"⚙️  自动识鸟: 是 (2★+ 照片)")
+        if getattr(args, 'birdid_country', None):
+            print(f"  └─ 国家: {args.birdid_country}")
+        if getattr(args, 'birdid_region', None):
+            print(f"  └─ 区域: {args.birdid_region}")
+        print(f"  └─ 置信度阈值: {getattr(args, 'birdid_threshold', 70.0)}%")
     print()
     
-    # 创建处理器
-    ui_settings = [
-        args.confidence,      # ai_confidence
-        args.sharpness,       # sharpness_threshold
-        args.nima_threshold,  # nima_threshold
-        False,                # save_crop
-        'log_compression'     # norm_mode
-    ]
-    
-    processor = CLIProcessor(
-        dir_path=args.directory,
-        ui_settings=ui_settings,
-        verbose=not args.quiet,
-        detect_flight=args.flight
+    # V4.0: 构建 ProcessingSettings（与 GUI 完全一致）
+    settings = ProcessingSettings(
+        ai_confidence=args.confidence,
+        sharpness_threshold=args.sharpness,
+        nima_threshold=args.nima_threshold,
+        save_crop=False,
+        normalization_mode='log_compression',
+        detect_flight=args.flight,
+        detect_exposure=True,
+        detect_burst=args.burst,
+        # V4.0: BirdID 自动识别设置
+        auto_identify=auto_identify,
+        birdid_use_ebird=True,
+        birdid_country_code=getattr(args, 'birdid_country', None),
+        birdid_region_code=getattr(args, 'birdid_region', None),
+        birdid_confidence_threshold=getattr(args, 'birdid_threshold', 70.0)
     )
     
-    # 执行处理
+    # 创建处理器（直接传入 ProcessingSettings）
+    processor = CLIProcessor(
+        dir_path=args.directory,
+        verbose=not args.quiet,
+        settings=settings
+    )
+    
+    # 执行处理（PhotoProcessor 内部会处理自动识鸟）
     stats = processor.process(
         organize_files=args.organize,
         cleanup_temp=args.cleanup
@@ -751,8 +771,17 @@ Examples:
                           help='不清理临时JPG文件')
     p_process.add_argument('-q', '--quiet', action='store_true',
                           help='静默模式')
+    # V4.0: 自动识鸟选项
+    p_process.add_argument('--auto-identify', '-i', action='store_true',
+                          help='自动识别 2★+ 照片的鸟种并按鸟种分目录')
+    p_process.add_argument('--birdid-country', type=str, default=None,
+                          help='BirdID 国家代码 (如 AU, CN, US)')
+    p_process.add_argument('--birdid-region', type=str, default=None,
+                          help='BirdID 区域代码 (如 AU-SA, CN-31)')
+    p_process.add_argument('--birdid-threshold', type=float, default=70.0,
+                          help='BirdID 置信度阈值 (默认: 70%%)')
     # V3.9: 使用 set_defaults 确保 flight, burst 默认为 True
-    p_process.set_defaults(organize=True, cleanup=True, burst=True, flight=True)
+    p_process.set_defaults(organize=True, cleanup=True, burst=True, flight=True, auto_identify=False)
     
     # ===== reset 命令 =====
     p_reset = subparsers.add_parser('reset', help='重置目录')

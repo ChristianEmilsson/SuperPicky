@@ -960,6 +960,46 @@ class PhotoProcessor:
                 # 记录评分（用于文件移动）
                 self.file_ratings[file_prefix] = rating_value
                 
+                # V4.0.1: 自动鸟种识别（移至共同路径，对 RAW 和纯 JPG 都执行）
+                # 注意：对于 RAW 文件，在上面的分支中已经执行过；这里主要处理纯 JPG
+                if self.settings.auto_identify and rating_value >= 2:
+                    # 检查是否已经识别过（RAW 文件在上面已处理）
+                    if file_prefix not in self.file_bird_species:
+                        try:
+                            from birdid.bird_identifier import identify_bird
+                            
+                            birdid_result = identify_bird(
+                                filepath,  # 使用当前文件路径
+                                use_yolo=True,
+                                use_gps=True,
+                                use_ebird=self.settings.birdid_use_ebird,
+                                country_code=self.settings.birdid_country_code,
+                                region_code=self.settings.birdid_region_code,
+                                top_k=1
+                            )
+                            
+                            if birdid_result.get('success') and birdid_result.get('results'):
+                                top_result = birdid_result['results'][0]
+                                birdid_confidence = top_result.get('confidence', 0)
+                                
+                                if birdid_confidence >= self.settings.birdid_confidence_threshold:
+                                    cn_name = top_result.get('cn_name', '')
+                                    en_name = top_result.get('en_name', '')
+                                    self._log(f"  🐦 识别: {cn_name} ({birdid_confidence:.0f}%)")
+                                    
+                                    if cn_name and cn_name not in self.stats['bird_species']:
+                                        self.stats['bird_species'].append(cn_name)
+                                    if cn_name:
+                                        self.file_bird_species[file_prefix] = cn_name
+                                    
+                                    # V4.0.1: 对纯 JPG 文件也写入鸟种名称到 EXIF
+                                    bird_title = f"{cn_name} ({en_name})"
+                                    exiftool_mgr.batch_set_metadata([{'file': target_file_path, 'title': bird_title}])
+                                else:
+                                    self._log(f"  🐦 识别置信度不足: {top_result.get('cn_name', '?')} ({birdid_confidence:.0f}% < {self.settings.birdid_confidence_threshold}%)")
+                        except Exception as e:
+                            self._log(f"  ⚠️ 鸟种识别失败: {e}", "warning")
+                
                 # 记录2星原因（用于分目录）（V3.8: 使用加成后的值）
                 if rating_value == 2:
                     sharpness_ok = rating_sharpness >= self.settings.sharpness_threshold

@@ -18,35 +18,48 @@ from utils import log_message
 class CLIProcessor:
     """CLI 处理器 - 只负责命令行交互"""
     
-    def __init__(self, dir_path: str, ui_settings: List = None, verbose: bool = True, detect_flight: bool = True):
+    def __init__(
+        self, 
+        dir_path: str, 
+        ui_settings: List = None, 
+        verbose: bool = True, 
+        detect_flight: bool = True,
+        settings: ProcessingSettings = None  # V4.0: 直接传入完整设置
+    ):
         """
         初始化处理器
         
         Args:
             dir_path: 处理目录
-            ui_settings: [ai_confidence, sharpness_threshold, nima_threshold, save_crop, norm_mode]
+            ui_settings: [ai_confidence, sharpness_threshold, nima_threshold, save_crop, norm_mode] (向后兼容)
             verbose: 详细输出
             detect_flight: 是否启用飞鸟检测
+            settings: 直接传入完整的 ProcessingSettings (优先使用)
         """
         self.verbose = verbose
         self.dir_path = dir_path  # 保存目录路径用于日志
         
-        # V3.9.4: 修正默认值，与 GUI 保持完全一致
-        # GUI 默认: sharpness=400, nima=5.0, exposure=True, burst=True
-        if ui_settings is None:
-            ui_settings = [50, 400, 5.0, False, 'log_compression']
-        
-        # 转换为 ProcessingSettings
-        settings = ProcessingSettings(
-            ai_confidence=ui_settings[0],
-            sharpness_threshold=ui_settings[1],
-            nima_threshold=ui_settings[2],
-            save_crop=ui_settings[3] if len(ui_settings) > 3 else False,
-            normalization_mode=ui_settings[4] if len(ui_settings) > 4 else 'log_compression',
-            detect_flight=detect_flight,
-            detect_exposure=True,   # V3.9.4: 默认开启曝光检测，与 GUI 一致
-            detect_burst=True       # V3.9.4: 默认开启连拍检测，与 GUI 一致
-        )
+        # V4.0: 如果直接传入了 ProcessingSettings，使用它
+        if settings is not None:
+            pass  # 直接使用传入的 settings
+        else:
+            # 向后兼容：从 ui_settings 构建 ProcessingSettings
+            # V3.9.4: 修正默认值，与 GUI 保持完全一致
+            # GUI 默认: sharpness=400, nima=5.0, exposure=True, burst=True
+            if ui_settings is None:
+                ui_settings = [50, 400, 5.0, False, 'log_compression']
+            
+            # 转换为 ProcessingSettings
+            settings = ProcessingSettings(
+                ai_confidence=ui_settings[0],
+                sharpness_threshold=ui_settings[1],
+                nima_threshold=ui_settings[2],
+                save_crop=ui_settings[3] if len(ui_settings) > 3 else False,
+                normalization_mode=ui_settings[4] if len(ui_settings) > 4 else 'log_compression',
+                detect_flight=detect_flight,
+                detect_exposure=True,   # V3.9.4: 默认开启曝光检测，与 GUI 一致
+                detect_burst=True       # V3.9.4: 默认开启连拍检测，与 GUI 一致
+            )
         
         # 创建核心处理器
         self.processor = PhotoProcessor(
