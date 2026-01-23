@@ -468,9 +468,9 @@ class BurstDetector:
             
             best_photo = group.best_photo
             
-            # V4.1: 增强调试日志
+            # V4.1: Enhanced debug log
             if log_callback:
-                log_callback(f"  📦 处理组 #{group.group_id}: {group.count} 张照片 (最佳: {os.path.basename(best_photo.filepath) if best_photo else 'None'})", "info")
+                log_callback(f"  📦 Processing group #{group.group_id}: {group.count} photos (best: {os.path.basename(best_photo.filepath) if best_photo else 'None'})", "info")
             
             for i, photo in enumerate(group.photos):
                 if i == group.best_index:
@@ -505,12 +505,12 @@ class BurstDetector:
                                         pass
                         else:
                             if log_callback:
-                                log_callback(f"    ⚠️ 找不到文件: {filename}", "warning")
+                                log_callback(f"    ⚠️ File not found: {filename}", "warning")
                                 print(f"DEBUG: File not found at {src_path}")
                     except Exception as e:
                         if log_callback:
-                            log_callback(f"    ❌ 移动失败 {filename}: {e}", "error")
-                        print(f"⚠️ 移动文件失败: {e}")
+                            log_callback(f"    ❌ Move failed {filename}: {e}", "error")
+                        print(f"⚠️ Move file failed: {e}")
             
             stats['groups_processed'] += 1
         

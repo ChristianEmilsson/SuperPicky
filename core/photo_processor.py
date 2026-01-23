@@ -36,6 +36,9 @@ from core.focus_point_detector import get_focus_detector, verify_focus_in_bbox
 
 from constants import RATING_FOLDER_NAMES, RAW_EXTENSIONS, JPG_EXTENSIONS
 
+# 国际化
+from i18n import get_i18n
+
 
 @dataclass
 class ProcessingSettings:
@@ -109,19 +112,25 @@ class PhotoProcessor:
             nima_threshold=settings.nima_threshold
         )
         
+        # 获取国际化实例
+        self.i18n = get_i18n()
+        
         # DEBUG: 输出参数
-        self._log(f"\n🔍 DEBUG - 处理参数:")
-        self._log(f"  📊 AI置信度: {settings.ai_confidence}")
-        self._log(f"  📏 锐度阈值: {settings.sharpness_threshold}")
-        self._log(f"  🎨 NIMA阈值: {settings.nima_threshold}")
-        self._log(f"  🔧 归一化模式: {settings.normalization_mode}")
-        self._log(f"  🦅 飞鸟检测: {'开启' if settings.detect_flight else '关闭'}")
-        self._log(f"  📸 曝光检测: {'开启' if settings.detect_exposure else '关闭'}")
-        self._log(f"  🐦 自动识鸟: {'开启' if settings.auto_identify else '关闭'}")
+        on_off = lambda b: self.i18n.t("labels.yes") if b else self.i18n.t("labels.no")
+        self._log(f"\n🔍 DEBUG - {self.i18n.t('labels.processing')}:")
+        self._log(f"  📊 {self.i18n.t('labels.ai_confidence')}: {settings.ai_confidence}")
+        self._log(f"  📏 {self.i18n.t('labels.sharpness_short')}: {settings.sharpness_threshold}")
+        self._log(f"  🎨 {self.i18n.t('labels.aesthetics')}: {settings.nima_threshold}")
+        self._log(f"  🔧 {self.i18n.t('labels.normalization')}: {settings.normalization_mode}")
+        self._log(f"  🦅 {self.i18n.t('labels.flight_detection')}: {on_off(settings.detect_flight)}")
+        self._log(f"  📸 {self.i18n.t('labels.exposure_detection')}: {on_off(settings.detect_exposure)}")
+        self._log(f"  🐦 BirdID: {on_off(settings.auto_identify)}")
         if settings.auto_identify:
-            self._log(f"     └─ 国家: {settings.birdid_country_code or '自动(GPS)'}, 区域: {settings.birdid_region_code or '整个国家'}")
-        self._log(f"  ⚙️  高级配置 - 最低锐度: {self.config.min_sharpness}")
-        self._log(f"  ⚙️  高级配置 - 最低美学: {self.config.min_nima}\n")
+            country = settings.birdid_country_code or "Auto(GPS)"
+            region = settings.birdid_region_code or "All"
+            self._log(f"     └─ Country: {country}, Region: {region}")
+        self._log(f"  ⚙️  Min Sharpness: {self.config.min_sharpness}")
+        self._log(f"  ⚙️  Min Aesthetics: {self.config.min_nima}\n")
         
         # 统计数据（支持 0/1/2/3 星）
         self.stats = {
@@ -237,7 +246,7 @@ class PhotoProcessor:
                 files_tbr.append(filename)
         
         scan_time = (time.time() - scan_start) * 1000
-        self._log(f"⏱️  文件扫描耗时: {scan_time:.1f}ms")
+        self._log(self.i18n.t("logs.scan_time", time=scan_time))
         
         return raw_dict, jpg_dict, files_tbr
     
@@ -261,7 +270,7 @@ class PhotoProcessor:
         import multiprocessing
         max_workers = min(4, multiprocessing.cpu_count())
         
-        self._log(f"🔄 开始并行转换 {len(raw_files_to_convert)} 个RAW文件({max_workers}线程)...")
+        self._log(self.i18n.t("logs.raw_conversion_start", count=len(raw_files_to_convert), threads=max_workers))
         
         def convert_single(args):
             key, raw_path = args
@@ -286,17 +295,15 @@ class PhotoProcessor:
                     self.temp_converted_jpegs.add(jpeg_filename)  # V4.0: 标记为临时转换的 JPEG
                     converted_count += 1
                     if converted_count % 5 == 0 or converted_count == len(raw_files_to_convert):
-                        self._log(f"  ✅ 已转换 {converted_count}/{len(raw_files_to_convert)} 张")
+                        self._log(self.i18n.t("logs.raw_converted", current=converted_count, total=len(raw_files_to_convert)))
                 else:
-                    self._log(f"  ❌ 转换失败: {key} ({error})", "error")
+                    self._log(f"  ❌ {self.i18n.t('logs.batch_failed', start=key, end=key, error=error)}", "error")
         
         raw_time = time.time() - raw_start
         avg_time = raw_time / len(raw_files_to_convert) if len(raw_files_to_convert) > 0 else 0
-        # 智能选择时间单位：小于1秒显示毫秒
-        if avg_time < 1:
-            self._log(f"⏱️  RAW转换耗时: {raw_time:.1f}秒 (平均 {avg_time*1000:.0f}ms/张)\n")
-        else:
-            self._log(f"⏱️  RAW转换耗时: {raw_time:.1f}秒 (平均 {avg_time:.1f}秒/张)\n")
+        # Format time string
+        time_str = f"{raw_time:.1f}s" if raw_time >= 1 else f"{raw_time*1000:.0f}ms"
+        self._log(self.i18n.t("logs.raw_conversion_time", time_str=time_str, avg=avg_time))
     
     def _process_images(self, files_tbr, raw_dict):
         """处理所有图片 - AI检测、关键点检测与评分"""
@@ -309,7 +316,7 @@ class PhotoProcessor:
             keypoint_detector.load_model()
             use_keypoints = True
         except FileNotFoundError:
-            self._log("⚠️  关键点模型未找到，使用传统锐度计算", "warning")
+            self._log("⚠️  Keypoint model not found, using traditional sharpness", "warning")
             use_keypoints = False
         
         # V3.4: 飞版检测模型
@@ -321,11 +328,11 @@ class PhotoProcessor:
                 flight_detector.load_model()
                 use_flight = True
             except FileNotFoundError:
-                self._log("⚠️  飞版检测模型未找到，跳过飞版检测", "warning")
+                self._log("⚠️  Flight model not found, skipping flight detection", "warning")
                 use_flight = False
         
         total_files = len(files_tbr)
-        self._log(f"📁 共 {total_files} 个文件待处理\n")
+        self._log(self.i18n.t("logs.files_to_process", total=total_files))
         
         exiftool_mgr = get_exiftool_manager()
         
@@ -360,10 +367,10 @@ class PhotoProcessor:
                     filepath, model, None, self.dir_path, ui_settings, None, skip_nima=True
                 )
                 if result is None:
-                    self._log(f"  ⚠️  无法处理(AI推理失败)", "error")
+                    self._log(self.i18n.t("logs.cannot_process", filename=filename), "error")
                     continue
             except Exception as e:
-                self._log(f"  ❌ 处理异常: {e}", "error")
+                self._log(self.i18n.t("logs.processing_error", filename=filename, error=str(e)), "error")
                 continue
             
             # V4.2: 解构 AI 结果（现在有 9 个返回值，包含 bird_count）
@@ -397,11 +404,11 @@ class PhotoProcessor:
                 
                 if not detected:
                     rating_value = -1
-                    reason = "未检测到鸟类"
+                    reason = self.i18n.t("logs.reject_no_bird")
                 else:
                     rating_value = 0
-                    # V4.2: 显示实际置信度和阈值
-                    reason = f"置信度{confidence:.0%}<{self.settings.ai_confidence}%"
+                    # V4.2: Show actual confidence and threshold
+                    reason = self.i18n.t("logs.quality_low_confidence", confidence=confidence, threshold=confidence_threshold)
                 
                 # 简化日志
                 self._log_photo_result_simple(i, total_files, filename, rating_value, reason, photo_time_ms, False, False, None)
@@ -540,7 +547,7 @@ class PhotoProcessor:
                                         head_radius_val = int(max(cw, ch) * 0.15)
                                     head_radius_val = max(20, min(head_radius_val, min(cw, ch) // 2))
                 except Exception as e:
-                    self._log(f"  ⚠️ 关键点检测异常: {e}", "warning")
+                    self._log(f"  ⚠️ Keypoint detection error: {e}", "warning")
                     # import traceback
                     # self._log(traceback.format_exc(), "error")
                     pass
@@ -579,7 +586,7 @@ class PhotoProcessor:
                     # DEBUG: 输出飞版检测结果
                     # self._log(f"  🦅 飞版检测: is_flying={is_flying}, conf={flight_confidence:.2f}")
                 except Exception as e:
-                    self._log(f"  ⚠️ 飞版检测异常: {e}", "warning")
+                    self._log(f"  ⚠️ Flight detection error: {e}", "warning")
             
             # Phase 5: V3.8 曝光检测（在鸟的裁剪区域上执行）
             is_overexposed = False
@@ -736,19 +743,19 @@ class PhotoProcessor:
             # V4.0: 根据 focus_sharpness_weight 计算对焦状态文本
             # 只有检测到鸟才设置对焦状态，避免无鸟照片也写入
             focus_status = None
-            focus_status_en = None  # 英文版本用于调试图（避免中文字体问题）
-            if detected:  # 只有检测到鸟才计算对焦状态
+            focus_status_en = None  # English version for debug image
+            if detected:  # Only calculate focus status if bird detected
                 if focus_sharpness_weight > 1.0:
-                    focus_status = "精焦"
+                    focus_status = "BEST"
                     focus_status_en = "BEST"
-                elif focus_sharpness_weight >= 0.9:  # V3.9.3: 鸟身也算合焦
-                    focus_status = "合焦"
+                elif focus_sharpness_weight >= 0.9:
+                    focus_status = "GOOD"
                     focus_status_en = "GOOD"
                 elif focus_sharpness_weight >= 0.7:
-                    focus_status = "失焦"
+                    focus_status = "BAD"
                     focus_status_en = "BAD"
                 elif focus_sharpness_weight < 0.7:
-                    focus_status = "脱焦"
+                    focus_status = "WORST"
                     focus_status_en = "WORST"
             
             # V3.9: 生成调试可视化图（仅对有鸟的照片）
@@ -841,26 +848,26 @@ class PhotoProcessor:
                     topiq_str = f"{topiq:.2f}" if topiq else "未计算"
                     caption_lines.append(f"[原始检测数据] AI置信度: {confidence:.0%} | 头部锐度: {sharpness_str} | TOPIQ美学: {topiq_str} | 眼睛可见度: {best_eye_visibility:.0%}")
                     
-                    # 修正因子
-                    flying_str = "是 (锐度×1.2, 美学×1.1)" if is_flying else "否"
-                    caption_lines.append(f"[修正因子] 对焦锐度权重: {focus_sharpness_weight:.2f} | 对焦美学权重: {focus_topiq_weight:.2f} | 是否飞鸟: {flying_str}")
+                    # Adjustment factors
+                    flying_str = "Yes (Sharp×1.2, Aes×1.1)" if is_flying else "No"
+                    caption_lines.append(f"[Factors] Focus Sharp Weight: {focus_sharpness_weight:.2f} | Focus Aes Weight: {focus_topiq_weight:.2f} | Flying: {flying_str}")
                     
-                    # 调整后数值
+                    # Adjusted values
                     adj_sharpness = head_sharpness * focus_sharpness_weight if head_sharpness else 0
                     if is_flying and head_sharpness:
                         adj_sharpness = adj_sharpness * 1.2
-                    adj_line = f"[调整后数值] 调整后锐度: {adj_sharpness:.2f} (阈值400)"
+                    adj_line = f"[Adjusted] Sharpness: {adj_sharpness:.2f} (threshold 400)"
                     if topiq:
                         adj_topiq = topiq * focus_topiq_weight
                         if is_flying:
                             adj_topiq = adj_topiq * 1.1
-                        adj_line += f" | 调整后美学: {adj_topiq:.2f} (阈值5.0)"
+                        adj_line += f" | Aesthetics: {adj_topiq:.2f} (threshold 5.0)"
                     caption_lines.append(adj_line)
                     
-                    # 可见度降权（简化版，不显示公式）
+                    # Visibility weight
                     visibility_weight = max(0.5, min(1.0, best_eye_visibility * 2))
                     if visibility_weight < 1.0:
-                        caption_lines.append(f"[可见度降权] 可见度权重: {visibility_weight:.2f}")
+                        caption_lines.append(f"[Visibility] Weight: {visibility_weight:.2f}")
                     
                     caption = "\n".join(caption_lines)
                     
@@ -890,7 +897,7 @@ class PhotoProcessor:
                                     cn_name = top_result.get('cn_name', '')
                                     en_name = top_result.get('en_name', '')
                                     bird_title = f"{cn_name} ({en_name})"
-                                    self._log(f"  🐦 识别: {cn_name} ({confidence:.0f}%)")
+                                    self._log(f"  🐦 Bird ID: {cn_name} ({confidence:.0f}%)")
                                     # V4.2: 收集识别的鸟种名称
                                     if cn_name and cn_name not in self.stats['bird_species']:
                                         self.stats['bird_species'].append(cn_name)
@@ -898,9 +905,9 @@ class PhotoProcessor:
                                     if cn_name:
                                         self.file_bird_species[file_prefix] = cn_name
                                 else:
-                                    self._log(f"  🐦 识别置信度不足: {top_result.get('cn_name', '?')} ({confidence:.0f}% < {self.settings.birdid_confidence_threshold}%)")
+                                    self._log(f"  🐦 Low confidence: {top_result.get('cn_name', '?')} ({confidence:.0f}% < {self.settings.birdid_confidence_threshold}%)")
                         except Exception as e:
-                            self._log(f"  ⚠️ 鸟种识别失败: {e}", "warning")
+                            self._log(f"  ⚠️ Bird ID failed: {e}", "warning")
                     
                     single_batch = [{
                         'file': target_file_path,
@@ -985,7 +992,7 @@ class PhotoProcessor:
                                 if birdid_confidence >= self.settings.birdid_confidence_threshold:
                                     cn_name = top_result.get('cn_name', '')
                                     en_name = top_result.get('en_name', '')
-                                    self._log(f"  🐦 识别: {cn_name} ({birdid_confidence:.0f}%)")
+                                    self._log(f"  🐦 Bird ID: {cn_name} ({birdid_confidence:.0f}%)")
                                     
                                     if cn_name and cn_name not in self.stats['bird_species']:
                                         self.stats['bird_species'].append(cn_name)
@@ -996,9 +1003,9 @@ class PhotoProcessor:
                                     bird_title = f"{cn_name} ({en_name})"
                                     exiftool_mgr.batch_set_metadata([{'file': target_file_path, 'title': bird_title}])
                                 else:
-                                    self._log(f"  🐦 识别置信度不足: {top_result.get('cn_name', '?')} ({birdid_confidence:.0f}% < {self.settings.birdid_confidence_threshold}%)")
+                                    self._log(f"  🐦 Low confidence: {top_result.get('cn_name', '?')} ({birdid_confidence:.0f}% < {self.settings.birdid_confidence_threshold}%)")
                         except Exception as e:
-                            self._log(f"  ⚠️ 鸟种识别失败: {e}", "warning")
+                            self._log(f"  ⚠️ Bird ID failed: {e}", "warning")
                 
                 # 记录2星原因（用于分目录）（V3.8: 使用加成后的值）
                 if rating_value == 2:
@@ -1013,7 +1020,7 @@ class PhotoProcessor:
         
         ai_total_time = time.time() - ai_total_start
         avg_ai_time = ai_total_time / total_files if total_files > 0 else 0
-        self._log(f"\n⏱️  AI检测总耗时: {ai_total_time:.1f}秒 (平均 {avg_ai_time:.1f}秒/张)")
+        self._log(self.i18n.t("logs.ai_detection_total", time_str=f"{ai_total_time:.1f}s", avg=avg_ai_time))
     
     # 注意: _calculate_rating 方法已移至 core/rating_engine.py
     # 现在使用 self.rating_engine.calculate() 替代
@@ -1032,15 +1039,15 @@ class PhotoProcessor:
             iqa_text += f", 美学:{nima:.2f}"
         
         if rating == 3:
-            self._log(f"  ⭐⭐⭐ 优选照片 (AI:{conf:.2f}, 锐度:{sharp:.1f}{iqa_text})", "success")
+            self._log(self.i18n.t("logs.excellent_photo", confidence=conf, sharpness=sharp, iqa_text=iqa_text), "success")
         elif rating == 2:
-            self._log(f"  ⭐⭐ 良好照片 (AI:{conf:.2f}, 锐度:{sharp:.1f}{iqa_text})", "info")
+            self._log(self.i18n.t("logs.good_photo", confidence=conf, sharpness=sharp, iqa_text=iqa_text), "info")
         elif rating == 1:
-            self._log(f"  ⭐ 普通照片 (AI:{conf:.2f}, 锐度:{sharp:.1f}{iqa_text})", "warning")
+            self._log(self.i18n.t("logs.average_photo", confidence=conf, sharpness=sharp, iqa_text=iqa_text), "warning")
         elif rating == 0:
-            self._log(f"  普通照片 - {reason}", "warning")
+            self._log(self.i18n.t("logs.poor_quality", reason=reason, confidence=conf, iqa_text=iqa_text), "warning")
         else:  # -1
-            self._log(f"  ❌ 无鸟 - {reason}", "error")
+            self._log(f"  ❌ No bird - {reason}", "error")
     
     def _log_photo_result_simple(
         self,
@@ -1055,12 +1062,12 @@ class PhotoProcessor:
         focus_status: str = None  # V3.9: 对焦状态
     ):
         """记录照片处理结果（简化版，单行输出）"""
-        # 星级标识
-        star_map = {3: "3星", 2: "2星", 1: "1星", 0: "0星", -1: "-1星"}
-        star_text = star_map.get(rating, "?星")
+        # Star text mapping - use short English format
+        star_map = {3: "3★", 2: "2★", 1: "1★", 0: "0★", -1: "-1★"}
+        star_text = star_map.get(rating, "?★")
         
-        # V3.4: 飞鸟标识
-        flight_tag = "【飞鸟】" if is_flying else ""
+        # V3.4: Flight tag
+        flight_tag = "[FLY]" if is_flying else ""
         
         # V3.8: 曝光问题标识（已在reason中显示"欠曝/过曝"，故不再单独显示标签）
         # exposure_tag = "【曝光】" if has_exposure_issue else ""
@@ -1255,15 +1262,15 @@ class PhotoProcessor:
                     writer.writeheader()
                     writer.writerows(rows)
         except Exception as e:
-            self._log(f"  ⚠️  更新CSV失败: {e}", "warning")
+            self._log(f"  ⚠️  CSV update failed: {e}", "warning")
     
     def _calculate_picked_flags(self):
-        """计算精选旗标 - 3星照片中美学+锐度双排名交集"""
+        """Calculate picked flags - intersection of aesthetics + sharpness rankings among 3-star photos"""
         if len(self.star_3_photos) == 0:
-            self._log("\nℹ️  无3星照片，跳过精选旗标计算")
+            self._log("\nℹ️  No 3-star photos, skipping picked flag calculation")
             return
         
-        self._log(f"\n🎯 计算精选旗标 (共{len(self.star_3_photos)}张3星照片)...")
+        self._log(self.i18n.t("logs.picked_calculation_start", count=len(self.star_3_photos)))
         top_percent = self.config.picked_top_percentage / 100.0
         top_count = max(1, int(len(self.star_3_photos) * top_percent))
         
@@ -1279,14 +1286,14 @@ class PhotoProcessor:
         picked_files = nima_top_files & sharpness_top_files
         
         if len(picked_files) > 0:
-            self._log(f"  📌 美学Top{self.config.picked_top_percentage}%: {len(nima_top_files)}张")
-            self._log(f"  📌 锐度Top{self.config.picked_top_percentage}%: {len(sharpness_top_files)}张")
-            self._log(f"  ⭐ 双排名交集: {len(picked_files)}张 → 设为精选")
+            self._log(self.i18n.t("logs.picked_aesthetic_top", percent=self.config.picked_top_percentage, count=len(nima_top_files)))
+            self._log(self.i18n.t("logs.picked_sharpness_top", percent=self.config.picked_top_percentage, count=len(sharpness_top_files)))
+            self._log(self.i18n.t("logs.picked_intersection", count=len(picked_files)))
             
-            # 调试：显示精选文件路径
+            # Debug: show picked file paths
             for file_path in picked_files:
                 exists = os.path.exists(file_path)
-                self._log(f"    🔍 精选: {os.path.basename(file_path)} (存在: {exists})")
+                self._log(f"    🔍 Picked: {os.path.basename(file_path)} (exists: {exists})")
             
             # 批量写入
             picked_batch = [{
@@ -1299,13 +1306,13 @@ class PhotoProcessor:
             picked_stats = exiftool_mgr.batch_set_metadata(picked_batch)
             
             if picked_stats['failed'] == 0:
-                self._log(f"  ✅ 精选旗标写入成功")
+                self._log(self.i18n.t("logs.picked_exif_success"))
             else:
-                self._log(f"  ⚠️  {picked_stats['failed']} 张精选旗标写入失败", "warning")
+                self._log(self.i18n.t("logs.picked_exif_failed", failed=picked_stats['failed']), "warning")
             
             self.stats['picked'] = len(picked_files) - picked_stats.get('failed', 0)
         else:
-            self._log(f"  ℹ️  双排名交集为空，未设置精选旗标")
+            self._log(self.i18n.t("logs.picked_no_intersection"))
             self.stats['picked'] = 0
     
     def _move_files_to_rating_folders(self, raw_dict):
@@ -1365,10 +1372,10 @@ class PhotoProcessor:
                             break  # 找到就跳出
         
         if not files_to_move:
-            self._log("\n📂 无需移动文件")
+            self._log("\n📂 No files to move")
             return
         
-        self._log(f"\n📂 移动 {len(files_to_move)} 张照片到分类文件夹...")
+        self._log(f"\n📂 Moving {len(files_to_move)} photos to rating folders...")
         
         # 创建文件夹（使用实际的目录名，支持多层）
         folders_in_use = set(f['folder'] for f in files_to_move)
@@ -1376,11 +1383,11 @@ class PhotoProcessor:
             folder_path = os.path.join(self.dir_path, folder_name)
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
-                # V4.0: 显示更清晰的目录创建日志
+                # V4.0: Show clearer folder creation log
                 if os.path.sep in folder_name or '/' in folder_name:
-                    self._log(f"  📁 创建文件夹: {folder_name}/")
+                    self._log(f"  📁 Created folder: {folder_name}/")
                 else:
-                    self._log(f"  📁 创建文件夹: {folder_name}/")
+                    self._log(f"  📁 Created folder: {folder_name}/")
         
         # 移动文件
         moved_count = 0
@@ -1395,7 +1402,7 @@ class PhotoProcessor:
                 shutil.move(src_path, dst_path)
                 moved_count += 1
             except Exception as e:
-                self._log(f"  ⚠️  移动失败: {file_info['filename']} - {e}", "warning")
+                self._log(self.i18n.t("logs.delete_failed", filename=file_info['filename'], error=str(e)), "warning")
         
         # 生成manifest（V4.0: 增加鸟种分类信息和临时 JPEG 列表）
         manifest = {
@@ -1414,18 +1421,18 @@ class PhotoProcessor:
         try:
             with open(manifest_path, 'w', encoding='utf-8') as f:
                 json.dump(manifest, f, ensure_ascii=False, indent=2)
-            self._log(f"  ✅ 已移动 {moved_count} 张照片")
+            self._log(f"  ✅ Moved {moved_count} photos")
             self._log(f"  📋 Manifest: .superpicky_manifest.json")
         except Exception as e:
-            self._log(f"  ⚠️  保存manifest失败: {e}", "warning")
+            self._log(f"  ⚠️  Manifest save failed: {e}", "warning")
     
     def _cleanup_temp_files(self, files_tbr, raw_dict):
-        """清理临时JPG文件（V4.0: 只删除从 RAW 转换的临时 JPEG，保护用户原始 JPEG）"""
-        self._log("\n🧹 清理临时文件...")
+        """Clean up temporary JPG files (V4.0: only delete converted JPEGs, protect user originals)"""
+        self._log(self.i18n.t("logs.cleaning_temp"))
         deleted_count = 0
         for filename in files_tbr:
             file_prefix, file_ext = os.path.splitext(filename)
-            # V4.0: 只删除临时转换的 JPEG，不删除用户原始的 RAW+JPEG
+            # V4.0: Only delete temp converted JPEGs, not user's original RAW+JPEG
             if (file_prefix in raw_dict and 
                 file_ext.lower() in ['.jpg', '.jpeg'] and
                 filename in self.temp_converted_jpegs):
@@ -1435,9 +1442,9 @@ class PhotoProcessor:
                         os.remove(jpg_path)
                         deleted_count += 1
                 except Exception as e:
-                    self._log(f"  ⚠️  删除失败 {filename}: {e}", "warning")
+                    self._log(self.i18n.t("logs.delete_failed", filename=filename, error=str(e)), "warning")
         
         if deleted_count > 0:
-            self._log(f"  ✅ 已删除 {deleted_count} 个临时JPG文件")
+            self._log(self.i18n.t("logs.temp_deleted", count=deleted_count))
         else:
-            self._log(f"  ℹ️  无临时文件需清理")
+            self._log("  ℹ️  No temp files to clean")
