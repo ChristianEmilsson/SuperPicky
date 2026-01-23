@@ -8,6 +8,8 @@ from config import config
 # V3.2: 移除未使用的 sharpness 计算器导入
 from iqa_scorer import get_iqa_scorer
 from advanced_config import get_advanced_config
+# V4.2.1
+from i18n import get_i18n
 
 # 禁用 Ultralytics 设置警告
 os.environ['YOLO_VERBOSE'] = 'False'
@@ -21,14 +23,15 @@ def load_yolo_model():
     # 尝试使用 Apple MPS (Metal Performance Shaders) GPU 加速
     try:
         import torch
+        t = get_i18n().t
         if torch.backends.mps.is_available():
-            print("✅ 检测到 Apple GPU (MPS)，启用硬件加速")
+            print(t("ai.mps_detected"))
             # YOLO模型会自动识别device参数
             # 注意：不需要手动 model.to('mps')，YOLO会在推理时自动处理
         else:
-            print("⚠️  MPS不可用，使用CPU推理")
+            print(t("ai.mps_unavailable"))
     except Exception as e:
-        print(f"⚠️  GPU检测失败: {e}，使用CPU推理")
+        print(t("ai.gpu_detect_failed", error=e))
 
     return model
 
@@ -122,11 +125,12 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
         results = model(image, device='mps')
     except Exception as mps_error:
         # MPS失败，降级到CPU
-        log_message(f"⚠️  MPS推理失败，降级到CPU: {mps_error}", dir)
+        t = i18n.t if i18n else get_i18n().t
+        log_message(t("ai.mps_inference_failed", error=mps_error), dir)
         try:
             results = model(image, device='cpu')
         except Exception as cpu_error:
-            log_message(f"❌ AI推理完全失败: {cpu_error}", dir)
+            log_message(t("ai.ai_inference_failed", error=cpu_error), dir)
             # 返回"无鸟"结果（V3.1）
             # V3.3: 使用英文列名
             data = {

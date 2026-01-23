@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
     QFileDialog, QMessageBox, QSizePolicy, QFrame, QSpacerItem,
     QSystemTrayIcon, QApplication  # V4.0: 系统托盘图标
 )
-from PySide6.QtCore import Qt, Signal, QObject, Slot, QTimer, QPropertyAnimation, QEasingCurve, QMimeData
+from PySide6.QtCore import Qt, Signal, QObject, Slot, QTimer, QPropertyAnimation, QEasingCurve, QMimeData, QThread
 from PySide6.QtGui import QFont, QPixmap, QIcon, QAction, QTextCursor, QColor, QDragEnterEvent, QDropEvent
 
 from i18n import get_i18n
@@ -348,6 +348,9 @@ class SuperPickyMainWindow(QMainWindow):
     # V3.6: 重置操作的信号
     reset_log_signal = Signal(str)
     reset_complete_signal = Signal(bool, dict, dict)
+    
+    # V4.2.1: 日志信号，确保线程安全
+    log_signal = Signal(str, str)
     reset_error_signal = Signal(str)
 
     def __init__(self):
@@ -372,7 +375,11 @@ class SuperPickyMainWindow(QMainWindow):
         self._show_initial_help()
 
         # 连接重置信号
+        # 连接重置信号
         self.reset_log_signal.connect(self._log)
+        # 修复Crash: 确保日志信号连接到主线程槽
+        # noinspection PyUnresolvedReferences
+        self.log_signal.connect(self._log, Qt.QueuedConnection)
         self.reset_complete_signal.connect(self._on_reset_complete)
         self.reset_error_signal.connect(self._on_reset_error)
         
@@ -482,10 +489,10 @@ class SuperPickyMainWindow(QMainWindow):
         menubar = self.menuBar()
 
         # 识鸟菜单
-        birdid_menu = menubar.addMenu("识鸟")
+        birdid_menu = menubar.addMenu(self.i18n.t("menu.birdid"))
         
         # 粘贴图片识鸟
-        paste_image_action = QAction("粘贴图片识鸟", self)
+        paste_image_action = QAction(self.i18n.t("menu.paste_image"), self)
         paste_image_action.setShortcut("Ctrl+V")  # Mac 会自动转为 Cmd+V
         paste_image_action.triggered.connect(self._paste_image_for_birdid)
         birdid_menu.addAction(paste_image_action)
@@ -493,14 +500,14 @@ class SuperPickyMainWindow(QMainWindow):
         birdid_menu.addSeparator()
 
         # 识鸟面板（可勾选显示/隐藏）
-        self.birdid_dock_action = QAction("打开识鸟面板", self)
+        self.birdid_dock_action = QAction(self.i18n.t("menu.toggle_dock"), self)
         self.birdid_dock_action.setCheckable(True)
         self.birdid_dock_action.setChecked(True)
         self.birdid_dock_action.triggered.connect(self._toggle_birdid_dock)
         birdid_menu.addAction(self.birdid_dock_action)
 
         # 启动/停止识鸟 API 服务
-        self.birdid_server_action = QAction("启动识鸟服务器", self)
+        self.birdid_server_action = QAction(self.i18n.t("menu.start_server"), self)
         self.birdid_server_action.triggered.connect(self._toggle_birdid_server)
         birdid_menu.addAction(self.birdid_server_action)
 
@@ -508,22 +515,22 @@ class SuperPickyMainWindow(QMainWindow):
         help_menu = menubar.addMenu(self.i18n.t("menu.help"))
         
         # 参数设置
-        settings_action = QAction("参数设置...", self)
+        settings_action = QAction(self.i18n.t("menu.settings"), self)
         settings_action.triggered.connect(self._show_advanced_settings)
         help_menu.addAction(settings_action)
         
         # 界面语言子菜单
-        lang_menu = help_menu.addMenu("界面语言")
+        lang_menu = help_menu.addMenu(self.i18n.t("menu.language"))
         
         # 简体中文
-        zh_action = QAction("简体中文", self)
+        zh_action = QAction(self.i18n.t("menu.lang_zh"), self)
         zh_action.setCheckable(True)
         zh_action.setChecked(self.config.language == "zh_CN")
         zh_action.triggered.connect(lambda: self._change_language("zh_CN"))
         lang_menu.addAction(zh_action)
         
         # English
-        en_action = QAction("English", self)
+        en_action = QAction(self.i18n.t("menu.lang_en"), self)
         en_action.setCheckable(True)
         en_action.setChecked(self.config.language == "en")
         en_action.triggered.connect(lambda: self._change_language("en"))
@@ -534,19 +541,19 @@ class SuperPickyMainWindow(QMainWindow):
         help_menu.addSeparator()
         
         # 检查更新
-        update_action = QAction("检查更新...", self)
+        update_action = QAction(self.i18n.t("menu.check_update"), self)
         update_action.triggered.connect(self._check_for_updates)
         help_menu.addAction(update_action)
         
         # V4.0: 后台运行（最小化到托盘）
-        minimize_tray_action = QAction("后台运行 (保持识鸟服务)", self)
+        minimize_tray_action = QAction(self.i18n.t("menu.background_mode"), self)
         minimize_tray_action.triggered.connect(self._minimize_to_tray)
         help_menu.addAction(minimize_tray_action)
         
         help_menu.addSeparator()
         
         # 关于
-        about_action = QAction("关于慧眼选鸟", self)
+        about_action = QAction(self.i18n.t("menu.about"), self)
         about_action.triggered.connect(self._show_about)
         help_menu.addAction(about_action)
 
@@ -601,7 +608,9 @@ class SuperPickyMainWindow(QMainWindow):
         """识鸟面板可见性变化"""
         if hasattr(self, 'birdid_dock_action'):
             self.birdid_dock_action.setChecked(visible)
-            self.birdid_dock_action.setText("关闭识鸟面板" if visible else "打开识鸟面板")
+            # 这里的文字其实不用动态改变，保持 "打开/关闭" 即可，或者更复杂点
+            # 暂时保持简单
+            pass # self.birdid_dock_action.setText("关闭识鸟面板" if visible else "打开识鸟面板")
     
     def _setup_system_tray(self):
         """V4.0: 设置系统托盘图标"""
@@ -657,7 +666,7 @@ class SuperPickyMainWindow(QMainWindow):
         # 显示托盘图标
         self.tray_icon.show()
         
-        print("✅ 系统托盘图标已启用")
+        print(self.i18n.t("server.tray_icon_enabled"))
     
     def _on_tray_activated(self, reason):
         """托盘图标被点击"""
@@ -924,7 +933,7 @@ class SuperPickyMainWindow(QMainWindow):
         burst_layout = QHBoxLayout()
         burst_layout.setSpacing(10)
         
-        burst_label = QLabel("连拍")
+        burst_label = QLabel(self.i18n.t("labels.burst"))
         burst_label.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 12px;")
         burst_layout.addWidget(burst_label)
         
@@ -938,7 +947,7 @@ class SuperPickyMainWindow(QMainWindow):
         exposure_layout = QHBoxLayout()
         exposure_layout.setSpacing(10)
         
-        exposure_label = QLabel("曝光")  # V4.0: 简化为"曝光"
+        exposure_label = QLabel(self.i18n.t("menu.exposure_label"))
         exposure_label.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 12px;")
         exposure_layout.addWidget(exposure_label)
         
@@ -952,7 +961,7 @@ class SuperPickyMainWindow(QMainWindow):
         birdid_layout = QHBoxLayout()
         birdid_layout.setSpacing(10)
         
-        birdid_label = QLabel("识鸟")
+        birdid_label = QLabel(self.i18n.t("menu.birdid_label"))
         birdid_label.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 12px;")
         birdid_layout.addWidget(birdid_label)
         
@@ -1271,11 +1280,11 @@ class SuperPickyMainWindow(QMainWindow):
         # V4.2: 根据选中的功能动态添加说明
         extra_notes = []
         if self.flight_check.isChecked():
-            extra_notes.append("🟢 飞鸟照片将标记绿色标签（锐度×1.2加成）")
+            extra_notes.append(self.i18n.t("dialogs.note_flight"))
         if self.birdid_check.isChecked():
-            extra_notes.append("🐦 2星+照片将自动识别鸟种，写入EXIF Title")
+            extra_notes.append(self.i18n.t("dialogs.note_birdid"))
         if self.burst_check.isChecked():
-            extra_notes.append("📸 连拍照片将分组保存到 burst_xxx/ 子目录")
+            extra_notes.append(self.i18n.t("dialogs.note_burst"))
         
         if extra_notes:
             notes_text = "\n".join(extra_notes)
@@ -1469,7 +1478,7 @@ class SuperPickyMainWindow(QMainWindow):
                                             shutil.move(src, dst)
                                             burst_stats['files_restored'] += 1
                                         except Exception as e:
-                                            emit_log(f"  ⚠️ 移动失败: {filename}: {e}")
+                                            emit_log(self.i18n.t("logs.move_failed", filename=filename, error=e))
                                 
                                 # 删除空的 burst 目录
                                 try:
@@ -1479,12 +1488,12 @@ class SuperPickyMainWindow(QMainWindow):
                                         shutil.rmtree(burst_path)
                                     burst_stats['dirs_removed'] += 1
                                 except Exception as e:
-                                    emit_log(f"  ⚠️ 删除目录失败: {entry}: {e}")
+                                    emit_log(self.i18n.t("logs.burst_clean_failed", entry=entry, error=e))
                 
                 if burst_stats['dirs_removed'] > 0:
-                    emit_log(f"  ✅ 已清理 {burst_stats['dirs_removed']} 个连拍目录，恢复 {burst_stats['files_restored']} 个文件")
+                    emit_log(self.i18n.t("logs.burst_cleaned", dirs=burst_stats['dirs_removed'], files=burst_stats['files_restored']))
                 else:
-                    emit_log("  ℹ️ 无连拍子目录需要清理")
+                    emit_log(self.i18n.t("logs.burst_no_clean"))
 
                 emit_log(i18n.t("logs.reset_step1"))
                 restore_stats = exiftool_mgr.restore_files_from_manifest(
@@ -1690,11 +1699,11 @@ class SuperPickyMainWindow(QMainWindow):
                     stderr=subprocess.DEVNULL,
                     start_new_session=True
                 )
-                self.birdid_server_action.setText("停止识鸟服务器")
-                self._log("识鸟 API 服务已启动 (端口 5156)", "success")
+                self.birdid_server_action.setText(self.i18n.t("menu.stop_server"))
+                self._log(self.i18n.t("server.api_started", port=5156), "success")
             except Exception as e:
                 from PySide6.QtWidgets import QMessageBox
-                QMessageBox.critical(self, "错误", f"无法启动识鸟 API 服务:\n{e}")
+                QMessageBox.critical(self, self.i18n.t("errors.error_title"), self.i18n.t("server.api_start_failed", error=str(e)))
         else:
             # 停止服务
             try:
@@ -1706,8 +1715,8 @@ class SuperPickyMainWindow(QMainWindow):
                 except:
                     pass
             self._birdid_server_process = None
-            self.birdid_server_action.setText("启动识鸟服务器")
-            self._log("识鸟 API 服务已停止", "info")
+            self.birdid_server_action.setText(self.i18n.t("menu.start_server"))
+            self._log(self.i18n.t("server.api_stopped"), "info")
 
     def _auto_start_birdid_server(self):
         """自动启动识鸟 API 服务器（使用服务器管理器）"""
@@ -1717,21 +1726,21 @@ class SuperPickyMainWindow(QMainWindow):
             # 检查是否已有服务器在运行
             status = get_server_status()
             if status['healthy']:
-                self._log("识鸟 API 服务已在运行 (复用现有服务)", "success")
-                self.birdid_server_action.setText("停止识鸟 API 服务")
+                self._log(self.i18n.t("server.api_reused"), "success")
+                self.birdid_server_action.setText(self.i18n.t("menu.stop_server"))
                 return
             
             # 启动服务器（守护进程模式）
             success, msg, pid = start_server_daemon(log_callback=lambda m: print(m))
             
             if success:
-                self.birdid_server_action.setText("停止识鸟 API 服务")
-                self._log("识鸟 API 服务已自动启动 (端口 5156)", "success")
+                self.birdid_server_action.setText(self.i18n.t("menu.stop_server"))
+                self._log(self.i18n.t("server.api_auto_started", port=5156), "success")
             else:
-                self._log(f"识鸟服务启动失败: {msg}", "warning")
+                self._log(self.i18n.t("server.start_failed", error=msg), "warning")
                 
         except Exception as e:
-            self._log(f"自动启动识鸟服务失败: {e}", "warning")
+            self._log(self.i18n.t("server.start_failed", error=str(e)), "warning")
 
     def _stop_birdid_server(self):
         """停止识鸟 API 服务器（使用服务器管理器）"""
@@ -1739,7 +1748,7 @@ class SuperPickyMainWindow(QMainWindow):
             from server_manager import stop_server
             success, msg = stop_server()
             if success:
-                self._log("识鸟 API 服务已停止", "info")
+                self._log(self.i18n.t("server.api_stopped"), "info")
             else:
                 self._log(f"停止服务器失败: {msg}", "warning")
         except Exception as e:
@@ -1750,6 +1759,12 @@ class SuperPickyMainWindow(QMainWindow):
     def _log(self, message, tag=None):
         """输出日志"""
         from datetime import datetime
+        
+        # 线程安全检查：如果在非主线程中调用，通过信号发送（修复 preloading_models 导致的 Crash）
+        # tag 可能是 None，但 Signal(str, str) 不接受 None，所以转为空字符串
+        if QThread.currentThread() != self.thread():
+            self.log_signal.emit(message, tag if tag else "")
+            return
 
         print(message)
 
@@ -1952,34 +1967,35 @@ class SuperPickyMainWindow(QMainWindow):
         
         def preload_task():
             try:
-                self._log("🔄 正在预加载AI模型...")
+
+                self._log(self.i18n.t("preload.preloading_models"))
                 
                 # 1. YOLO 检测模型
                 from ai_model import load_yolo_model
                 load_yolo_model()
-                self._log("✅ YOLO检测模型已加载")
+                self._log(self.i18n.t("preload.yolo_loaded"))
                 
                 # 2. 关键点检测模型
                 from core.keypoint_detector import get_keypoint_detector
                 kp_detector = get_keypoint_detector()
                 kp_detector.load_model()
-                self._log("✅ 关键点模型已加载")
+                self._log(self.i18n.t("preload.keypoint_loaded"))
                 
                 # 3. 飞版检测模型
                 from core.flight_detector import get_flight_detector
                 flight_detector = get_flight_detector()
                 flight_detector.load_model()
-                self._log("✅ 飞版检测模型已加载")
+                self._log(self.i18n.t("preload.flight_loaded"))
                 
                 # 4. 识鸟模型
                 from birdid.bird_identifier import get_bird_model
                 get_bird_model()
-                self._log("✅ 识鸟模型已加载")
+                self._log(self.i18n.t("preload.birdid_loaded"))
                 
-                self._log("🎉 所有模型预加载完成！\n")
+                self._log(self.i18n.t("preload.preload_complete"))
                 
             except Exception as e:
-                self._log(f"⚠️ 模型预加载失败: {e}", "warning")
+                self._log(self.i18n.t("preload.preload_failed", error=str(e)), "warning")
         
         # 在后台线程中执行，不阻塞UI
         thread = threading.Thread(target=preload_task, daemon=True)
@@ -1996,7 +2012,7 @@ class SuperPickyMainWindow(QMainWindow):
         import threading
         
         if not silent:
-            self._log("正在检查更新...", "info")
+            self._log(self.i18n.t("update.checking"), "info")
         
         def _do_check():
             try:
@@ -2033,7 +2049,7 @@ class SuperPickyMainWindow(QMainWindow):
             import webbrowser
             
             dialog = QDialog(self)
-            dialog.setWindowTitle("检查更新")
+            dialog.setWindowTitle(self.i18n.t("update.window_title"))
             dialog.setMinimumWidth(420)
             dialog.setStyleSheet(f"""
                 QDialog {{
@@ -2055,13 +2071,13 @@ class SuperPickyMainWindow(QMainWindow):
             has_error = update_info.get('error') if update_info else None
             
             if has_error:
-                title = QLabel("⚠️ 检查更新失败")
+                title = QLabel(self.i18n.t("update.check_failed_title"))
                 title.setStyleSheet(f"color: {COLORS['warning']}; font-size: 18px; font-weight: 600;")
             elif has_update:
-                title = QLabel("🎉 发现新版本！")
+                title = QLabel(self.i18n.t("update.new_version_found"))
                 title.setStyleSheet(f"color: {COLORS['accent']}; font-size: 18px; font-weight: 600;")
             else:
-                title = QLabel("✅ 已是最新版本")
+                title = QLabel(self.i18n.t("update.up_to_date_title"))
                 title.setStyleSheet(f"color: {COLORS['success']}; font-size: 18px; font-weight: 600;")
             layout.addWidget(title)
             
@@ -2076,7 +2092,7 @@ class SuperPickyMainWindow(QMainWindow):
             
             # 当前版本
             current_row = QHBoxLayout()
-            current_label = QLabel("当前版本:")
+            current_label = QLabel(self.i18n.t("update.current_version_label"))
             current_label.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 13px;")
             current_row.addWidget(current_label)
             current_row.addStretch()
@@ -2087,7 +2103,7 @@ class SuperPickyMainWindow(QMainWindow):
             
             # 发布版本
             latest_row = QHBoxLayout()
-            latest_label = QLabel("发布版本:")
+            latest_label = QLabel(self.i18n.t("update.latest_version_label"))
             latest_label.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 13px;")
             latest_row.addWidget(latest_label)
             latest_row.addStretch()
@@ -2103,7 +2119,7 @@ class SuperPickyMainWindow(QMainWindow):
             
             # 提示和下载按钮
             if not has_error:
-                msg = QLabel("如需下载，请前往官网：")
+                msg = QLabel(self.i18n.t("update.download_hint"))
                 msg.setStyleSheet(f"color: {COLORS['text_tertiary']}; font-size: 12px;")
                 layout.addWidget(msg)
                 
@@ -2118,7 +2134,7 @@ class SuperPickyMainWindow(QMainWindow):
                 btn_layout.setContentsMargins(16, 12, 16, 12)
                 btn_layout.setSpacing(12)
                 
-                mac_btn = QPushButton("⌘ Mac 版")
+                mac_btn = QPushButton(self.i18n.t("update.mac_version"))
                 mac_btn.setStyleSheet(f"""
                     QPushButton {{
                         background-color: {COLORS['accent']};
@@ -2136,7 +2152,7 @@ class SuperPickyMainWindow(QMainWindow):
                 mac_btn.clicked.connect(lambda: webbrowser.open(download_url))
                 btn_layout.addWidget(mac_btn)
                 
-                win_btn = QPushButton("⊞ Windows 版")
+                win_btn = QPushButton(self.i18n.t("update.windows_version"))
                 win_btn.setStyleSheet(f"""
                     QPushButton {{
                         background-color: {COLORS['bg_card']};
@@ -2163,7 +2179,7 @@ class SuperPickyMainWindow(QMainWindow):
             close_layout = QHBoxLayout()
             close_layout.addStretch()
             
-            close_btn = QPushButton("关闭")
+            close_btn = QPushButton(self.i18n.t("update.close"))
             close_btn.setStyleSheet(f"""
                 QPushButton {{
                     background-color: {COLORS['bg_card']};

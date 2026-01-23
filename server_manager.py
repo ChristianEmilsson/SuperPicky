@@ -16,6 +16,20 @@ import time
 import json
 import threading
 
+# V4.2.1: I18n support
+from i18n import get_i18n
+
+def get_t():
+    """Get translator function"""
+    try:
+        # Try to get language from config file if possible, or default
+        # For server manager, we might just default to system locale or english if config not loaded
+        # But get_i18n handles defaults.
+        return get_i18n().t
+    except Exception:
+        # Fallback if core module not found (e.g. running check script standalone without path)
+        return lambda k, **kw: k
+
 # PID 文件位置
 def get_pid_file_path():
     """获取 PID 文件路径"""
@@ -148,31 +162,32 @@ def start_server_thread(port=5156, log_callback=None):
         print(msg)
     
     # 检查是否已经运行
+    t = get_t()
     if check_server_health(port):
-        log(f"✅ 服务器已在端口 {port} 运行")
-        return True, "服务器已运行", _server_thread
+        log(t("server.server_already_running", port=port))
+        return True, "Server already running", _server_thread
     
     try:
         # 导入服务器模块
         from birdid_server import app, ensure_models_loaded
         from werkzeug.serving import make_server
         
-        log("🔧 打包模式：使用线程方式启动 API 服务器...")
+        log(t("server.packaged_mode_thread"))
         
         def run_server():
             global _server_instance
             try:
                 # 预加载模型
-                log("📦 正在加载 AI 模型...")
+                log(t("server.loading_models"))
                 ensure_models_loaded()
-                log("✅ AI 模型加载完成")
+                log(t("server.models_loaded"))
                 
                 # 创建并运行服务器
                 _server_instance = make_server('127.0.0.1', port, app, threaded=True)
-                log(f"🚀 API 服务器已启动: http://127.0.0.1:{port}")
+                log(t("server.server_started", port=port))
                 _server_instance.serve_forever()
             except Exception as e:
-                log(f"❌ 服务器线程错误: {e}")
+                log(t("server.server_thread_error", error=e))
         
         # 创建并启动守护线程
         _server_thread = threading.Thread(target=run_server, daemon=True, name="BirdID-API-Server")
@@ -182,14 +197,14 @@ def start_server_thread(port=5156, log_callback=None):
         for i in range(60):
             time.sleep(0.5)
             if check_server_health(port):
-                log(f"✅ 服务器健康检查通过，端口 {port}")
-                return True, "服务器启动成功", _server_thread
+                log(t("server.server_health_ok", port=port))
+                return True, "Server start success", _server_thread
         
-        log("⚠️ 服务器启动超时，但线程仍在运行")
-        return True, "服务器启动中", _server_thread
+        log(t("server.server_timeout"))
+        return True, "Server starting", _server_thread
         
     except Exception as e:
-        log(f"❌ 线程启动失败: {e}")
+        log(t("server.thread_start_failed", error=e))
         import traceback
         traceback.print_exc()
         return False, str(e), None
@@ -215,14 +230,15 @@ def start_server_daemon(port=5156, log_callback=None):
         print(msg)
     
     # 检查是否已经运行
+    t = get_t()
     status = get_server_status(port)
     if status['healthy']:
-        log(f"✅ 服务器已在端口 {port} 运行")
-        return True, "服务器已运行", status['pid']
+        log(t("server.server_already_running", port=port))
+        return True, "Server already running", status['pid']
     
     # 如果端口被占用但不健康，可能是僵尸进程
     if status['running'] and not status['healthy']:
-        log("⚠️ 检测到僵尸进程，尝试清理...")
+        log(t("server.zombie_process"))
         stop_server()
         time.sleep(1)
     
@@ -231,13 +247,13 @@ def start_server_daemon(port=5156, log_callback=None):
     
     if is_frozen:
         # 打包模式：使用线程方式启动
-        log("📦 检测到打包模式，使用线程方式启动服务器")
+        log(t("server.packaged_mode_detected"))
         success, message, thread = start_server_thread(port, log_callback)
         # 线程模式没有独立 PID，返回主进程 PID
         return success, message, os.getpid() if success else None
     else:
         # 开发模式：使用子进程方式启动
-        log("🛠️ 开发模式，使用子进程方式启动服务器")
+        log(t("server.dev_mode_subprocess"))
         return _start_server_subprocess(port, log_callback)
 
 
@@ -253,11 +269,13 @@ def _start_server_subprocess(port=5156, log_callback=None):
     python_exe = sys.executable
     server_script = get_server_script_path()
     
+    t = get_t()
+    
     if not os.path.exists(server_script):
-        return False, f"服务器脚本不存在: {server_script}", None
+        return False, f"Server script not found: {server_script}", None
     
     cmd = [python_exe, server_script, '--port', str(port)]
-    log(f"🚀 启动守护进程: {' '.join(cmd)}")
+    log(t("server.starting_daemon", cmd=' '.join(cmd)))
     
     try:
         # 以守护进程方式启动（分离子进程）
@@ -281,25 +299,25 @@ def _start_server_subprocess(port=5156, log_callback=None):
             )
         
         write_pid(process.pid)
-        log(f"📝 服务器 PID: {process.pid}")
+        log(t("server.server_pid", pid=process.pid))
         
         # 等待服务器启动
         for i in range(10):
             time.sleep(0.5)
             if check_server_health(port):
-                log(f"✅ 服务器已启动，端口 {port}")
-                return True, "服务器启动成功", process.pid
+                log(t("server.server_health_ok", port=port))
+                return True, "Server start success", process.pid
         
         if is_process_running(process.pid):
-            log("⚠️ 服务器进程已启动，但健康检查未通过")
-            return True, "服务器启动中", process.pid
+            log(t("server.server_started_health_fail"))
+            return True, "Server starting", process.pid
         else:
-            log("❌ 服务器进程已退出")
+            log(t("server.server_process_exited"))
             remove_pid()
             return False, "服务器启动失败", None
             
     except Exception as e:
-        log(f"❌ 启动失败: {e}")
+        log(t("server.start_failed", error=e))
         return False, str(e), None
 
 
@@ -315,10 +333,11 @@ def stop_server(log_callback=None):
             log_callback(msg)
         print(msg)
     
+    t = get_t()
     pid = read_pid()
     
     if pid and is_process_running(pid):
-        log(f"🛑 停止服务器 (PID: {pid})...")
+        log(t("server.stop_server", pid=pid))
         try:
             os.kill(pid, signal.SIGTERM)
             
@@ -330,23 +349,23 @@ def stop_server(log_callback=None):
             
             # 如果还没退出，强制终止
             if is_process_running(pid):
-                log("⚠️ 进程未响应，强制终止...")
+                log(t("server.force_kill"))
                 os.kill(pid, signal.SIGKILL)
                 time.sleep(0.5)
             
             remove_pid()
-            log("✅ 服务器已停止")
-            return True, "服务器已停止"
+            log(t("server.server_stopped"))
+            return True, "Server stopped"
             
         except (ProcessLookupError, PermissionError) as e:
-            log(f"⚠️ 停止进程失败: {e}")
+            log(t("server.stop_failed", error=e))
             remove_pid()
             return False, str(e)
     else:
         # 清理可能的僵尸 PID 文件
         remove_pid()
-        log("ℹ️ 服务器未运行")
-        return True, "服务器未运行"
+        log(t("server.server_not_running"))
+        return True, "Server not running"
 
 
 def restart_server(port=5156, log_callback=None):
