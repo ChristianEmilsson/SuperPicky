@@ -1480,36 +1480,54 @@ class PhotoProcessor:
             if (file_prefix in raw_dict and 
                 file_ext.lower() in ['.jpg', '.jpeg'] and
                 filename in self.temp_converted_jpegs):
+                
+                # 首先在原目录查找
                 jpg_path = os.path.join(self.dir_path, filename)
+                file_found = False
+                
                 try:
-                    # 使用绝对路径并确保路径存在
+                    # 尝试在原目录删除
                     if os.path.exists(jpg_path):
-                        # 尝试删除文件
                         os.remove(jpg_path)
                         deleted_count += 1
+                        file_found = True
                     else:
-                        # 文件可能已经被移动或不存在，跳过
-                        continue
+                        # V4.0.2 FIX: 文件已被移动到分类文件夹，需要在子文件夹中查找并删除
+                        # 根据 file_ratings 找到文件的评分和对应的文件夹
+                        if file_prefix in self.file_ratings:
+                            rating = self.file_ratings[file_prefix]
+                            base_folder = get_rating_folder_name(rating)
+                            
+                            # 确定实际的目标文件夹（包括鸟种子目录）
+                            if rating >= 2 and file_prefix in self.file_bird_species:
+                                # 有鸟种识别，在鸟种子目录中
+                                bird_info = self.file_bird_species[file_prefix]
+                                if self.i18n.current_lang.startswith('en'):
+                                    bird_name = bird_info.get('en_name', '').replace(' ', '_')
+                                else:
+                                    bird_name = bird_info.get('cn_name', '')
+                                if not bird_name:
+                                    bird_name = bird_info.get('cn_name', '') or bird_info.get('en_name', '').replace(' ', '_') or 'Unknown'
+                                folder = os.path.join(base_folder, bird_name)
+                            elif rating >= 2:
+                                # 2-star/3-star without species ID
+                                other_birds = self.i18n.t("logs.folder_other_birds")
+                                folder = os.path.join(base_folder, other_birds)
+                            else:
+                                # 0-star, 1-star, -1-star
+                                folder = base_folder
+                            
+                            # 在分类文件夹中查找并删除
+                            jpg_path_in_folder = os.path.join(self.dir_path, folder, filename)
+                            if os.path.exists(jpg_path_in_folder):
+                                os.remove(jpg_path_in_folder)
+                                deleted_count += 1
+                                file_found = True
+                
                 except Exception as e:
                     # 记录错误但不中断处理
                     error_msg = str(e)
-                    # 如果是中文路径问题，提供更详细的错误信息
-                    if "系统找不到指定的文件" in error_msg or "WinError 2" in error_msg:
-                        # 检查路径编码
-                        try:
-                            # 尝试使用原始字节路径
-                            jpg_path_bytes = jpg_path.encode('utf-8')
-                            # 检查文件是否存在（使用原始路径）
-                            if os.path.exists(jpg_path):
-                                # 再次尝试删除
-                                os.remove(jpg_path)
-                                deleted_count += 1
-                            else:
-                                self._log(f"  ⚠️ 文件不存在或已被移动: {filename}", "warning")
-                        except Exception as e2:
-                            self._log(f"  ⚠️ 清理失败: {filename} ({error_msg})", "warning")
-                    else:
-                        self._log(f"  ⚠️ 清理失败: {filename} ({error_msg})", "warning")
+                    self._log(f"  ⚠️ 清理失败: {filename} ({error_msg})", "warning")
         
         if deleted_count > 0:
             self._log(self.i18n.t("logs.temp_deleted", count=deleted_count))
