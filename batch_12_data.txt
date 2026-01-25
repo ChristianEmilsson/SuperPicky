@@ -1,0 +1,965 @@
+10001|萨氏信天翁|Salvin's Albatross|Thalassarche salvini
+10002|小白嘴端凤头燕鸥|Cabot's Tern|Thalasseus acuflavidus
+10003|西非凤头燕鸥|West African Crested Tern|Thalasseus albididorsalis
+10004|小凤头燕鸥|Lesser Crested Tern|Thalasseus bengalensis
+10005|大凤头燕鸥|Greater Crested Tern|Thalasseus bergii
+10006|中华凤头燕鸥|Chinese Crested Tern|Thalasseus bernsteini
+10007|丽色凤头燕鸥|Elegant Tern|Thalasseus elegans
+10008|橙嘴凤头燕鸥|Royal Tern|Thalasseus maximus
+10009|白嘴端凤头燕鸥|Sandwich Tern|Thalasseus sandvicensis
+10010|南极鹱|Antarctic Petrel|Thalassoica antarctica
+10011|白背鸭|White-backed Duck|Thalassornis leuconotus
+10012|蓝顶妍蜂鸟|Crowned Woodnymph|Thalurania colombica
+10013|叉尾妍蜂鸟|Fork-tailed Woodnymph|Thalurania furcata
+10014|紫顶妍蜂鸟|Violet-capped Woodnymph|Thalurania glaucopis
+10015|长尾妍蜂鸟|Long-tailed Woodnymph|Thalurania watertonii
+10016|褐蚁鵙|Russet Antshrike|Thamnistes anabatinus
+10017|红褐蚁鵙|Rufescent Antshrike|Thamnistes rufescens
+10018|桂红蚁䳭|Mocking Cliff Chat|Thamnolaea cinnamomeiventris
+10019|桂红壁䳭|White-crowned Cliff Chat|Thamnolaea coronata
+10020|灰喉蚁鵙|Dusky-throated Antshrike|Thamnomanes ardesiacus
+10021|灰蚁鵙|Cinereous Antshrike|Thamnomanes caesius
+10022|暗色蚁鵙|Saturnine Antshrike|Thamnomanes saturninus
+10023|蓝蚁鵙|Bluish-slate Antshrike|Thamnomanes schistogynus
+10024|白肩蚁鵙|White-shouldered Antshrike|Thamnophilus aethiops
+10025|亚马孙蚁鵙|Amazonian Antshrike|Thamnophilus amazonicus
+10026|索瑞蚁鵙|Sooretama Slaty Antshrike|Thamnophilus ambiguus
+10027|山蚁鵙|Upland Antshrike|Thamnophilus aroyae
+10028|西蓝灰蚁鵙|Black-crowned Antshrike|Thamnophilus atrinucha
+10029|领蚁鵙|Collared Antshrike|Thamnophilus bernardi
+10030|黑头蚁鵙|Black-hooded Antshrike|Thamnophilus bridgesi
+10031|杂色蚁鵙|Variable Antshrike|Thamnophilus caerulescens
+10032|卡氏蚁鵙|Castelnau's Antshrike|Thamnophilus cryptoleucus
+10033|亚卡蚁鵙|Acre Antshrike|Thamnophilus divisorius
+10034|横斑蚁鵙|Barred Antshrike|Thamnophilus doliatus
+10035|纹背蚁鵙|Streak-backed Antshrike|Thamnophilus insignis
+10036|黑背蚁鵙|Black-backed Antshrike|Thamnophilus melanonotus
+10037|斑尾蚁鵙|Band-tailed Antshrike|Thamnophilus melanothorax
+10038|斑冠蚁鵙|Bar-crested Antshrike|Thamnophilus multistriatus
+10039|鼠灰蚁鵙|Mouse-colored Antshrike|Thamnophilus murinus
+10040|黑蚁鵙|Black Antshrike|Thamnophilus nigriceps
+10041|黑灰蚁鵙|Blackish-grey Antshrike|Thamnophilus nigrocinereus
+10042|栗背蚁鵙|Chestnut-backed Antshrike|Thamnophilus palliatus
+10043|高原蚁鵙|Planalto Slaty Antshrike|Thamnophilus pelzelni
+10044|厄瓜多尔蚁鵙|Cocha Antshrike|Thamnophilus praecox
+10045|蓝灰蚁鵙|Northern Slaty Antshrike|Thamnophilus punctatus
+10046|棕顶蚁鵙|Rufous-capped Antshrike|Thamnophilus ruficapillus
+10047|黑顶蚁鵙|Plain-winged Antshrike|Thamnophilus schistaceus
+10048|纳氏蚁鵙|Natterer's Slaty Antshrike|Thamnophilus stictocephalus
+10049|玻利维亚蚁鵙|Bolivian Slaty Antshrike|Thamnophilus sticturus
+10050|线纹蚁鵙|Lined Antshrike|Thamnophilus tenuepunctatus
+10051|棕翅蚁鵙|Rufous-winged Antshrike|Thamnophilus torquatus
+10052|纯色蚁鵙|Uniform Antshrike|Thamnophilus unicolor
+10053|查氏蚁鵙|Chapman's Antshrike|Thamnophilus zarumae
+10054|凯瑞薮莺|Thamnornis|Thamnornis chloropetoides
+10055|秘鲁蜂鸟|Tumbes Hummingbird|Thaumasius baeri
+10056|斑喉蜂鸟|Spot-throated Hummingbird|Thaumasius taczanowskii
+10057|矛尾蜂鸟|Peruvian Sheartail|Thaumastura cora
+10058|蓝冠鹦哥|Blue-crowned Parakeet|Thectocercus acuticaudatus
+10059|安第斯鹮|Andean Ibis|Theristicus branickii
+10060|铅色鹮|Plumbeous Ibis|Theristicus caerulescens
+10061|黄颈鹮|Buff-necked Ibis|Theristicus caudatus
+10062|黑脸鹮|Black-faced Ibis|Theristicus melanopis
+10063|沼泽鹎|Swamp Palm Bulbul|Thescelocichla leucopleura
+10064|灰胸籽鹬|Grey-breasted Seedsnipe|Thinocorus orbignyianus
+10065|小籽鹬|Least Seedsnipe|Thinocorus rumicivorus
+10066|黑头鸻|Hooded Dotterel|Thinornis cucullatus
+10067|滨鸻|Shore Dotterel|Thinornis novaeseelandiae
+10068|黄头灰背雀|Fulvous-headed Tanager|Thlypopsis fulviceps
+10069|黄腹灰背雀|Buff-bellied Tanager|Thlypopsis inornata
+10070|棕胸灰背雀|Rufous-chested Tanager|Thlypopsis ornata
+10071|褐胁灰背雀|Brown-flanked Tanager|Thlypopsis pectoralis
+10072|栗头唐纳雀|Chestnut-headed Tanager|Thlypopsis pyrrhocoma
+10073|红黄灰背雀|Rust-and-yellow Tanager|Thlypopsis ruficeps
+10074|橙头灰背雀|Orange-headed Tanager|Thlypopsis sordida
+10075|白眉拟雀|Superciliaried Hemispingus|Thlypopsis superciliaris
+10076|黄翅裸鼻雀|Yellow-winged Tanager|Thraupis abbas
+10077|蓝肩裸鼻雀|Azure-shouldered Tanager|Thraupis cyanoptera
+10078|灰蓝裸鼻雀|Blue-grey Tanager|Thraupis episcopus
+10079|绿灰裸鼻雀|Glaucous Tanager|Thraupis glaucocolpa
+10080|金肩纹裸鼻雀|Golden-chevroned Tanager|Thraupis ornata
+10081|棕榈裸鼻雀|Palm Tanager|Thraupis palmarum
+10082|灰喉裸鼻雀|Sayaca Tanager|Thraupis sayaca
+10083|淡尾髭喉蜂鸟|Pale-tailed Barbthroat|Threnetes leucurus
+10084|暗色髭喉蜂鸟|Sooty Barbthroat|Threnetes niger
+10085|斑尾髭喉蜂鸟|Band-tailed Barbthroat|Threnetes ruckeri
+10086|埃及圣鹮|African Sacred Ibis|Threskiornis aethiopicus
+10087|马岛白鹮|Malagasy Sacred Ibis|Threskiornis bernieri
+10088|黑头白鹮|Black-headed Ibis|Threskiornis melanocephalus
+10089|澳洲白鹮|Australian White Ibis|Threskiornis molucca
+10090|留尼汪孤鸽|Reunion Ibis|Threskiornis solitarius ††
+10091|蓑颈白鹮|Straw-necked Ibis|Threskiornis spinicollis
+10092|火红树猎雀|Flammulated Treehunter|Thripadectes flammulatus
+10093|纵纹树猎雀|Striped Treehunter|Thripadectes holostictus
+10094|纯色树猎雀|Uniform Treehunter|Thripadectes ignobilis
+10095|黑嘴树猎雀|Black-billed Treehunter|Thripadectes melanorhynchus
+10096|纹胸树猎雀|Streak-breasted Treehunter|Thripadectes rufobrunneus
+10097|黄喉树猎雀|Peruvian Treehunter|Thripadectes scrutator
+10098|纹顶树猎雀|Streak-capped Treehunter|Thripadectes virgaticeps
+10099|阿马库罗软尾雀|Delta Amacuro Softtail|Thripophaga amacurensis
+10100|委内瑞拉软尾雀|Orinoco Softtail|Thripophaga cherriei
+10101|纯色软尾雀|Plain Softtail|Thripophaga fusciceps
+10102|斑针尾雀|Speckled Spinetail|Thripophaga gutturata
+10103|条纹软尾雀|Striated Softtail|Thripophaga macroura
+10104|比氏苇鹪鹩|Bewick's Wren|Thryomanes bewickii
+10105|尼氏苇鹪鹩|Niceforo's Wren|Thryophilus nicefori
+10106|斑苇鹪鹩|Banded Wren|Thryophilus pleurostictus
+10107|棕白苇鹪鹩|Rufous-and-white Wren|Thryophilus rufalbus
+10108|安省苇鹪鹩|Antioquia Wren|Thryophilus sernai
+10109|斑臀苇鹪鹩|Sinaloa Wren|Thryophilus sinaloa
+10110|高山鹪鹩|Timberline Wren|Thryorchilus browni
+10111|卡罗苇鹪鹩|Carolina Wren|Thryothorus ludovicianus
+10112|黄脸草雀|Yellow-faced Grassquit|Tiaris olivaceus
+10113|红翅旋壁雀|Wallcreeper|Tichodroma muraria
+10114|宽嘴鹟莺|Broad-billed Warbler|Tickellia hodgsoni
+10115|白冠虎鹭|White-crested Tiger Heron|Tigriornis leucolopha
+10116|横纹虎鹭|Fasciated Tiger Heron|Tigrisoma fasciatum
+10117|栗虎鹭|Rufescent Tiger Heron|Tigrisoma lineatum
+10118|裸喉虎鹭|Bare-throated Tiger Heron|Tigrisoma mexicanum
+10119|火尾蜂鸟|Sparkling-tailed Woodstar|Tilmatura dupontii
+10120|红顶鹛|Chestnut-capped Babbler|Timalia pileata
+10121|黄喉直嘴吸蜜鸟|Olive Straightbill|Timeliopsis fulvigula
+10122|灰喉直嘴吸蜜鸟|Tawny Straightbill|Timeliopsis griseigula
+10123|南山䳍|Patagonian Tinamou|Tinamotis ingoufi
+10124|北山䳍|Puna Tinamou|Tinamotis pentlandii
+10125|白喉䳍|White-throated Tinamou|Tinamus guttatus
+10126|大䳍|Great Tinamou|Tinamus major
+10127|黑䳍|Black Tinamou|Tinamus osgoodi
+10128|孤䳍|Solitary Tinamou|Tinamus solitarius
+10129|灰䳍|Grey Tinamou|Tinamus tao
+10130|黑尾蒂泰霸鹟|Black-tailed Tityra|Tityra cayana
+10131|黑顶蒂泰霸鹟|Black-crowned Tityra|Tityra inquisitor
+10132|花脸蒂泰霸鹟|Masked Tityra|Tityra semifasciata
+10133|金鹨|Golden Pipit|Tmetothylacus tenellus
+10134|达马拉红嘴犀鸟|Damara Red-billed Hornbill|Tockus damarensis
+10135|斑嘴弯嘴犀鸟|Von der Decken's Hornbill|Tockus deckeni
+10136|红嘴弯嘴犀鸟|Northern Red-billed Hornbill|Tockus erythrorhynchus
+10137|黄弯嘴犀鸟|Eastern Yellow-billed Hornbill|Tockus flavirostris
+10138|杰氏弯嘴犀鸟|Jackson's Hornbill|Tockus jacksoni
+10139|西红嘴犀鸟|Western Red-billed Hornbill|Tockus kempi
+10140|南黄弯嘴犀鸟|Southern Yellow-billed Hornbill|Tockus leucomelas
+10141|蒙氏弯嘴犀鸟|Monteiro's Hornbill|Tockus monteiri
+10142|坦桑尼亚红嘴犀鸟|Tanzanian Red-billed Hornbill|Tockus ruahae
+10143|南红嘴犀鸟|Southern Red-billed Hornbill|Tockus rufirostris
+10144|马里亚纳翡翠|Mariana Kingfisher|Todiramphus albicilla
+10145|白背翡翠|White-mantled Kingfisher|Todiramphus albonotatus
+10146|冠翡翠|Cinnamon-banded Kingfisher|Todiramphus australasia
+10147|白领翡翠|Collared Kingfisher|Todiramphus chloris
+10148|桂红翡翠|Guam Kingfisher|Todiramphus cinnamominus
+10149|小岛翡翠|Islet Kingfisher|Todiramphus colonus
+10150|摩鹿加翡翠|Blue-and-white Kingfisher|Todiramphus diops
+10151|暗色翡翠|Talaud Kingfisher|Todiramphus enigma
+10152|栗腹翡翠|Vanuatu Kingfisher|Todiramphus farquhari
+10153|淡黑翡翠|Sombre Kingfisher|Todiramphus funebris
+10154|土岛翡翠|Mangareva Kingfisher|Todiramphus gambieri †
+10155|尼澳岛翡翠|Niau Kingfisher|Todiramphus gertrudae
+10156|马克岛翡翠|Marquesan Kingfisher|Todiramphus godeffroyi
+10157|南摩鹿加翡翠|Lazuli Kingfisher|Todiramphus lazuli
+10158|深蓝翡翠|Ultramarine Kingfisher|Todiramphus leucopygius
+10159|林翡翠|Forest Kingfisher|Todiramphus macleayii
+10160|蓝黑翡翠|Blue-black Kingfisher|Todiramphus nigrocyaneus
+10161|锈顶翡翠|Rusty-capped Kingfisher|Todiramphus pelewensis
+10162|红背翡翠|Red-backed Kingfisher|Todiramphus pyrrhopygius
+10163|扁嘴翡翠|Flat-billed Kingfisher|Todiramphus recurvirostris
+10164|波纳佩翡翠|Pohnpei Kingfisher|Todiramphus reichenbachii
+10165|库克岛翡翠|Mewing Kingfisher|Todiramphus ruficollaris
+10166|太平洋翡翠|Pacific Kingfisher|Todiramphus sacer
+10167|白眉翡翠|Sacred Kingfisher|Todiramphus sanctus
+10168|白头翡翠|Beach Kingfisher|Todiramphus saurophagus
+10169|托列斯翡翠|Torresian Kingfisher|Todiramphus sordidus
+10170|美岛翡翠|Melanesian Kingfisher|Todiramphus tristrami
+10171|博拉翡翠|Chattering Kingfisher|Todiramphus tutus
+10172|社会岛翡翠|Society Kingfisher|Todiramphus veneratus
+10173|菲律宾翡翠|Winchell's Kingfisher|Todiramphus winchelli
+10174|黄眉哑霸鹟|Yellow-browed Tody-Flycatcher|Todirostrum chrysocrotaphum
+10175|哑霸鹟|Common Tody-Flycatcher|Todirostrum cinereum
+10176|斑哑霸鹟|Spotted Tody-Flycatcher|Todirostrum maculatum
+10177|黑头哑霸鹟|Black-headed Tody-Flycatcher|Todirostrum nigriceps
+10178|彩哑霸鹟|Painted Tody-Flycatcher|Todirostrum pictum
+10179|灰头哑霸鹟|Yellow-lored Tody-Flycatcher|Todirostrum poliocephalum
+10180|短尾哑霸鹟|Maracaibo Tody-Flycatcher|Todirostrum viridanum
+10181|狭嘴短尾鴗|Narrow-billed Tody|Todus angustirostris
+10182|波多黎各短尾鴗|Puerto Rican Tody|Todus mexicanus
+10183|杂色短尾鴗|Cuban Tody|Todus multicolor
+10184|阔嘴短尾鴗|Broad-billed Tody|Todus subulatus
+10185|短尾鴗|Jamaican Tody|Todus todus
+10186|齐默氏霸鹟|Zimmer's Flatbill|Tolmomyias assimilis
+10187|黄胸霸鹟|Ochre-lored Flatbill|Tolmomyias flaviventris
+10188|黄羽缘霸鹟|Yellow-margined Flatbill|Tolmomyias flavotectus
+10189|灰顶霸鹟|Grey-crowned Flatbill|Tolmomyias poliocephalus
+10190|黄绿霸鹟|Yellow-olive Flatbill|Tolmomyias sulphurescens
+10191|黄眼霸鹟|Orange-eyed Flatbill|Tolmomyias traylori
+10192|绿脸霸鹟|Olive-faced Flatbill|Tolmomyias viridiceps
+10193|赤叉尾蜂鸟|Crimson Topaz|Topaza pella
+10194|火红叉尾蜂鸟|Fiery Topaz|Topaza pyra
+10195|皱脸秃鹫|Lappet-faced Vulture|Torgos tracheliotos
+10196|萨帕塔鹀|Zapata Sparrow|Torreornis inexpectata
+10197|淡紫尾鹦哥|Lilac-tailed Parrotlet|Touit batavicus
+10198|中美红额鹦哥|Red-fronted Parrotlet|Touit costaricensis
+10199|蓝额鹦哥|Blue-fronted Parrotlet|Touit dilectissimus
+10200|紫肩鹦哥|Scarlet-shouldered Parrotlet|Touit huetii
+10201|褐背鹦哥|Brown-backed Parrotlet|Touit melanonotus
+10202|青腰鹦哥|Sapphire-rumped Parrotlet|Touit purpuratus
+10203|斑翅鹦哥|Spot-winged Parrotlet|Touit stictopterus
+10204|金尾鹦哥|Golden-tailed Parrotlet|Touit surdus
+10205|黄腹弯嘴吸蜜鸟|Yellow-bellied Longbill|Toxorhamphus novaeguineae
+10206|灰颏弯嘴吸蜜鸟|Slaty-headed Longbill|Toxorhamphus poliopterus
+10207|本氏弯嘴嘲鸫|Bendire's Thrasher|Toxostoma bendirei
+10208|灰弯嘴嘲鸫|Grey Thrasher|Toxostoma cinereum
+10209|栗臀弯嘴嘲鸫|Crissal Thrasher|Toxostoma crissale
+10210|弯嘴嘲鸫|Curve-billed Thrasher|Toxostoma curvirostre
+10211|斑弯嘴嘲鸫|Cozumel Thrasher|Toxostoma guttatum
+10212|勒氏弯嘴嘲鸫|LeConte's Thrasher|Toxostoma lecontei
+10213|长弯嘴嘲鸫|Long-billed Thrasher|Toxostoma longirostre
+10214|墨西哥弯嘴嘲鸫|Ocellated Thrasher|Toxostoma ocellatum
+10215|加州弯嘴嘲鸫|California Thrasher|Toxostoma redivivum
+10216|褐弯嘴嘲鸫|Brown Thrasher|Toxostoma rufum
+10217|东非拟啄木|D'Arnaud's Barbet|Trachyphonus darnaudii
+10218|红黄拟䴕|Red-and-yellow Barbet|Trachyphonus erythrocephalus
+10219|黄胸拟䴕|Yellow-breasted Barbet|Trachyphonus margaritatus
+10220|黄嘴拟䴕|Yellow-billed Barbet|Trachyphonus purpuratus
+10221|南非拟䴕|Crested Barbet|Trachyphonus vaillantii
+10222|灰腹角雉|Blyth's Tragopan|Tragopan blythii
+10223|黄腹角雉|Cabot's Tragopan|Tragopan caboti
+10224|黑头角雉|Western Tragopan|Tragopan melanocephalus
+10225|红胸角雉|Satyr Tragopan|Tragopan satyra
+10226|红腹角雉|Temminck's Tragopan|Tragopan temminckii
+10227|斯蒂芬岛异鹩|Lyall's Wren|Traversia † lyalli †
+10228|淡黄歌鸲鹟|Pale-yellow Robin|Tregellasia capito
+10229|白脸歌鸲鹟|White-faced Robin|Tregellasia leucops
+10230|灰额绿鸠|Grey-fronted Green Pigeon|Treron affinis
+10231|针尾绿鸠|Pin-tailed Green Pigeon|Treron apicauda
+10232|布鲁绿鸠|Buru Green Pigeon|Treron aromaticus
+10233|马岛绿鸠|Madagascan Green Pigeon|Treron australis
+10234|菲律宾绿鸠|Philippine Green Pigeon|Treron axillaris
+10235|橙胸绿鸠|Orange-breasted Green Pigeon|Treron bicinctus
+10236|非洲绿鸠|African Green Pigeon|Treron calvus
+10237|大绿鸠|Large Green Pigeon|Treron capellei
+10238|安达曼绿鸠|Andaman Green Pigeon|Treron chloropterus
+10239|厚嘴绿鸠|Thick-billed Green Pigeon|Treron curvirostra
+10240|绿鸠|Flores Green Pigeon|Treron floris
+10241|红顶绿鸠|Whistling Green Pigeon|Treron formosae
+10242|棕头绿鸠|Cinnamon-headed Green Pigeon|Treron fulvicollis
+10243|灰颊绿鸠|Grey-cheeked Green Pigeon|Treron griseicauda
+10244|科摩罗绿鸠|Comoros Green Pigeon|Treron griveaudi
+10245|小绿鸠|Little Green Pigeon|Treron olax
+10246|黄腹针尾绿鸠|Sumatran Green Pigeon|Treron oxyurus
+10247|奔巴绿鸠|Pemba Green Pigeon|Treron pembaensis
+10248|灰头绿鸠|Ashy-headed Green Pigeon|Treron phayrei
+10249|黄脚绿鸠|Yellow-footed Green Pigeon|Treron phoenicopterus
+10250|斯里兰卡绿鸠|Sri Lanka Green Pigeon|Treron pompadora
+10251|帝汶绿鸠|Timor Green Pigeon|Treron psittaceus
+10252|圣多美绿鸠|Sao Tome Green Pigeon|Treron sanctithomae
+10253|白腹针尾绿鸠|Yellow-vented Green Pigeon|Treron seimundi
+10254|红翅绿鸠|White-bellied Green Pigeon|Treron sieboldii
+10255|楔尾绿鸠|Wedge-tailed Green Pigeon|Treron sphenurus
+10256|松巴绿鸠|Sumba Green Pigeon|Treron teysmannii
+10257|红颈绿鸠|Pink-necked Green Pigeon|Treron vernans
+10258|黄腹绿鸠|Bruce's Green Pigeon|Treron waalia
+10259|绿水鸡|Tasmanian Nativehen|Tribonyx mortierii
+10260|黑尾水鸡|Black-tailed Nativehen|Tribonyx ventralis
+10261|白纹岩吸蜜鸟|White-streaked Honeyeater|Trichodere cockerelli
+10262|橘黄彩虹鹦鹉|Marigold Lorikeet|Trichoglossus capistratus
+10263|鳞胸鹦鹉|Scaly-breasted Lorikeet|Trichoglossus chlorolepidotus
+10264|褐头绿鹦鹉|Olive-headed Lorikeet|Trichoglossus euteles
+10265|黄绿鹦鹉|Citrine Lorikeet|Trichoglossus flavoviridis
+10266|红胸吸蜜鹦鹉|Sunset Lorikeet|Trichoglossus forsteni
+10267|椰果彩虹鹦鹉|Coconut Lorikeet|Trichoglossus haematodus
+10268|彩虹吸蜜鹦鹉|Rainbow Lorikeet|Trichoglossus moluccanus
+10269|比亚克彩虹鹦鹉|Biak Lorikeet|Trichoglossus rosenbergii
+10270|紫红鹦鹉|Pohnpei Lorikeet|Trichoglossus rubiginosus
+10271|红领彩虹鹦鹉|Red-collared Lorikeet|Trichoglossus rubritorquis
+10272|叶华丽鹦鹉|Leaf Lorikeet|Trichoglossus weberi
+10273|红额拟䴕|Red-fronted Barbet|Tricholaema diademata
+10274|米奥斑拟䴕|Miombo Pied Barbet|Tricholaema frontata
+10275|丝胸拟䴕|Hairy-breasted Barbet|Tricholaema hirsuta
+10276|斑肋拟䴕|Spot-flanked Barbet|Tricholaema lacrymosa
+10277|斑拟䴕|Acacia Pied Barbet|Tricholaema leucomelas
+10278|黑喉拟䴕|Black-throated Barbet|Tricholaema melanocephala
+10279|丝背鹎|Hairy-backed Bulbul|Tricholestes criniger
+10280|黑脸唐拉格雀|Black-goggled Tanager|Trichothraupis melanops
+10281|蓝腹鹦哥|Blue-bellied Parrot|Triclaria malachitacea
+10282|白头秃鹫|White-headed Vulture|Trigonoceps occipitalis
+10283|灰尾漂鹬|Grey-tailed Tattler|Tringa brevipes
+10284|鹤鹬|Spotted Redshank|Tringa erythropus
+10285|小黄脚鹬|Lesser Yellowlegs|Tringa flavipes
+10286|林鹬|Wood Sandpiper|Tringa glareola
+10287|小青脚鹬|Nordmann's Greenshank|Tringa guttifer
+10288|漂鹬|Wandering Tattler|Tringa incana
+10289|大黄脚鹬|Greater Yellowlegs|Tringa melanoleuca
+10290|青脚鹬|Common Greenshank|Tringa nebularia
+10291|白腰草鹬|Green Sandpiper|Tringa ochropus
+10292|斑翅鹬|Willet|Tringa semipalmata
+10293|褐腰草鹬|Solitary Sandpiper|Tringa solitaria
+10294|泽鹬|Marsh Sandpiper|Tringa stagnatilis
+10295|红脚鹬|Common Redshank|Tringa totanus
+10296|黑顶噪鹛|Black-faced Laughingthrush|Trochalopteron affine
+10297|褐顶噪鹛|Brown-capped Laughingthrush|Trochalopteron austeni
+10298|金翅噪鹛|Assam Laughingthrush|Trochalopteron chrysopterum
+10299|橙翅噪鹛|Elliot's Laughingthrush|Trochalopteron elliotii
+10300|红头噪鹛|Chestnut-crowned Laughingthrush|Trochalopteron erythrocephalum
+10301|丽色噪鹛|Red-winged Laughingthrush|Trochalopteron formosum
+10302|灰腹噪鹛|Brown-cheeked Laughingthrush|Trochalopteron henrici
+10303|丽星噪鹛|Bhutan Laughingthrush|Trochalopteron imbricatum
+10304|细纹噪鹛|Streaked Laughingthrush|Trochalopteron lineatum
+10305|银耳噪鹛|Silver-eared Laughingthrush|Trochalopteron melanostigma
+10306|赤尾噪鹛|Red-tailed Laughingthrush|Trochalopteron milnei
+10307|玉山噪鹛|White-whiskered Laughingthrush|Trochalopteron morrisonianum
+10308|越南金翅噪鹛|Golden-winged Laughingthrush|Trochalopteron ngoclinhense
+10309|马来噪鹛|Malayan Laughingthrush|Trochalopteron peninsulae
+10310|蓝翅噪鹛|Blue-winged Laughingthrush|Trochalopteron squamatum
+10311|纯色噪鹛|Scaly Laughingthrush|Trochalopteron subunicolor
+10312|杂色噪鹛|Variegated Laughingthrush|Trochalopteron variegatum
+10313|纹耳噪鹛|Striped Laughingthrush|Trochalopteron virgatum
+10314|纹枕噪鹛|Collared Laughingthrush|Trochalopteron yersini
+10315|红嘴长尾蜂鸟|Red-billed Streamertail|Trochilus polytmus
+10316|黑嘴长尾蜂鸟|Black-billed Streamertail|Trochilus scitulus
+10317|非洲凤头鹟|Blue-mantled Crested Flycatcher|Trochocercus cyanomelas
+10318|蓝头凤头鹟|Blue-headed Crested Flycatcher|Trochocercus nitens
+10319|莺鹪鹩|House Wren|Troglodytes aedon
+10320|科氏鹪鹩|Cobb's Wren|Troglodytes cobbi
+10321|冬鹪鹩|Winter Wren|Troglodytes hiemalis
+10322|圣岛鹪鹩|Santa Marta Wren|Troglodytes monticola
+10323|赭鹪鹩|Ochraceous Wren|Troglodytes ochraceus
+10324|太平洋鹪鹩|Pacific Wren|Troglodytes pacificus
+10325|棕眉鹪鹩|Rufous-browed Wren|Troglodytes rufociliatus
+10326|淡红鹪鹩|Tepui Wren|Troglodytes rufulus
+10327|索科罗苇鹪鹩|Socorro Wren|Troglodytes sissonii
+10328|山鹪鹩|Mountain Wren|Troglodytes solstitialis
+10329|号声鹪鹩|Clarion Wren|Troglodytes tanneri
+10330|鹪鹩|Eurasian Wren|Troglodytes troglodytes
+10331|拜氏美洲咬鹃|Baird's Trogon|Trogon bairdii
+10332|斑尾美洲咬鹃|Gartered Trogon|Trogon caligatus
+10333|白尾美洲咬鹃|White-tailed Trogon|Trogon chionurus
+10334|黄纹美洲咬鹃|Citreoline Trogon|Trogon citreolus
+10335|花尾美洲咬鹃|Lattice-tailed Trogon|Trogon clathratus
+10336|白领美洲咬鹃|Collared Trogon|Trogon collaris
+10337|白眼美洲咬鹃|Choco Trogon|Trogon comptus
+10338|蓝顶美洲咬鹃|Blue-crowned Trogon|Trogon curucui
+10339|铜尾美洲咬鹃|Elegant Trogon|Trogon elegans
+10340|灰尾美洲咬鹃|Slaty-tailed Trogon|Trogon massena
+10341|黑头美洲咬鹃|Black-headed Trogon|Trogon melanocephalus
+10342|黑尾美洲咬鹃|Black-tailed Trogon|Trogon melanurus
+10343|厄瓜多尔美洲咬鹃|Ecuadorian Trogon|Trogon mesurus
+10344|高山美洲咬鹃|Mountain Trogon|Trogon mexicanus
+10345|美洲咬鹃|Masked Trogon|Trogon personatus
+10346|亚马逊美洲咬鹃|Amazonian Trogon|Trogon ramonianus
+10347|黑喉美洲咬鹃|Black-throated Trogon|Trogon rufus
+10348|苏鲁美洲咬鹃|Surucua Trogon|Trogon surrucura
+10349|紫头美洲咬鹃|Guianan Trogon|Trogon violaceus
+10350|绿背美洲咬鹃|Green-backed Trogon|Trogon viridis
+10351|栗胸山鹧鸪|Chestnut-necklaced Partridge|Tropicoperdix charltonii
+10352|绿脚树鹧鸪|Green-legged Partridge|Tropicoperdix chloropus
+10353|厚嘴地鸠|Thick-billed Ground Pigeon|Trugon terrestris
+10354|通贝斯唧霸鹟|Tumbes Tyrant|Tumbezia salvini
+10355|褐顶绿莺雀|Tawny-crowned Greenlet|Tunchiornis ochraceiceps
+10356|白脸蕉鸠|White-faced Cuckoo-Dove|Turacoena manadensis
+10357|黑蕉鸠|Black Cuckoo-Dove|Turacoena modesta
+10358|苏拉蕉鸠|Sula Cuckoo-Dove|Turacoena sulaensis
+10359|黑喉鹪鹛|Black-throated Wren-Babbler|Turdinus atrigularis
+10360|大鹪鹛|Large Wren-Babbler|Turdinus macrodactylus
+10361|石纹鹪鹛|Marbled Wren-Babbler|Turdinus marmoratus
+10362|斗蓬鹛|Capuchin Babbler|Turdoides atripennis
+10363|斑鸫鹛|Southern Pied Babbler|Turdoides bicolor
+10364|查氏鵙鹛|Chapin's Babbler|Turdoides chapini
+10365|白喉鵙鹛|White-throated Mountain Babbler|Turdoides gilberti
+10366|裸颊鸫鹛|Bare-cheeked Babbler|Turdoides gymnogenys
+10367|安哥拉鸫鹛|Hartlaub's Babbler|Turdoides hartlaubii
+10368|海氏斑鸫鹛|Hinde's Babbler|Turdoides hindei
+10369|北斑鸫鹛|Northern Pied Babbler|Turdoides hypoleuca
+10370|箭纹鸫鹛|Arrow-marked Babbler|Turdoides jardineii
+10371|白头鸫鹛|White-headed Babbler|Turdoides leucocephala
+10372|白腰鸫鹛|White-rumped Babbler|Turdoides leucopygia
+10373|黑脸鸫鹛|Black-faced Babbler|Turdoides melanops
+10374|刺鸫鹛|Spiny Babbler|Turdoides nipalensis
+10375|非洲褐鸫鹛|Brown Babbler|Turdoides plebejus
+10376|黑头鸫鹛|Blackcap Babbler|Turdoides reinwardtii
+10377|棕颈鵙鹛|Red-collared Babbler|Turdoides rufocinctus
+10378|黑眼先鸫鹛|Black-lored Babbler|Turdoides sharpei
+10379|鳞羽鸫鹛|Scaly Babbler|Turdoides squamulata
+10380|暗色鸫鹛|Dusky Babbler|Turdoides tenebrosa
+10381|阿比西尼亞鶇|Abyssinian Thrush|Turdus abyssinicus
+10382|南美白颈鸫|White-necked Thrush|Turdus albicollis
+10383|白颈鸫|White-collared Blackbird|Turdus albocinctus
+10384|淡腹鸫|Creamy-bellied Thrush|Turdus amaurochalinus
+10385|坎皮纳黑嘴鸫|Campina Thrush|Turdus arthuri
+10386|白喉鸫|White-throated Thrush|Turdus assimilis
+10387|黑颈鸫|Black-throated Thrush|Turdus atrogularis
+10388|白颏鸫|White-chinned Thrush|Turdus aurantius
+10389|科摩罗鸫|Comoros Thrush|Turdus bewsheri
+10390|灰翅鸫|Grey-winged Blackbird|Turdus boulboul
+10391|乌灰鸫|Japanese Thrush|Turdus cardis
+10392|伊岛鸫|Izu Thrush|Turdus celaenops
+10393|芝古鸫|Chiguanco Thrush|Turdus chiguanco
+10394|赤胸鸫|Brown-headed Thrush|Turdus chrysolaus
+10395|达瓜鸫|Dagua Thrush|Turdus daguae
+10396|黑胸鸫|Black-breasted Thrush|Turdus dissimilis
+10397|特里斯坦鸫|Tristan Thrush|Turdus eremita
+10398|斑鸫|Dusky Thrush|Turdus eunomus
+10399|南美鸫|Austral Thrush|Turdus falcklandii
+10400|褐头鸫|Grey-sided Thrush|Turdus feae
+10401|黄腿鸫|Yellow-legged Thrush|Turdus flavipes
+10402|栗腹鸫|Chestnut-bellied Thrush|Turdus fulviventris
+10403|淡臀鸫|Cocoa Thrush|Turdus fumigatus
+10404|大棕鸫|Great Thrush|Turdus fuscater
+10405|褐背鸫|Clay-colored Thrush|Turdus grayi
+10406|纯色鸫|Unicolored Thrush|Turdus haplochrous
+10407|豪氏鸫|Hauxwell's Thrush|Turdus hauxwelli
+10408|泰塔鸫|Taita Thrush|Turdus helleri
+10409|灰背鸫|Grey-backed Thrush|Turdus hortulorum
+10410|黑嘴鸫|Black-billed Thrush|Turdus ignobilis
+10411|白眉歌鸫|Redwing|Turdus iliacus
+10412|美洲黑鸫|Black Thrush|Turdus infuscatus
+10413|白眼鸫|White-eyed Thrush|Turdus jamaicensis
+10414|棕背黑头鸫|Kessler's Thrush|Turdus kessleri
+10415|罗氏鸫|Lawrence's Thrush|Turdus lawrencii
+10416|淡胸鸫|Pale-breasted Thrush|Turdus leucomelas
+10417|淡眼鸫|Pale-eyed Thrush|Turdus leucops
+10418|林鸫|Forest Thrush|Turdus lherminieri
+10419|利邦鸫|Kurrichane Thrush|Turdus libonyana
+10420|非洲地鸫|Groundscraper Thrush|Turdus litsitsirupa
+10421|索马利鸫|Somali Thrush|Turdus ludoviciae
+10422|厄瓜多尔鸫|Ecuadorian Thrush|Turdus maculirostris
+10423|乌鸫|Chinese Blackbird|Turdus mandarinus
+10424|马拉鸫|Maranon Thrush|Turdus maranonicus
+10425|藏乌鸫|Tibetan Blackbird|Turdus maximus
+10426|也门鸫|Yemen Thrush|Turdus menachensis
+10427|欧乌鸫|Common Blackbird|Turdus merula
+10428|旅鸫|American Robin|Turdus migratorius
+10429|宝兴歌鸫|Chinese Thrush|Turdus mupinensis
+10430|泰普黑嘴鸫|Pantepui Thrush|Turdus murinus
+10431|红尾鸫|Naumann's Thrush|Turdus naumanni
+10432|乌鸲鸫|Sooty Thrush|Turdus nigrescens
+10433|安第斯灰鸫|Andean Slaty Thrush|Turdus nigriceps
+10434|裸眼鸫|Spectacled Thrush|Turdus nudigenis
+10435|白眉鸫|Eyebrowed Thrush|Turdus obscurus
+10436|白臀鸫|Pale-vented Thrush|Turdus obsoletus
+10437|绿棕鸫|Sao Tome Thrush|Turdus olivaceofuscus
+10438|橄欖鶇|Olive Thrush|Turdus olivaceus
+10439|黑冠鸫|Black-hooded Thrush|Turdus olivater
+10440|白腹鸫|Pale Thrush|Turdus pallidus
+10441|非洲鸫|African Thrush|Turdus pelios
+10442|欧歌鸫|Song Thrush|Turdus philomelos
+10443|田鸫|Fieldfare|Turdus pilaris
+10444|美洲山鸫|Mountain Thrush|Turdus plebejus
+10445|红腿鸫|Red-legged Thrush|Turdus plumbeus
+10446|岛鸫|Island Thrush|Turdus poliocephalus
+10447|大开曼鸫|Grand Cayman Thrush|Turdus ravidus †
+10448|铅背鸫|Plumbeous-backed Thrush|Turdus reevei
+10449|乌桑巴拉鸫|Usambara Thrush|Turdus roehli
+10450|灰头鸫|Chestnut Thrush|Turdus rubrocanus
+10451|赤颈鸫|Red-throated Thrush|Turdus ruficollis
+10452|中美棕颈鸫|Rufous-collared Thrush|Turdus rufitorques
+10453|棕腹鸫|Rufous-bellied Thrush|Turdus rufiventris
+10454|棕背鸲鸫|Rufous-backed Thrush|Turdus rufopalliatus
+10455|巴西裸眼鸫|Varzea Thrush|Turdus sanchezorum
+10456|辉背鸫|Glossy-black Thrush|Turdus serranus
+10457|印度烏鶇|Indian Blackbird|Turdus simillimus
+10458|卡鲁鸫|Karoo Thrush|Turdus smithi
+10459|石鸫|Blacksmith Thrush|Turdus subalaris
+10460|红腹鸫|La Selle Thrush|Turdus swalesi
+10461|非洲裸眼鸫|Bare-eyed Thrush|Turdus tephronotus
+10462|环颈鸫|Ring Ouzel|Turdus torquatus
+10463|卡塔鸫|Sulawesi Thrush|Turdus turdoides
+10464|梯氏鸫|Tickell's Thrush|Turdus unicolor
+10465|槲鸫|Mistle Thrush|Turdus viscivorus
+10466|普林西比鸫|Principe Thrush|Turdus xanthorhynchus
+10467|纽西兰鸫鹟|South Island Piopio|Turnagra † capensis †
+10468|北岛鸫鹟|North Island Piopio|Turnagra † tanagra †
+10469|栗背三趾鹑|Chestnut-backed Buttonquail|Turnix castanotus
+10470|松巴三趾鹑|Sumba Buttonquail|Turnix everetti
+10471|非洲三趾鹑|Hottentot Buttonquail|Turnix hottentottus
+10472|红背三趾鹑|Red-backed Buttonquail|Turnix maculosus
+10473|黑胸三趾鹑|Black-breasted Buttonquail|Turnix melanogaster
+10474|黑腰三趾鹑|Black-rumped Buttonquail|Turnix nanus
+10475|马岛三趾鹑|Madagascan Buttonquail|Turnix nigricollis
+10476|菲律宾三趾鹑|Spotted Buttonquail|Turnix ocellatus
+10477|黄胸三趾鹑|Buff-breasted Buttonquail|Turnix olivii
+10478|红胸三趾鹑|Red-chested Buttonquail|Turnix pyrrhothorax
+10479|棕三趾鹑|Barred Buttonquail|Turnix suscitator
+10480|林三趾鹑|Common Buttonquail|Turnix sylvaticus
+10481|黄脚三趾鹑|Yellow-legged Buttonquail|Turnix tanki
+10482|彩三趾鹑|Painted Buttonquail|Turnix varius
+10483|小三趾鹑|Little Buttonquail|Turnix velox
+10484|沃氏三趾鹑|Worcester's Buttonquail|Turnix worcesteri
+10485|黑嘴森鸠|Black-billed Wood Dove|Turtur abyssinicus
+10486|蓝斑森鸠|Blue-spotted Wood Dove|Turtur afer
+10487|蓝头森鸠|Blue-headed Wood Dove|Turtur brehmeri
+10488|绿点森鸠|Emerald-spotted Wood Dove|Turtur chalcospilos
+10489|白胸森鸠|Tambourine Dove|Turtur tympanistria
+10490|须薮鸲|Miombo Scrub Robin|Tychaedon barbata
+10491|卡如薮鸲|Karoo Scrub Robin|Tychaedon coryphoeus
+10492|林薮鸲|Forest Scrub Robin|Tychaedon leucosticta
+10493|东须薮鸲|Bearded Scrub Robin|Tychaedon quadrivirgata
+10494|褐薮鸲|Brown Scrub Robin|Tychaedon signata
+10495|泰拉钩嘴鵙|Tylas Vanga|Tylas eduardi
+10496|草原松鸡|Greater Prairie Chicken|Tympanuchus cupido
+10497|小草原松鸡|Lesser Prairie Chicken|Tympanuchus pallidicinctus
+10498|尖尾松鸡|Sharp-tailed Grouse|Tympanuchus phasianellus
+10499|侏霸娇鹟|Dwarf Tyrant-Manakin|Tyranneutes stolzmanni
+10500|小霸娇鹟|Tiny Tyrant-Manakin|Tyranneutes virescens
+10501|灰头小霸鹟|Ashy-headed Tyrannulet|Tyranniscus cinereiceps
+10502|黑顶小霸鹟|Black-capped Tyrannulet|Tyranniscus nigrocapillus
+10503|褐腰小霸鹟|Tawny-rumped Tyrannulet|Tyranniscus uropygialis
+10504|黄白喉霸鹟|Sulphury Flycatcher|Tyrannopsis sulphurea
+10505|黄顶小霸鹟|Yellow-crowned Tyrannulet|Tyrannulus elatus
+10506|白喉王霸鹟|White-throated Kingbird|Tyrannus albogularis
+10507|圆头王霸鹟|Loggerhead Kingbird|Tyrannus caudifasciatus
+10508|库氏王霸鹟|Couch's Kingbird|Tyrannus couchii
+10509|厚嘴王霸鹟|Thick-billed Kingbird|Tyrannus crassirostris
+10510|巨王霸鹟|Giant Kingbird|Tyrannus cubensis
+10511|灰王霸鹟|Grey Kingbird|Tyrannus dominicensis
+10512|剪尾王霸鹟|Scissor-tailed Flycatcher|Tyrannus forficatus
+10513|热带王霸鹟|Tropical Kingbird|Tyrannus melancholicus
+10514|雪喉王霸鹟|Snowy-throated Kingbird|Tyrannus niveigularis
+10515|叉尾王霸鹟|Fork-tailed Flycatcher|Tyrannus savana
+10516|东王霸鹟|Eastern Kingbird|Tyrannus tyrannus
+10517|西王霸鹟|Western Kingbird|Tyrannus verticalis
+10518|卡氏王霸鹟|Cassin's Kingbird|Tyrannus vociferans
+10519|西方仓鸮|Western Barn Owl|Tyto alba
+10520|橘仓鸮|Golden Masked Owl|Tyto aurantia
+10521|非洲草鸮|African Grass Owl|Tyto capensis
+10522|安达曼草鸮|Andaman Masked Owl|Tyto deroepstorffi
+10523|美洲仓鸮|American Barn Owl|Tyto furcata
+10524|灰面鸮|Ashy-faced Owl|Tyto glaucops
+10525|米纳仓鸮|Minahassa Masked Owl|Tyto inexspectata
+10526|仓鸮|Eastern Barn Owl|Tyto javanica
+10527|草鸮|Eastern Grass Owl|Tyto longimembris
+10528|马努斯草鸮|Manus Masked Owl|Tyto manusi
+10529|小乌鸮|Lesser Sooty Owl|Tyto multipunctata
+10530|塔里仓鸮|Taliabu Masked Owl|Tyto nigrobrunnea
+10531|大草鸮|Australian Masked Owl|Tyto novaehollandiae
+10532|苏拉仓鸮|Sulawesi Masked Owl|Tyto rosenbergii
+10533|小草鸮|Moluccan Masked Owl|Tyto sororcula
+10534|马岛草鸮|Red Owl|Tyto soumagnei
+10535|乌草鸮|Greater Sooty Owl|Tyto tenebricosa
+10536|白喉爬地雀|White-throated Earthcreeper|Upucerthia albigula
+10537|鳞喉爬地雀|Scale-throated Earthcreeper|Upucerthia dumetaria
+10538|巴塔哥尼亚林爬地雀|Patagonian Forest Earthcreeper|Upucerthia saturatior
+10539|黄胸爬地雀|Buff-breasted Earthcreeper|Upucerthia validirostris
+10540|非洲戴胜|African Hoopoe|Upupa africana
+10541|圣赫勒拿岛戴胜|St. Helena Hoopoe|Upupa antaios ††
+10542|戴胜|Eurasian Hoopoe|Upupa epops
+10543|马岛戴胜|Madagascan Hoopoe|Upupa marginata
+10544|安哥拉蓝饰雀|Blue Waxbill|Uraeginthus angolensis
+10545|红颊蓝饰雀|Red-cheeked Cordon-bleu|Uraeginthus bengalus
+10546|蓝顶蓝饰雀|Blue-capped Cordon-bleu|Uraeginthus cyanocephalus
+10547|安第斯蜂鸟|Andean Emerald|Uranomitra franciae
+10548|长尾地三宝鸟|Long-tailed Ground Roller|Uratelornis chimaera
+10549|崖海鸦|Common Murre|Uria aalge
+10550|厚嘴崖海鸦|Thick-billed Murre|Uria lomvia
+10551|海鸬鹚|Pelagic Cormorant|Urile pelagicus
+10552|加州鸬鹚|Brandt's Cormorant|Urile penicillatus
+10553|红脸鸬鹚|Red-faced Cormorant|Urile urile
+10554|白尾蓝胸蜂鸟|Rufous-gaped Hillstar|Urochroa bougueri
+10555|绿背山蜂鸟|Green-backed Hillstar|Urochroa leucura
+10556|台湾蓝鹊|Taiwan Blue Magpie|Urocissa caerulea
+10557|红嘴蓝鹊|Red-billed Blue Magpie|Urocissa erythroryncha
+10558|黄嘴蓝鹊|Yellow-billed Blue Magpie|Urocissa flavirostris
+10559|斯里兰卡蓝鹊|Sri Lanka Blue Magpie|Urocissa ornata
+10560|白翅蓝鹊|White-winged Magpie|Urocissa whiteheadi
+10561|红脸鼠鸟|Red-faced Mousebird|Urocolius indicus
+10562|蓝枕鼠鸟|Blue-naped Mousebird|Urocolius macrourus
+10563|朱鹀|Przevalski's Finch|Urocynchramus pylzowi
+10564|长尾噪鹃|Pacific Long-tailed Cuckoo|Urodynamis taitensis
+10565|丛鹰鸮|Papuan Hawk-Owl|Uroglaux dimorpha
+10566|绿长尾莺|Green Longtail|Urolais epichlorus
+10567|敏雀霸鹟|Agile Tit-Tyrant|Uromyias agilis
+10568|无纹雀霸鹟|Unstreaked Tit-Tyrant|Uromyias agraphia
+10569|长尾地鸠|Long-tailed Ground Dove|Uropelia campestris
+10570|大燕尾夜鹰|Lyre-tailed Nightjar|Uropsalis lyra
+10571|小燕尾夜鹰|Swallow-tailed Nightjar|Uropsalis segmentata
+10572|白腹鹪鹩|White-bellied Wren|Uropsila leucogastra
+10573|鳞头树莺|Asian Stubtail|Urosphena squameiceps
+10574|帝汶短尾莺|Timor Stubtail|Urosphena subulata
+10575|印尼短尾莺|Bornean Stubtail|Urosphena whiteheadi
+10576|白尾梢蜂鸟|Purple-bibbed Whitetip|Urosticte benjamini
+10577|棕臀白尾梢蜂鸟|Rufous-vented Whitetip|Urosticte ruficrissa
+10578|黑背丛雀|Black-backed Bush Tanager|Urothraupis stolzmanni
+10579|非洲长尾鹰|Long-tailed Hawk|Urotriorchis macrourus
+10580|白头麦鸡|White-crowned Lapwing|Vanellus albiceps
+10581|黑背麦鸡|Blacksmith Lapwing|Vanellus armatus
+10582|凤头距翅麦鸡|Southern Lapwing|Vanellus chilensis
+10583|灰头麦鸡|Grey-headed Lapwing|Vanellus cinereus
+10584|冕麦鸡|Crowned Lapwing|Vanellus coronatus
+10585|长趾麦鸡|Long-toed Lapwing|Vanellus crassirostris
+10586|距翅麦鸡|River Lapwing|Vanellus duvaucelii
+10587|黄颊麦鸡|Sociable Lapwing|Vanellus gregarius
+10588|肉垂麦鸡|Red-wattled Lapwing|Vanellus indicus
+10589|白尾麦鸡|White-tailed Lapwing|Vanellus leucurus
+10590|塞内加尔麦鸡|Senegal Lapwing|Vanellus lugubris
+10591|爪哇麦鸡|Javan Lapwing|Vanellus macropterus †
+10592|黄垂麦鸡|Yellow-wattled Lapwing|Vanellus malabaricus
+10593|斑胸麦鸡|Spot-breasted Lapwing|Vanellus melanocephalus
+10594|黑翅麦鸡|Black-winged Lapwing|Vanellus melanopterus
+10595|白颈麦鸡|Masked Lapwing|Vanellus miles
+10596|安第斯麦鸡|Andean Lapwing|Vanellus resplendens
+10597|黑喉麦鸡|African Wattled Lapwing|Vanellus senegallus
+10598|黑胸麦鸡|Spur-winged Lapwing|Vanellus spinosus
+10599|褐胸麦鸡|Brown-chested Lapwing|Vanellus superciliosus
+10600|非洲麦鸡|Black-headed Lapwing|Vanellus tectus
+10601|三色麦鸡|Banded Lapwing|Vanellus tricolor
+10602|凤头麦鸡|Northern Lapwing|Vanellus vanellus
+10603|钩嘴鵙|Hook-billed Vanga|Vanga curvirostris
+10604|黑林鹟|White-throated Jungle Flycatcher|Vauriella albigularis
+10605|棉岛林鹟|Slaty-backed Jungle Flycatcher|Vauriella goodfellowi
+10606|白眉林鹟|Eyebrowed Jungle Flycatcher|Vauriella gularis
+10607|吕宋林鹟|White-browed Jungle Flycatcher|Vauriella insignis
+10608|非洲褐夜鹰|Brown Nightjar|Veles binotatus
+10609|红晕啄木鸟|Red-stained Woodpecker|Veniliornis affinis
+10610|朱背啄木鸟|Scarlet-backed Woodpecker|Veniliornis callonotus
+10611|金领啄木鸟|Golden-collared Woodpecker|Veniliornis cassini
+10612|乔科啄木鸟|Choco Woodpecker|Veniliornis chocoensis
+10613|黄臀啄木鸟|Yellow-vented Woodpecker|Veniliornis dignus
+10614|点额啄木鸟|Dot-fronted Woodpecker|Veniliornis frontalis
+10615|红腰啄木鸟|Red-rumped Woodpecker|Veniliornis kirkii
+10616|条纹啄木鸟|Striped Woodpecker|Veniliornis lignarius
+10617|黄耳啄木鸟|Yellow-eared Woodpecker|Veniliornis maculifrons
+10618|格斑啄木鸟|Checkered Woodpecker|Veniliornis mixtus
+10619|斑腹啄木鸟|Bar-bellied Woodpecker|Veniliornis nigriceps
+10620|小啄木鸟|Little Woodpecker|Veniliornis passerinus
+10621|红啄木鸟|Blood-colored Woodpecker|Veniliornis sanguineus
+10622|白斑啄木鸟|White-spotted Woodpecker|Veniliornis spilogaster
+10623|黑胸虫森莺|Bachman's Warbler|Vermivora bachmanii
+10624|金翅虫森莺|Golden-winged Warbler|Vermivora chrysoptera
+10625|蓝翅虫森莺|Blue-winged Warbler|Vermivora cyanoptera
+10626|非洲姬啄木鸟|African Piculet|Verreauxia africana
+10627|喀麦隆维达雀|Cameroon Indigobird|Vidua camerunensis
+10628|靛蓝维达鸟|Village Indigobird|Vidua chalybeata
+10629|双斑维达雀|Zambezi Indigobird|Vidua codringtoni
+10630|草尾维达鸟|Straw-tailed Whydah|Vidua fischeri
+10631|暗紫维达雀|Dusky Indigobird|Vidua funerea
+10632|辉蓝维达雀|Steel-blue Whydah|Vidua hypocherina
+10633|长尾维达雀|Exclamatory Paradise Whydah|Vidua interjecta
+10634|巴喀维达雀|Barka Indigobird|Vidua larvaticola
+10635|针尾维达雀|Pin-tailed Whydah|Vidua macroura
+10636|乔斯维达雀|Jos Plateau Indigobird|Vidua maryae
+10637|鹑雀达雀|Quailfinch Indigobird|Vidua nigeriae
+10638|宽尾维达雀|Broad-tailed Paradise Whydah|Vidua obtusa
+10639|北维达雀|Sahel Paradise Whydah|Vidua orientalis
+10640|乐园维达雀|Long-tailed Paradise Whydah|Vidua paradisaea
+10641|暗色维达雀|Purple Indigobird|Vidua purpurascens
+10642|詹巴杜维达雀|Jambandu Indigobird|Vidua raricola
+10643|箭尾维达雀|Shaft-tailed Whydah|Vidua regia
+10644|多哥维达雀|Togo Paradise Whydah|Vidua togoensis
+10645|淡翅维达雀|Wilson's Indigobird|Vidua wilsoni
+10646|红喉鹦鹉|Red-throated Lorikeet|Vini amabilis
+10647|蓝冠鹦鹉|Blue-crowned Lorikeet|Vini australis
+10648|新喀鹦鹉|New Caledonian Lorikeet|Vini diadema †
+10649|孔氏鹦鹉|Kuhl's Lorikeet|Vini kuhlii
+10650|米氏鹦鹉|Meek's Lorikeet|Vini meeki
+10651|棕榈鹦鹉|Palm Lorikeet|Vini palmarum
+10652|蓝鹦鹉|Blue Lorikeet|Vini peruviana
+10653|红颏鹦鹉|Red-chinned Lorikeet|Vini rubrigularis
+10654|绿领鹦鹉|Collared Lory|Vini solitaria
+10655|施氏鹦鹉|Stephen's Lorikeet|Vini stepheni
+10656|翠蓝鹦鹉|Ultramarine Lorikeet|Vini ultramarina
+10657|黑髭莺雀|Black-whiskered Vireo|Vireo altiloquus
+10658|普岛莺雀|Providencia Vireo|Vireo approximans
+10659|黑顶莺雀|Black-capped Vireo|Vireo atricapilla
+10660|科岛莺雀|Cozumel Vireo|Vireo bairdi
+10661|贝氏莺雀|Bell's Vireo|Vireo bellii
+10662|灰蓝莺雀|Slaty Vireo|Vireo brevipennis
+10663|圣岛莺雀|San Andres Vireo|Vireo caribaeus
+10664|黄翅莺雀|Yellow-winged Vireo|Vireo carmioli
+10665|卡氏莺雀|Cassin's Vireo|Vireo cassinii
+10666|南美莺雀|Chivi Vireo|Vireo chivi
+10667|厚嘴莺雀|Thick-billed Vireo|Vireo crassirostris
+10668|黄喉莺雀|Yellow-throated Vireo|Vireo flavifrons
+10669|黄绿莺雀|Yellow-green Vireo|Vireo flavoviridis
+10670|歌莺雀|Warbling Vireo|Vireo gilvus
+10671|巴西莺雀|Noronha Vireo|Vireo gracilirostris
+10672|白眼莺雀|White-eyed Vireo|Vireo griseus
+10673|古巴莺雀|Cuban Vireo|Vireo gundlachii
+10674|郝氏莺雀|Hutton's Vireo|Vireo huttoni
+10675|金莺雀|Golden Vireo|Vireo hypochryseus
+10676|波多黎各莺雀|Puerto Rican Vireo|Vireo latimeri
+10677|褐顶莺雀|Brown-capped Vireo|Vireo leucophrys
+10678|尤卡莺雀|Yucatan Vireo|Vireo magister
+10679|乔科莺雀|Choco Vireo|Vireo masteri
+10680|牙买加莺雀|Jamaican Vireo|Vireo modestus
+10681|扁嘴莺雀|Flat-billed Vireo|Vireo nanus
+10682|侏莺雀|Dwarf Vireo|Vireo nelsoni
+10683|红眼莺雀|Red-eyed Vireo|Vireo olivaceus
+10684|山莺雀|Blue Mountain Vireo|Vireo osburni
+10685|红树莺雀|Mangrove Vireo|Vireo pallens
+10686|费城莺雀|Philadelphia Vireo|Vireo philadelphicus
+10687|铅色莺雀|Plumbeous Vireo|Vireo plumbeus
+10688|蓝顶绿莺雀|Tepui Vireo|Vireo sclateri
+10689|蓝头莺雀|Blue-headed Vireo|Vireo solitarius
+10690|灰莺雀|Grey Vireo|Vireo vicinior
+10691|黄眉鵙雀|Yellow-browed Shrike-Vireo|Vireolanius eximius
+10692|灰顶鵙雀|Slaty-capped Shrike-Vireo|Vireolanius leucotis
+10693|栗胁鵙雀|Chestnut-sided Shrike-Vireo|Vireolanius melitophrys
+10694|绿鵙雀|Green Shrike-Vireo|Vireolanius pulchellus
+10695|大颚雀|Greater Amakihi|Viridonia † sagittirostris †
+10696|蓝黑草鹀|Blue-black Grassquit|Volatinia jacarina
+10697|山寻蜜鸟|Gilliard's Honeyeater|Vosea whitemanensis
+10698|安第斯神鹫|Andean Condor|Vultur gryphus
+10699|橙喉唐纳雀|Orange-throated Tanager|Wetmorethraupis sterrhopteron
+10700|鳞背蚁鸟|Common Scale-backed Antbird|Willisornis poecilinotus
+10701|兴谷鳞背蚁鸟|Xingu Scale-backed Antbird|Willisornis vidua
+10702|黄头黑鹂|Yellow-headed Blackbird|Xanthocephalus xanthocephalus
+10703|阿氏旋木鹎|Appert's Tetraka|Xanthomixis apperti
+10704|灰冠旋木鹎|Grey-crowned Tetraka|Xanthomixis cinereiceps
+10705|短嘴旋木鹎|Spectacled Tetraka|Xanthomixis zosterops
+10706|橙头黑鹂|Saffron-cowled Blackbird|Xanthopsar flavus
+10707|茶胸吸蜜鸟|Tawny-breasted Honeyeater|Xanthotis flaviventer
+10708|黄纹吸蜜鸟|Macleay's Honeyeater|Xanthotis macleayanus
+10709|斑吸蜜鸟|Spotted Honeyeater|Xanthotis polygrammus
+10710|叉尾鸥|Sabine's Gull|Xema sabini
+10711|双斑灰尾雀|Double-banded Greytail|Xenerpestes minlosi
+10712|赤道灰尾雀|Equatorial Greytail|Xenerpestes singularis
+10713|岩异鹩|New Zealand Rockwren|Xenicus gilviventris
+10714|丛异鹩|Bushwren|Xenicus longipes †
+10715|拟山雀锥嘴雀|Tit-like Dacnis|Xenodacnis parina
+10716|长须鸺鹠|Long-whiskered Owlet|Xenoglaux loweryi
+10717|白翅地莺|White-winged Warbler|Xenoligea montana
+10718|鲁山鹑|Rubeho Forest Partridge|Xenoperdix obscuratus
+10719|坦桑尼亚鹑|Udzungwa Forest Partridge|Xenoperdix udzungwensis
+10720|黑娇鹟|Black Manakin|Xenopipo atronitens
+10721|橄榄绿娇鹟|Olive Manakin|Xenopipo uniformis
+10722|范氏厚嘴鵙|Van Dam's Vanga|Xenopirostris damii
+10723|白额厚嘴鵙|Pollen's Vanga|Xenopirostris polleni
+10724|拉氏厚嘴鵙|Lafresnaye's Vanga|Xenopirostris xenopirostris
+10725|纯色翘嘴雀|Plain Xenops|Xenops minutus
+10726|纵纹翘嘴雀|Streaked Xenops|Xenops rutilans
+10727|细嘴翘嘴雀|Slender-billed Xenops|Xenops tenuirostris
+10728|白枕霸鹟|White-naped Xenopsaris|Xenopsaris albinucha
+10729|点胸蚁鵙|Speckled Antshrike|Xenornis setifrons
+10730|细嘴雀鹀|Slender-billed Finch|Xenospingus concolor
+10731|异雀鹀|Sierra Madre Sparrow|Xenospiza baileyi
+10732|带霸鹟|Belted Flycatcher|Xenotriccus callizonus
+10733|墨西哥霸鹟|Pileated Flycatcher|Xenotriccus mexicanus
+10734|翘嘴鹬|Terek Sandpiper|Xenus cinereus
+10735|古巴绿啄木鸟|Cuban Green Woodpecker|Xiphidiopicus percussus
+10736|白喉䴕雀|White-throated Woodcreeper|Xiphocolaptes albicollis
+10737|须䴕雀|Moustached Woodcreeper|Xiphocolaptes falcirostris
+10738|大棕䴕雀|Great Rufous Woodcreeper|Xiphocolaptes major
+10739|强嘴䴕雀|Strong-billed Woodcreeper|Xiphocolaptes promeropirhynchus
+10740|白翅伞鸟|White-winged Cotinga|Xipholena atropurpurea
+10741|白尾伞鸟|White-tailed Cotinga|Xipholena lamellipennis
+10742|白翅紫伞鸟|Pompadour Cotinga|Xipholena punicea
+10743|大西洋䴕雀|Ceara Woodcreeper|Xiphorhynchus atlanticus
+10744|舒氏䴕雀|Tschudi's Woodcreeper|Xiphorhynchus chunchotambo
+10745|华丽䴕雀|Elegant Woodcreeper|Xiphorhynchus elegans
+10746|点斑䴕雀|Spotted Woodcreeper|Xiphorhynchus erythropygius
+10747|白嘴䴕雀|Ivory-billed Woodcreeper|Xiphorhynchus flavigaster
+10748|小䴕雀|Lesser Woodcreeper|Xiphorhynchus fuscus
+10749|黄喉䴕雀|Buff-throated Woodcreeper|Xiphorhynchus guttatus
+10750|黑纹䴕雀|Black-striped Woodcreeper|Xiphorhynchus lachrymosus
+10751|纵纹䴕雀|Striped Woodcreeper|Xiphorhynchus obsoletus
+10752|眼斑䴕雀|Ocellated Woodcreeper|Xiphorhynchus ocellatus
+10753|栗腰䴕雀|Chestnut-rumped Woodcreeper|Xiphorhynchus pardalotus
+10754|斯氏䴕雀|Spix's Woodcreeper|Xiphorhynchus spixii
+10755|可岛䴕雀|Cocoa Woodcreeper|Xiphorhynchus susurrans
+10756|绿背䴕雀|Olive-backed Woodcreeper|Xiphorhynchus triangularis
+10757|白蒙霸鹟|White Monjita|Xolmis irupero
+10758|白腰蒙霸鹟|White-rumped Monjita|Xolmis velatus
+10759|白项凤鹛|White-naped Yuhina|Yuhina bakeri
+10760|褐头凤鹛|Taiwan Yuhina|Yuhina brunneiceps
+10761|黄颈凤鹛|Whiskered Yuhina|Yuhina flavicollis
+10762|纹喉凤鹛|Stripe-throated Yuhina|Yuhina gularis
+10763|缅甸凤鹛|Burmese Yuhina|Yuhina humilis
+10764|黑颏凤鹛|Black-chinned Yuhina|Yuhina nigrimenta
+10765|棕臀凤鹛|Rufous-vented Yuhina|Yuhina occipitalis
+10766|星头啄木鸟|Grey-capped Pygmy Woodpecker|Yungipicus canicapillus
+10767|小星头啄木鸟|Japanese Pygmy Woodpecker|Yungipicus kizuki
+10768|菲律宾啄木鸟|Philippine Pygmy Woodpecker|Yungipicus maculatus
+10769|巽他啄木鸟|Sunda Pygmy Woodpecker|Yungipicus moluccensis
+10770|褐头啄木鸟|Brown-capped Pygmy Woodpecker|Yungipicus nanus
+10771|菲律宾侏啄木|Sulu Pygmy Woodpecker|Yungipicus ramsayi
+10772|坦氏啄木鸟|Sulawesi Pygmy Woodpecker|Yungipicus temminckii
+10773|红嘴地鹃|Red-billed Malkoha|Zanclostomus javanicus
+10774|长嘴黑凤头鹦鹉|Baudin's Black Cockatoo|Zanda baudinii
+10775|黑凤头鹦鹉|Yellow-tailed Black Cockatoo|Zanda funerea
+10776|短嘴黑凤头鹦鹉|Carnaby's Black Cockatoo|Zanda latirostris
+10777|红脚苦恶鸟|Brown Crake|Zapornia akool
+10778|圣岛苦恶鸟|St. Helena Crake|Zapornia astrictocarpus ††
+10779|亨岛田鸡|Henderson Crake|Zapornia atra
+10780|棕背田鸡|Black-tailed Crake|Zapornia bicolor
+10781|黑苦恶鸟|Black Crake|Zapornia flavirostra
+10782|红胸田鸡|Ruddy-breasted Crake|Zapornia fusca
+10783|库岛田鸡|Kosrae Crake|Zapornia monasa †
+10784|塔希提田鸡|Tahiti Crake|Zapornia nigra †
+10785|马岛苦恶鸟|Sakalava Rail|Zapornia olivieri
+10786|雷仙岛秧鸡|Laysan Rail|Zapornia palmeri †
+10787|姬田鸡|Little Crake|Zapornia parva
+10788|斑胁田鸡|Band-bellied Crake|Zapornia paykullii
+10789|小田鸡|Baillon's Crake|Zapornia pusilla
+10790|夏威夷秧鸡|Hawaiian Rail|Zapornia sandwichensis †
+10791|无斑田鸡|Spotless Crake|Zapornia tabuensis
+10792|白颊伞鸟|White-cheeked Cotinga|Zaratornis stresemanni
+10793|灰丛鸦|Stresemann's Bushcrow|Zavattariornis stresemanni
+10794|波斑鹭|Zigzag Heron|Zebrilus undulatus
+10795|冠鹩森莺|Wrenthrush|Zeledonia coronata
+10796|白翅哀鸽|White-winged Dove|Zenaida asiatica
+10797|斑颊哀鸽|Eared Dove|Zenaida auriculata
+10798|鸣哀鸽|Zenaida Dove|Zenaida aurita
+10799|加岛哀鸽|Galapagos Dove|Zenaida galapagoensis
+10800|索岛哀鸽|Socorro Dove|Zenaida graysoni
+10801|哀鸽|Mourning Dove|Zenaida macroura
+10802|南美哀鸽|West Peruvian Dove|Zenaida meloda
+10803|灰头白脸鹑鸠|White-faced Quail-Dove|Zentrygon albifacies
+10804|卡氏鹑鸠|Tuxtla Quail-Dove|Zentrygon carrikeri
+10805|棕胸鹑鸠|Chiriqui Quail-Dove|Zentrygon chiriquensis
+10806|黄额鹑鸠|Buff-fronted Quail-Dove|Zentrygon costaricensis
+10807|白喉鹑鸠|White-throated Quail-Dove|Zentrygon frenata
+10808|黄顶鹑鸠|Russet-crowned Quail-Dove|Zentrygon goldmani
+10809|紫背鹑鸠|Purplish-backed Quail-Dove|Zentrygon lawrencii
+10810|白脸鹑鸠|Lined Quail-Dove|Zentrygon linearis
+10811|圭亚那小霸鹟|Guianan Tyrannulet|Zimmerius acer
+10812|乔科小霸鹟|Choco Tyrannulet|Zimmerius albigularis
+10813|玻利维亚小霸鹟|Bolivian Tyrannulet|Zimmerius bolivianus
+10814|奇氏小霸鹟|Chico's Tyrannulet|Zimmerius chicomendesi
+10815|金脸小霸鹟|Golden-faced Tyrannulet|Zimmerius chrysops
+10816|红嘴小霸鹟|Red-billed Tyrannulet|Zimmerius cinereicapilla
+10817|厄瓜多尔小霸鹟|Loja Tyrannulet|Zimmerius flavidifrons
+10818|细脚小霸鹟|Slender-footed Tyrannulet|Zimmerius gracilipes
+10819|华丽小霸鹟|Spectacled Tyrannulet|Zimmerius improbus
+10820|库氏小霸鹟|Coopmans's Tyrannulet|Zimmerius minimus
+10821|槲小霸鹟|Mistletoe Tyrannulet|Zimmerius parvus
+10822|委内瑞拉小霸鹟|Venezuelan Tyrannulet|Zimmerius petersi
+10823|稚小霸鹟|Guatemalan Tyrannulet|Zimmerius vilissimus
+10824|米莎娜小霸鹟|Mishana Tyrannulet|Zimmerius villarejoi
+10825|秘鲁小霸鹟|Peruvian Tyrannulet|Zimmerius viridiflavus
+10826|林鳽|Forest Bittern|Zonerodius heliosylus
+10827|白喉带鹀|White-throated Sparrow|Zonotrichia albicollis
+10828|金冠带鹀|Golden-crowned Sparrow|Zonotrichia atricapilla
+10829|红领带鹀|Rufous-collared Sparrow|Zonotrichia capensis
+10830|白冠带鹀|White-crowned Sparrow|Zonotrichia leucophrys
+10831|赫氏带鹀|Harris's Sparrow|Zonotrichia querula
+10832|马岛雨燕|Madagascan Spinetail|Zoonavena grandidieri
+10833|白腰针尾雨燕|White-rumped Spinetail|Zoonavena sylvatica
+10834|圣多美雨燕|Sao Tome Spinetail|Zoonavena thomensis
+10835|巽他地鸫|Sunda Thrush|Zoothera andromedae
+10836|怀氏虎鸫|White's Thrush|Zoothera aurea
+10837|虎斑地鸫|Scaly Thrush|Zoothera dauma
+10838|长尾地鸫|Long-tailed Thrush|Zoothera dixoni
+10839|埃氏地鸫|Everett's Thrush|Zoothera everetti
+10840|四川光背地鸫|Sichuan Thrush|Zoothera griseiceps
+10841|黄尾地鸫|Russet-tailed Thrush|Zoothera heinei
+10842|苏拉山鸫|Geomalia|Zoothera heinrichi
+10843|斯里兰卡地鸫|Sri Lanka Thrush|Zoothera imbricata
+10844|绿尾地鸫|Bassian Thrush|Zoothera lunulata
+10845|黄胸地鸫|Fawn-breasted Thrush|Zoothera machiki
+10846|阿迈地鸫|Amami Thrush|Zoothera major
+10847|圣岛地鸫|Makira Thrush|Zoothera margaretae
+10848|长嘴地鸫|Dark-sided Thrush|Zoothera marginata
+10849|光背地鸫|Alpine Thrush|Zoothera mollissima
+10850|大长嘴地鸫|Long-billed Thrush|Zoothera monticola
+10851|尼尔吉里地鸫|Nilgiri Thrush|Zoothera neilgherriensis
+10852|喜山光背地鸫|Himalayan Thrush|Zoothera salimalii
+10853|新不列颠地鸫|Black-backed Thrush|Zoothera talaseae
+10854|启利氏地鸫|Bonin Thrush|Zoothera terrestris †
+10855|瓜岛地鸫|Guadalcanal Thrush|Zoothera turipavae
+10856|白胸绣眼鸟|Abyssinian White-eye|Zosterops abyssinicus
+10857|诺岛绣眼鸟|White-chested White-eye|Zosterops albogularis †
+10858|阿岛绣眼鸟|Aldabra White-eye|Zosterops aldabrensis
+10859|南黄绣眼鸟|Southern Yellow White-eye|Zosterops anderssoni
+10860|柠喉绣眼鸟|Black-ringed White-eye|Zosterops anomalus
+10861|黑冠绣眼鸟|Black-capped White-eye|Zosterops atricapilla
+10862|摩鹿加绣眼鸟|Cream-throated White-eye|Zosterops atriceps
+10863|白额绣眼鸟|Black-crowned White-eye|Zosterops atrifrons
+10864|休氏绣眼鸟|Hume's White-eye|Zosterops auriventer
+10865|马斯绣眼鸟|Reunion Grey White-eye|Zosterops borbonicus
+10866|褐绣眼鸟|Fernando Po Speirops|Zosterops brunneus
+10867|布鲁绣眼鸟|Buru White-eye|Zosterops buruensis
+10868|斯里兰卡绣眼鸟|Sri Lanka White-eye|Zosterops ceylonensis
+10869|红树绣眼鸟|Lemon-bellied White-eye|Zosterops chloris
+10870|毛里求斯绣眼鸟|Mauritius Olive White-eye|Zosterops chloronothos
+10871|灰褐绣眼鸟|Kosrae White-eye|Zosterops cinereus
+10872|苍腹绣眼鸟|Ashy-bellied White-eye|Zosterops citrinella
+10873|淡腹绣眼鸟|Pale-bellied White-eye|Zosterops consobrinorum
+10874|马里亚纳绣眼鸟|Bridled White-eye|Zosterops conspicillatus
+10875|摩罗泰绣眼鸟|Morotai White-eye|Zosterops dehaani
+10876|绿绣眼鸟|Mountain Blackeye|Zosterops emiliae
+10877|红胁绣眼鸟|Chestnut-flanked White-eye|Zosterops erythropleurus
+10878|宽颈绣眼鸟|Broad-ringed White-eye|Zosterops eurycricotus
+10879|埃氏绣眼鸟|Everett's White-eye|Zosterops everetti
+10880|莱氏绣眼鸟|Fiji White-eye|Zosterops explorator
+10881|圣多美绣眼鸟|Sao Tome White-eye|Zosterops feae
+10882|普林西比绣眼鸟|Principe White-eye|Zosterops ficedulinus
+10883|暗绣眼鸟|Dusky White-eye|Zosterops finschii
+10884|黄额绣眼鸟|Vanuatu White-eye|Zosterops flavifrons
+10885|灰白绣眼鸟|Pale White-eye|Zosterops flavilateralis
+10886|瓦卡托比绣眼鸟|Wakatobi White-eye|Zosterops flavissimus
+10887|爪哇绣眼鸟|Javan White-eye|Zosterops flavus
+10888|黄腹绣眼鸟|Capped White-eye|Zosterops fuscicapilla
+10889|瓦岛绣眼鸟|Vanikoro White-eye|Zosterops gibbsi
+10890|珠腹绣眼鸟|Pearl-bellied White-eye|Zosterops grayi
+10891|路易绣眼鸟|Louisiade White-eye|Zosterops griseotinctus
+10892|安诺绣眼鸟|Annobon White-eye|Zosterops griseovirescens
+10893|淡色绣眼鸟|Plain White-eye|Zosterops hypolais
+10894|黑头绣眼鸟|Bismarck White-eye|Zosterops hypoxanthus
+10895|利岛绣眼鸟|Large Lifou White-eye|Zosterops inornatus
+10896|日本绣眼鸟|Warbling White-eye|Zosterops japonicus
+10897|基库尤绣眼鸟|Kikuyu White-eye|Zosterops kikuyuensis
+10898|科氏绣眼鸟|Kirk's White-eye|Zosterops kirki
+10899|库氏绣眼鸟|Ambon White-eye|Zosterops kuehni
+10900|所罗门绣眼鸟|Solomons White-eye|Zosterops kulambangrae
+10901|桑氏绣眼鸟|Sanford's White-eye|Zosterops lacertosus
+10902|灰胸绣眼鸟|Silvereye|Zosterops lateralis
+10903|白顶绣眼鸟|Principe Speirops|Zosterops leucophaeus
+10904|黑顶绣眼鸟|Black-capped Speirops|Zosterops lugubris
+10905|丽绣眼鸟|Gizo White-eye|Zosterops luteirostris
+10906|澳洲黄绣眼鸟|Canary White-eye|Zosterops luteus
+10907|马岛绣眼鸟|Malagasy White-eye|Zosterops maderaspatanus
+10908|毛里求斯灰绣眼鸟|Mauritius Grey White-eye|Zosterops mauritianus
+10909|栗胁绣眼鸟|Mayotte White-eye|Zosterops mayottensis
+10910|坦桑尼亚绣眼鸟|Mbulu White-eye|Zosterops mbuluensis
+10911|白喉绣眼鸟|Tagula White-eye|Zosterops meeki
+10912|喀麦隆绣眼鸟|Mount Cameroon Speirops|Zosterops melanocephalus
+10913|印尼绣眼鸟|Sangkar White-eye|Zosterops melanurus
+10914|黄喉绣眼鸟|Yellow-throated White-eye|Zosterops metcalfii
+10915|低地绣眼鸟|Lowland White-eye|Zosterops meyeni
+10916|黑额绣眼鸟|Black-fronted White-eye|Zosterops minor
+10917|姬绣眼鸟|Small Lifou White-eye|Zosterops minutus
+10918|塞舌尔绣眼鸟|Seychelles White-eye|Zosterops modestus
+10919|*山绣眼鸟|Mountain White-eye|Zosterops montanus
+10920|科摩罗绣眼鸟|Karthala White-eye|Zosterops mouroniensis
+10921|库拉山绣眼鸟|Kolombangara White-eye|Zosterops murphyi
+10922|比阿绣眼鸟|Biak White-eye|Zosterops mysorensis
+10923|圣诞岛绣眼鸟|Christmas White-eye|Zosterops natalis
+10924|桑岛绣眼鸟|Sangihe White-eye|Zosterops nehrkorni
+10925|菲律宾绣眼鸟|Yellowish White-eye|Zosterops nigrorum
+10926|新几内亚绣眼鸟|Papuan White-eye|Zosterops novaeguineae
+10927|雅浦绣眼鸟|Olive-colored White-eye|Zosterops oleagineus
+10928|橄揽绣眼鸟|Reunion Olive White-eye|Zosterops olivaceus
+10929|苍色绣眼鸟|Orange River White-eye|Zosterops pallidus
+10930|灰腹绣眼鸟|Indian White-eye|Zosterops palpebrosus
+10931|宽翼绣眼鸟|Heuglin's White-eye|Zosterops poliogastrus
+10932|波纳佩岛绣眼鸟|Grey-brown White-eye|Zosterops ponapensis
+10933|灰喉绣眼鸟|Grey-throated White-eye|Zosterops rendovae
+10934|伦纳绣眼鸟|Rennell White-eye|Zosterops rennellianus
+10935|罗塔绣眼鸟|Rota White-eye|Zosterops rotensis
+10936|*恩加绣眼鸟|Enggano White-eye|Zosterops salvadorii
+10937|萨摩绣眼鸟|Samoan White-eye|Zosterops samoensis
+10938|圣岛绣眼鸟|Santa Cruz White-eye|Zosterops sanctaecrucis
+10939|塞舌尔栗胁绣眼鸟|Marianne White-eye|Zosterops semiflavus †
+10940|卡岛绣眼鸟|Citrine White-eye|Zosterops semperi
+10941|黄绣眼鸟|Northern Yellow White-eye|Zosterops senegalensis
+10942|泰塔绣眼鸟|Taita White-eye|Zosterops silvanus
+10943|暗绿绣眼鸟|Swinhoe's White-eye|Zosterops simplex
+10944|索岛绣眼鸟|Socotra White-eye|Zosterops socotranus
+10945|托吉安绣眼鸟|Togian White-eye|Zosterops somadikartai
+10946|加农绣眼鸟|Ranongga White-eye|Zosterops splendidus
+10947|赛兰绣眼鸟|Seram White-eye|Zosterops stalkeri
+10948|林绣眼鸟|Forest White-eye|Zosterops stenocricotus
+10949|硕绣眼鸟|Robust White-eye|Zosterops strenuus †
+10950|马莱绣眼鸟|Malaita White-eye|Zosterops stresemanni
+10951|绿黄绣眼鸟|Green White-eye|Zosterops stuhlmanni
+10952|裸眼绣眼鸟|Bare-eyed White-eye|Zosterops superciliosus
+10953|细嘴绣眼鸟|Slender-billed White-eye|Zosterops tenuirostris
+10954|黑眼绣眼鸟|Dark-eyed White-eye|Zosterops tetiparius
+10955|金腹绣眼鸟|Golden-bellied White-eye|Zosterops uropygialis
+10956|奔巴绣眼鸟|Pemba White-eye|Zosterops vaughani
+10957|斑绣眼鸟|Vella Lavella White-eye|Zosterops vellalavella
+10958|南非绣眼鸟|Cape White-eye|Zosterops virens
+10959|南帕雷山绣眼鸟|South Pare White-eye|Zosterops winifredae
+10960|绿背绣眼鸟|Green-backed White-eye|Zosterops xanthochroa
+10961|巴拉望穗鹛|Palawan Striped Babbler|Zosterornis hypogrammicus
+10962|班岛穗鹛|Panay Striped Babbler|Zosterornis latistriatus
+10963|黑纹穗鹛|Negros Striped Babbler|Zosterornis nigrorum
+10964|纹穗鹛|Luzon Striped Babbler|Zosterornis striatus
+10965|怀氏穗鹛|Chestnut-faced Babbler|Zosterornis whiteheadi

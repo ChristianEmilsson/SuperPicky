@@ -1,0 +1,300 @@
+8001|瑞氏灰头鹦鹉|Brown-necked Parrot|Poicephalus fuscicollis
+8002|非洲红额鹦鹉|Red-fronted Parrot|Poicephalus gulielmi
+8003|麦耶氏鹦鹉|Meyer's Parrot|Poicephalus meyeri
+8004|褐颈鹦鹉|Cape Parrot|Poicephalus robustus
+8005|鲁氏鹦鹉|Rüppell's Parrot|Poicephalus rueppellii
+8006|红腹鹦鹉|Red-bellied Parrot|Poicephalus rufiventris
+8007|塞内加尔鹦鹉|Senegal Parrot|Poicephalus senegalus
+8008|红腿鸬鹚|Red-legged Cormorant|Poikilocarbo gaimardi
+8009|猛雕|Martial Eagle|Polemaetus bellicosus
+8010|非洲侏隼|Pygmy Falcon|Polihierax semitorquatus
+8011|灰头䴙䴘|Hoary-headed Grebe|Poliocephalus poliocephalus
+8012|新西兰䴙䴘|New Zealand Grebe|Poliocephalus rufopectus
+8013|栗背蚁鸟|Chestnut-backed Antbird|Poliocrania exsul
+8014|白尾拱翅莺|White-tailed Warbler|Poliolais lopezi
+8015|白眉田鸡|White-browed Crake|Poliolimnas cinereus
+8016|黄肉垂鹎|Yellow-wattled Bulbul|Poliolophus urostictus
+8017|白眼先蚋莺|White-lored Gnatcatcher|Polioptila albiloris
+8018|尤卡坦蚋莺|Yucatan Gnatcatcher|Polioptila albiventris
+8019|伊南巴里蚋莺|Inambari Gnatcatcher|Polioptila attenboroughi
+8020|灰蓝蚋莺|Blue-grey Gnatcatcher|Polioptila caerulea
+8021|加州蚋莺|California Gnatcatcher|Polioptila californica
+8022|秘鲁蚋莺|Iquitos Gnatcatcher|Polioptila clementsi
+8023|花脸蚋莺|Masked Gnatcatcher|Polioptila dumicola
+8024|尼格罗蚋莺|Rio Negro Gnatcatcher|Polioptila facilis
+8025|圭亚那蚋莺|Guianan Gnatcatcher|Polioptila guianensis
+8026|白腹蚋莺|Creamy-bellied Gnatcatcher|Polioptila lactea
+8027|古巴蚋莺|Cuban Gnatcatcher|Polioptila lembeyei
+8028|黑尾蚋莺|Black-tailed Gnatcatcher|Polioptila melanura
+8029|黑顶蚋莺|Black-capped Gnatcatcher|Polioptila nigriceps
+8030|帕拉蚋莺|Para Gnatcatcher|Polioptila paraensis
+8031|热带蚋莺|Tropical Gnatcatcher|Polioptila plumbea
+8032|灰喉蚋莺|Slate-throated Gnatcatcher|Polioptila schistaceigula
+8033|马岛鬣鹰|Madagascan Harrier-Hawk|Polyboroides radiatus
+8034|非洲鬣鹰|African Harrier-Hawk|Polyboroides typus
+8035|蓝胸蜂鸟|Blue-chested Hummingbird|Polyerata amabilis
+8036|娇蜂鸟|Charming Hummingbird|Polyerata decora
+8037|紫胸蜂鸟|Purple-chested Hummingbird|Polyerata rosenbergi
+8038|铜尾彗星蜂鸟|Bronze-tailed Comet|Polyonymus caroli
+8039|灰孔雀雉|Grey Peacock-Pheasant|Polyplectron bicalcaratum
+8040|铜尾孔雀雉|Bronze-tailed Peacock-Pheasant|Polyplectron chalcurum
+8041|眼斑孔雀雉|Germain's Peacock-Pheasant|Polyplectron germaini
+8042|山孔雀雉|Mountain Peacock-Pheasant|Polyplectron inopinatum
+8043|海南孔雀雉|Hainan Peacock-Pheasant|Polyplectron katsumatae
+8044|凤冠孔雀雉|Malayan Peacock-Pheasant|Polyplectron malacense
+8045|巴拉望孔雀雉|Palawan Peacock-Pheasant|Polyplectron napoleonis
+8046|加里曼丹孔雀雉|Bornean Peacock-Pheasant|Polyplectron schleiermacheri
+8047|小绒鸭|Steller's Eider|Polysticta stelleri
+8048|须多斑霸鹟|Bearded Tachuri|Polystictus pectoralis
+8049|灰背多斑霸鹟|Grey-backed Tachuri|Polystictus superciliaris
+8050|公主鹦鹉|Princess Parrot|Polytelis alexandrae
+8051|至尊鹦鹉|Regent Parrot|Polytelis anthopeplus
+8052|靓鹦鹉|Superb Parrot|Polytelis swainsonii
+8053|白尾金喉蜂鸟|White-tailed Goldenthroat|Polytmus guainumbi
+8054|黑嘴金喉蜂鸟|Tepui Goldenthroat|Polytmus milleri
+8055|绿尾金喉蜂鸟|Green-tailed Goldenthroat|Polytmus theresiae
+8056|拉罗果鹟|Rarotonga Monarch|Pomarea dimidiata
+8057|埃岛果鹟|Eiao Monarch|Pomarea fluxa †
+8058|果鹟|Iphis Monarch|Pomarea iphis
+8059|莫岛果鹟|Maupiti Monarch|Pomarea maupitiensis †
+8060|马克果鹟|Marquesan Monarch|Pomarea mendozae
+8061|乌阿珀果鹟|Ua Pou Monarch|Pomarea mira
+8062|黑腹果鹟|Tahiti Monarch|Pomarea nigra
+8063|努库希瓦果鹟|Nuku Hiva Monarch|Pomarea nukuhivae †
+8064|巨果鹟|Fatu Hiva Monarch|Pomarea whitneyi
+8065|红嘴钩嘴鹛|Coral-billed Scimitar Babbler|Pomatorhinus ferruginosus
+8066|霍氏钩嘴鹛|Indian Scimitar Babbler|Pomatorhinus horsfieldii
+8067|斯里兰卡钩嘴鹛|Sri Lanka Scimitar Babbler|Pomatorhinus melanurus
+8068|栗背钩嘴鹛|Chestnut-backed Scimitar Babbler|Pomatorhinus montanus
+8069|台湾棕颈钩嘴鹛|Taiwan Scimitar Babbler|Pomatorhinus musicus
+8070|棕头钩嘴鹛|Red-billed Scimitar Babbler|Pomatorhinus ochraceiceps
+8071|棕颈钩嘴鹛|Streak-breasted Scimitar Babbler|Pomatorhinus ruficollis
+8072|灰头钩嘴鹛|White-browed Scimitar Babbler|Pomatorhinus schisticeps
+8073|剑嘴鹛|Slender-billed Scimitar Babbler|Pomatorhinus superciliaris
+8074|哈氏弯嘴鹛|Hall's Babbler|Pomatostomus halli
+8075|栗冠弯嘴鹛|Chestnut-crowned Babbler|Pomatostomus ruficeps
+8076|白眉弯嘴鹛|White-browed Babbler|Pomatostomus superciliosus
+8077|灰冠弯嘴鹛|Grey-crowned Babbler|Pomatostomus temporalis
+8078|佛来大尾莺|Fly River Grassbird|Poodytes albolimbatus
+8079|刺莺|Spinifexbird|Poodytes carteri
+8080|姬大尾莺|Little Grassbird|Poodytes gramineus
+8081|新西兰大尾莺|New Zealand Fernbird|Poodytes punctatus
+8082|查塔姆蕨莺|Chatham Fernbird|Poodytes rufescens
+8083|栗肩雀鹀|Vesper Sparrow|Pooecetes gramineus
+8084|图库曼歌鹀|Tucuman Mountain Finch|Poospiza baeri
+8085|玻利维亚歌鹀|Bolivian Warbling Finch|Poospiza boliviana
+8086|科恰歌鹀|Cochabamba Mountain Finch|Poospiza garleppi
+8087|灰背拟雀|Slaty-backed Hemispingus|Poospiza goeringi
+8088|领歌鹀|Collared Warbling Finch|Poospiza hispaniolensis
+8089|棕黑歌鹀|Black-and-rufous Warbling Finch|Poospiza nigrorufa
+8090|桂红歌鹀|Cinnamon Warbling Finch|Poospiza ornata
+8091|棕胸歌鹀|Rufous-breasted Warbling Finch|Poospiza rubecula
+8092|棕眉拟雀|Rufous-browed Hemispingus|Poospiza rufosuperciliaris
+8093|黑栗歌鹀|Black-and-chestnut Warbling Finch|Poospiza whitii
+8094|栗胸歌鹀|Chestnut-breasted Mountain Finch|Poospizopsis caesar
+8095|棕胁歌鹀|Rufous-sided Warbling Finch|Poospizopsis hypocondria
+8096|新不列颠紫水鸡|White Swamphen|Porphyrio albus †
+8097|辉青水鸡|Allen's Gallinule|Porphyrio alleni
+8098|淡青水鸡|Azure Gallinule|Porphyrio flavirostris
+8099|南秧鸡|South Island Takahe|Porphyrio hochstetteri
+8100|黑背紫水鸡|Black-backed Swamphen|Porphyrio indicus
+8101|非洲紫水鸡|African Swamphen|Porphyrio madagascariensis
+8102|巨水鸡|North Island Takahe|Porphyrio mantelli ††
+8103|紫青水鸡|Purple Gallinule|Porphyrio martinica
+8104|澳洲紫水鸡|Australasian Swamphen|Porphyrio melanotus
+8105|紫水鸡|Grey-headed Swamphen|Porphyrio poliocephalus
+8106|西紫水鸡|Western Swamphen|Porphyrio porphyrio
+8107|菲律宾紫水鸡|Philippine Swamphen|Porphyrio pulverulentus
+8108|斑胁水鸡|Spot-flanked Gallinule|Porphyriops melanops
+8109|紫喉伞鸟|Purple-throated Cotinga|Porphyrolaema porphyrolaema
+8110|黑脸田鸡|Sora|Porzana carolina
+8111|斑田鸡|Australian Crake|Porzana fluminea
+8112|斑胸田鸡|Spotted Crake|Porzana porzana
+8113|点斑尾雀|Spotted Barbtail|Premnoplex brunnescens
+8114|白喉斑尾雀|White-throated Barbtail|Premnoplex tatei
+8115|锈翅斑尾雀|Rusty-winged Barbtail|Premnornis guttuliger
+8116|金领金刚鹦鹉|Golden-collared Macaw|Primolius auricollis
+8117|蓝头金刚鹦鹉|Blue-headed Macaw|Primolius couloni
+8118|蓝翅金刚鹦鹉|Blue-winged Macaw|Primolius maracana
+8119|黑胸山鹪莺|Black-throated Prinia|Prinia atrogularis
+8120|横斑山鹪莺|Banded Prinia|Prinia bairdii
+8121|棕额山鹪莺|Rufous-fronted Prinia|Prinia buchanani
+8122|霍氏山鹪莺|Grey-crowned Prinia|Prinia cinereocapilla
+8123|缅甸山鹪莺|Burmese Prinia|Prinia cooki
+8124|喜山山鹪莺|Himalayan Prinia|Prinia crinigera
+8125|红翅山鹪莺|Red-winged Prinia|Prinia erythroptera
+8126|斑翅山鹪莺|Bar-winged Prinia|Prinia familiaris
+8127|黑胸鹪莺|Black-chested Prinia|Prinia flavicans
+8128|黄腹山鹪莺|Yellow-bellied Prinia|Prinia flaviventris
+8129|河山鹪莺|River Prinia|Prinia fluviatilis
+8130|优雅山鹪莺|Graceful Prinia|Prinia gracilis
+8131|灰胸山鹪莺|Grey-breasted Prinia|Prinia hodgsonii
+8132|德拉山鹪莺|Drakensberg Prinia|Prinia hypoxantha
+8133|纯色山鹪莺|Plain Prinia|Prinia inornata
+8134|斑山鹪莺|Karoo Prinia|Prinia maculosa
+8135|黑脸山鹪莺|Black-faced Prinia|Prinia melanops
+8136|圣多美山鹪莺|Sao Tome Prinia|Prinia molleri
+8137|褐山鹪莺|Deignan's Prinia|Prinia polychroa
+8138|越南山鹪莺|Annam Prinia|Prinia rocki
+8139|暗冕山鹪莺|Rufescent Prinia|Prinia rufescens
+8140|红脸娇莺|Red-fronted Prinia|Prinia rufifrons
+8141|灰山鹪莺|Ashy Prinia|Prinia socialis
+8142|淡山鹪莺|Pale Prinia|Prinia somalica
+8143|山鹪莺|Swinhoe's Prinia|Prinia striata
+8144|褐胁鹪莺|Tawny-flanked Prinia|Prinia subflava
+8145|黑喉山鹪莺|Hill Prinia|Prinia superciliaris
+8146|丛林山鹪莺|Jungle Prinia|Prinia sylvatica
+8147|蓝冠扇尾鹦鹉|Blue-crowned Racket-tail|Prioniturus discurus
+8148|红斑扇尾鹦鹉|Yellow-breasted Racket-tail|Prioniturus flavicans
+8149|绿扇尾鹦鹉|Green Racket-tail|Prioniturus luconensis
+8150|布岛扇尾鹦鹉|Buru Racket-tail|Prioniturus mada
+8151|民岛扇尾鹦鹉|Mindoro Racket-tail|Prioniturus mindorensis
+8152|山扇尾鹦鹉|Montane Racket-tail|Prioniturus montanus
+8153|巴拉望扇尾鹦鹉|Blue-headed Racket-tail|Prioniturus platenae
+8154|金肩扇尾鹦鹉|Golden-mantled Racket-tail|Prioniturus platurus
+8155|苏禄扇尾鹦鹉|Blue-winged Racket-tail|Prioniturus verticalis
+8156|棉岛扇尾鹦鹉|Mindanao Racket-tail|Prioniturus waterstradti
+8157|黄喉锯齿啄花鸟|Yellow-breasted Flowerpecker|Prionochilus maculatus
+8158|红胸锯齿啄花鸟|Crimson-breasted Flowerpecker|Prionochilus percussus
+8159|巴拉望啄花鸟|Palawan Flowerpecker|Prionochilus plateni
+8160|赤胸锯齿啄花鸟|Scarlet-breasted Flowerpecker|Prionochilus thoracicus
+8161|加里曼丹啄花鸟|Yellow-rumped Flowerpecker|Prionochilus xanthopygius
+8162|金亭鸟|Golden Bowerbird|Prionodura newtoniana
+8163|黄冠盔鵙|Yellow-crested Helmetshrike|Prionops alberti
+8164|红嘴盔鵙|Red-billed Helmetshrike|Prionops caniceps
+8165|安哥拉盔鵙|Gabela Helmetshrike|Prionops gabela
+8166|长冠盔鵙|White-crested Helmetshrike|Prionops plumatus
+8167|灰冠盔鵙|Grey-crested Helmetshrike|Prionops poliolophus
+8168|雷氏盔鵙|Retz's Helmetshrike|Prionops retzii
+8169|栗腹盔鵙|Rufous-bellied Helmetshrike|Prionops rufiventris
+8170|栗额盔鵙|Chestnut-fronted Helmetshrike|Prionops scopifrons
+8171|伊岛咬鹃|Hispaniolan Trogon|Priotelus roseigaster
+8172|古巴咬鹃|Cuban Trogon|Priotelus temnurus
+8173|棕树凤头鹦鹉|Palm Cockatoo|Probosciger aterrimus
+8174|暗胸朱雀|Dark-breasted Rosefinch|Procarduelis nipalensis
+8175|白颏风鹱|White-chinned Petrel|Procellaria aequinoctialis
+8176|灰风鹱|Grey Petrel|Procellaria cinerea
+8177|眼镜风鹱|Spectacled Petrel|Procellaria conspicillata
+8178|黑风鹱|Black Petrel|Procellaria parkinsoni
+8179|大黑风鹱|Westland Petrel|Procellaria westlandica
+8180|白钟伞鸟|White Bellbird|Procnias albus
+8181|须钟伞鸟|Bearded Bellbird|Procnias averano
+8182|裸喉钟伞鸟|Bare-throated Bellbird|Procnias nudicollis
+8183|肉垂钟伞鸟|Three-wattled Bellbird|Procnias tricarunculatus
+8184|尖嘴蜜䴕|Cassin's Honeybird|Prodotiscus insignis
+8185|沃氏蜜䴕|Brown-backed Honeybird|Prodotiscus regulus
+8186|绿背蜜䴕|Green-backed Honeybird|Prodotiscus zambesiae
+8187|灰胸崖燕|Grey-breasted Martin|Progne chalybea
+8188|古巴崖燕|Cuban Martin|Progne cryptoleuca
+8189|加勒比崖燕|Caribbean Martin|Progne dominicensis
+8190|南美崖燕|Southern Martin|Progne elegans
+8191|加岛崖燕|Galapagos Martin|Progne modesta
+8192|秘鲁崖燕|Peruvian Martin|Progne murphyi
+8193|墨西哥崖燕|Sinaloa Martin|Progne sinaloae
+8194|紫崖燕|Purple Martin|Progne subis
+8195|棕胸崖燕|Brown-chested Martin|Progne tapera
+8196|南非食蜜鸟|Cape Sugarbird|Promerops cafer
+8197|格氏食蜜鸟|Gurney's Sugarbird|Promerops gurneyi
+8198|圣诞岛鹬|Kiritimati Sandpiper|Prosobonia cancellata †
+8199|莫岛矶鹬|Moorea Sandpiper|Prosobonia ellisi †
+8200|大溪地矶鹬|Tahiti Sandpiper|Prosobonia leucoptera †
+8201|土岛鹬|Tuamotu Sandpiper|Prosobonia parvirostris
+8202|黄胸辉鹦鹉|Masked Shining Parrot|Prosopeia personata
+8203|绯胸辉鹦鹉|Crimson Shining Parrot|Prosopeia splendens
+8204|红胸辉鹦鹉|Maroon Shining Parrot|Prosopeia tabuensis
+8205|簇胸吸蜜鸟|Tui|Prosthemadera novaeseelandiae
+8206|蓝翅黄森莺|Prothonotary Warbler|Protonotaria citrea
+8207|黑喉岩鹨|Black-throated Accentor|Prunella atrogularis
+8208|领岩鹨|Alpine Accentor|Prunella collaris
+8209|也门岩鹨|Arabian Accentor|Prunella fagani
+8210|褐岩鹨|Brown Accentor|Prunella fulvescens
+8211|高原岩鹨|Altai Accentor|Prunella himalayana
+8212|栗背岩鹨|Maroon-backed Accentor|Prunella immaculata
+8213|贺兰山岩鹨|Kozlov's Accentor|Prunella koslowi
+8214|林岩鹨|Dunnock|Prunella modularis
+8215|棕眉山岩鹨|Siberian Accentor|Prunella montanella
+8216|眼斑岩鹨|Radde's Accentor|Prunella ocularis
+8217|鸲岩鹨|Robin Accentor|Prunella rubeculoides
+8218|红岩鹨|Japanese Accentor|Prunella rubida
+8219|棕胸岩鹨|Rufous-breasted Accentor|Prunella strophiata
+8220|白头锯翅燕|White-headed Saw-wing|Psalidoprocne albiceps
+8221|山地锯翅燕|Mountain Saw-wing|Psalidoprocne fuliginosa
+8222|方尾锯翅燕|Square-tailed Saw-wing|Psalidoprocne nitens
+8223|叉尾锯翅燕|Fanti Saw-wing|Psalidoprocne obscura
+8224|蓝锯翅燕|Black Saw-wing|Psalidoprocne pristoptera
+8225|短嘴长尾山雀|American Bushtit|Psaltriparus minimus
+8226|长尾阔嘴鸟|Long-tailed Broadbill|Psarisomus dalhousiae
+8227|褐背拟椋鸟|Russet-backed Oropendola|Psarocolius angustifrons
+8228|暗绿拟椋鸟|Dusky-green Oropendola|Psarocolius atrovirens
+8229|亚马孙拟椋鸟|Olive Oropendola|Psarocolius bifasciatus
+8230|栗背拟椋鸟|Baudo Oropendola|Psarocolius cassini
+8231|发冠拟椋鸟|Crested Oropendola|Psarocolius decumanus
+8232|黑拟椋鸟|Black Oropendola|Psarocolius guatimozinus
+8233|褐拟椋鸟|Montezuma Oropendola|Psarocolius montezuma
+8234|绿拟椋鸟|Green Oropendola|Psarocolius viridis
+8235|栗头拟椋鸟|Chestnut-headed Oropendola|Psarocolius wagleri
+8236|金肩鹦鹉|Golden-shouldered Parrot|Psephotellus chrysopterygius
+8237|黑冠鹦鹉|Hooded Parrot|Psephotellus dissimilis
+8238|极乐鹦鹉|Paradise Parrot|Psephotellus pulcherrimus †
+8239|穆加鹦鹉|Mulga Parrot|Psephotellus varius
+8240|红腰鹦鹉|Red-rumped Parrot|Psephotus haematonotus
+8241|仙人掌卡纳灶鸟|Cactus Canastero|Pseudasthenes cactorum
+8242|乌尾卡纳灶鸟|Dusky-tailed Canastero|Pseudasthenes humicola
+8243|南美卡纳灶鸟|Patagonian Canastero|Pseudasthenes patagonica
+8244|栗卡纳灶鸟|Steinbach's Canastero|Pseudasthenes steinbachi
+8245|白南美鵟|White Hawk|Pseudastur albicollis
+8246|灰背南美鵟|Grey-backed Hawk|Pseudastur occidentalis
+8247|披风南美鵟|Mantled Hawk|Pseudastur polionotus
+8248|灰白小霸鹟|Grey-and-white Tyrannulet|Pseudelaenia leucospodia
+8249|暗红鹦鹉|Cardinal Lory|Pseudeos cardinalis
+8250|烟色鹦鹉|Dusky Lory|Pseudeos fuscata
+8251|灰腰燕|Grey-rumped Swallow|Pseudhirundo griseopyga
+8252|白肩黑鹮|White-shouldered Ibis|Pseudibis davisoni
+8253|巨鹮|Giant Ibis|Pseudibis gigantea
+8254|黑鹮|Red-naped Ibis|Pseudibis papillosa
+8255|瓦氏鹟|Ward's Flycatcher|Pseudobias wardi
+8256|黑圆尾鹱|Mascarene Petrel|Pseudobulweria aterrima
+8257|贝氏圆尾鹱|Beck's Petrel|Pseudobulweria becki
+8258|斐济圆尾鹱|Fiji Petrel|Pseudobulweria macgillivrayi
+8259|钩嘴圆尾鹱|Tahiti Petrel|Pseudobulweria rostrata
+8260|大圣赫勒拿岛海燕|St. Helena Petrel|Pseudobulweria rupinarum ††
+8261|非洲绿阔嘴鸟|Grauer's Broadbill|Pseudocalyptomena graueri
+8262|非洲河燕|African River Martin|Pseudochelidon eurystomina
+8263|白眼河燕|White-eyed River Martin|Pseudochelidon sirintarae
+8264|条纹簇颊灶鸫|Streaked Tuftedcheek|Pseudocolaptes boissonneautii
+8265|太平洋簇颊灶鸫|Pacific Tuftedcheek|Pseudocolaptes johnsoni
+8266|黄簇颊灶鸫|Buffy Tuftedcheek|Pseudocolaptes lawrencii
+8267|亚热带多拉霸鹟|Subtropical Doradito|Pseudocolopteryx acutipennis
+8268|滴答多拉霸鹟|Ticking Doradito|Pseudocolopteryx citreola
+8269|南美多拉霸鹟|Dinelli's Doradito|Pseudocolopteryx dinelliana
+8270|拟莺多拉霸鹟|Warbling Doradito|Pseudocolopteryx flaviventris
+8271|冠多拉霸鹟|Crested Doradito|Pseudocolopteryx sclateri
+8272|黄腰沼泽雀|Yellow-rumped Marshbird|Pseudoleistes guirahuro
+8273|褐黄沼泽雀|Brown-and-yellow Marshbird|Pseudoleistes virescens
+8274|毛岛鹦嘴雀|Maui Parrotbill|Pseudonestor xanthophrys
+8275|灰头群织雀|Grey-capped Social Weaver|Pseudonigrita arnaudi
+8276|黑头群织雀|Black-capped Social Weaver|Pseudonigrita cabanisi
+8277|白冠娇鹟|White-crowned Manakin|Pseudopipra pipra
+8278|地山雀|Ground Tit|Pseudopodoces humilis
+8279|锈色林鵙鹟|Rusty Pitohui|Pseudorectes ferrugineus
+8280|斑胸林鵙鹟|White-bellied Pitohui|Pseudorectes incertus
+8281|棕腹舞雀|Rufous-bellied Mountain Tanager|Pseudosaltator rufiventris
+8282|棕巨灶鸫|Caatinga Cacholote|Pseudoseisura cristata
+8283|白喉巨灶鸫|White-throated Cacholote|Pseudoseisura gutturalis
+8284|褐巨灶鸫|Brown Cacholote|Pseudoseisura lophotes
+8285|灰胸巨灶鸫|Grey-crested Cacholote|Pseudoseisura unirufa
+8286|黑头拟雀|Black-headed Hemispingus|Pseudospingus verticalis
+8287|褐拟雀|Drab Hemispingus|Pseudospingus xanthophthalmus
+8288|铜绿侏霸鹟|Bronze-olive Pygmy Tyrant|Pseudotriccus pelzelni
+8289|棕头侏霸鹟|Rufous-headed Pygmy Tyrant|Pseudotriccus ruficeps
+8290|褐额侏霸鹟|Hazel-fronted Pygmy Tyrant|Pseudotriccus simplex
+8291|印支拟啄木鸟|Indochinese Barbet|Psilopogon annamensis
+8292|蓝顶拟䴕|Flame-fronted Barbet|Psilopogon armillaris
+8293|蓝喉拟啄木鸟|Blue-throated Barbet|Psilopogon asiaticus
+8294|环喉拟啄木鸟|Necklaced Barbet|Psilopogon auricularis
+8295|黄耳拟啄木鸟|Yellow-eared Barbet|Psilopogon australis
+8296|绿喉拟啄木鸟|Turquoise-throated Barbet|Psilopogon chersonesus
+8297|金须拟䴕|Golden-whiskered Barbet|Psilopogon chrysopogon
+8298|褐喉拟䴕|Brown-throated Barbet|Psilopogon corvinus
+8299|蓝耳拟啄木鸟|Blue-eared Barbet|Psilopogon duvaucelii
+8300|加里曼丹拟䴕|Bornean Barbet|Psilopogon eximius

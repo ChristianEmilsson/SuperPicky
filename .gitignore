@@ -79,3 +79,4 @@ package_unsigned.sh
 # 用户配置文件
 advanced_config.json
 
+*.pkg

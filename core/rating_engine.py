@@ -40,7 +40,7 @@ class RatingResult:
         elif self.rating == 1:
             return "⭐"
         elif self.rating == 0:
-            return "普通"
+            return "0★"  # Simplified for i18n concern, or keep hardcoded if symbols are universal
         else:  # -1
             return "❌"
 
@@ -89,6 +89,10 @@ class RatingEngine:
         # 达标标准（2星和3星共用）
         self.sharpness_threshold = sharpness_threshold
         self.nima_threshold = nima_threshold
+        
+        # 国际化
+        from i18n import get_i18n
+        self.i18n = get_i18n()
     
     def calculate(
         self,
@@ -135,7 +139,7 @@ class RatingEngine:
             return RatingResult(
                 rating=-1,
                 pick=-1,
-                reason="未检测到鸟类"
+                reason=self.i18n.t("rating_engine.reject_no_bird")
             )
         
         # 第二步：置信度检查（低于阈值给 0星）
@@ -143,7 +147,7 @@ class RatingEngine:
             return RatingResult(
                 rating=0,
                 pick=0,
-                reason=f"置信度{confidence:.0%}<{self.min_confidence:.0%}"
+                reason=self.i18n.t("rating_engine.low_confidence", confidence=confidence, threshold=self.min_confidence)
             )
         # 第三步：关键点可见性检查（V4.0: 先判定眼睛）
         # 如果看不到眼睛/嘴巴，直接给 1 星，不再判断美学
@@ -151,7 +155,7 @@ class RatingEngine:
             return RatingResult(
                 rating=1,
                 pick=0,
-                reason="角度不佳（关键点不可见，但有鸟）"
+                reason=self.i18n.t("rating_engine.angle_poor")
             )
         
         # 第四步：锐度检查
@@ -159,7 +163,7 @@ class RatingEngine:
             return RatingResult(
                 rating=0,
                 pick=0,
-                reason=f"锐度太低({sharpness:.0f}<{self.min_sharpness})"
+                reason=self.i18n.t("rating_engine.low_sharpness", val=sharpness, threshold=self.min_sharpness)
             )
         
         # 第五步：美学检查（放在眼睛和锐度之后）
@@ -167,18 +171,18 @@ class RatingEngine:
             return RatingResult(
                 rating=0,
                 pick=0,
-                reason=f"美学太差({topiq:.1f}<{self.min_nima:.1f})"
+                reason=self.i18n.t("rating_engine.low_aesthetics", val=topiq, threshold=self.min_nima)
             )
         
         # V4.0: 曝光问题标记
         has_exposure_issue = is_overexposed or is_underexposed
         exposure_suffix = ""
         if is_overexposed and is_underexposed:
-            exposure_suffix = "，曝光异常"
+            exposure_suffix = self.i18n.t("rating_engine.exposure_issue_both")
         elif is_overexposed:
-            exposure_suffix = "，过曝"
+            exposure_suffix = self.i18n.t("rating_engine.exposure_over")
         elif is_underexposed:
-            exposure_suffix = "，欠曝"
+            exposure_suffix = self.i18n.t("rating_engine.exposure_under")
         
         # V4.0: 对焦权重处理 - 先应用对焦权重
         # 锐度权重: 1.1(头部) / 1.0(SEG) / 0.7(BBox) / 0.5(外部)
@@ -196,13 +200,13 @@ class RatingEngine:
         # V4.2: 阈值与 photo_processor.py 保持一致
         focus_suffix = ""
         if focus_sharpness_weight > 1.0:
-            focus_suffix = "，精焦"
+            focus_suffix = self.i18n.t("rating_engine.focus_best")
         elif focus_sharpness_weight >= 0.9:  # 修复: 0.9 以上为合焦（鸟身对焦）
-            focus_suffix = "，合焦"
+            focus_suffix = self.i18n.t("rating_engine.focus_good")
         elif focus_sharpness_weight >= 0.7:
-            focus_suffix = "，失焦"
+            focus_suffix = self.i18n.t("rating_engine.focus_bad")
         else:  # < 0.7
-            focus_suffix = "，脱焦"
+            focus_suffix = self.i18n.t("rating_engine.focus_worst")
         
         # 第五步：基础星级判定（锐度 >= 阈值 AND/OR TOPIQ >= 阈值）
         sharpness_ok = adjusted_sharpness >= self.sharpness_threshold
@@ -211,16 +215,16 @@ class RatingEngine:
         # 计算基础星级
         if sharpness_ok and topiq_ok:
             base_rating = 3
-            base_reason = "双达标"
+            base_reason = self.i18n.t("rating_engine.base_double")
         elif sharpness_ok:
             base_rating = 2
-            base_reason = "锐度达标"
+            base_reason = self.i18n.t("rating_engine.base_sharp")
         elif topiq_ok:
             base_rating = 2
-            base_reason = "TOPIQ达标"
+            base_reason = self.i18n.t("rating_engine.base_topiq")
         else:
             base_rating = 1
-            base_reason = "锐度和美学均未达标"
+            base_reason = self.i18n.t("rating_engine.base_none")
         
         # V4.0: 渐进式眼睛可见度降权
         # visibility_weight = max(0.5, min(1.0, best_eye_visibility * 2))
@@ -233,21 +237,33 @@ class RatingEngine:
             rating = max(0, rating - 1)
         
         # 构建理由
-        rating_names = {3: '优选', 2: '良好', 1: '普通', 0: '问题'}
-        rating_name = rating_names.get(rating, '普通')
+        rating_names = {
+            3: self.i18n.t("rating_engine.rating_excellent"), 
+            2: self.i18n.t("rating_engine.rating_good"), 
+            1: self.i18n.t("rating_engine.rating_average"), 
+            0: self.i18n.t("rating_engine.rating_poor")
+        }
+        rating_name = rating_names.get(rating, self.i18n.t("rating_engine.rating_average"))
         
         # 可见度降权说明
         visibility_suffix = ""
         if visibility_weight < 1.0:
-            visibility_suffix = f"，眼睛可见度{best_eye_visibility:.0%}"
+            visibility_suffix = self.i18n.t("rating_engine.visibility_suffix", val=best_eye_visibility)
         
         # 飞鸟标记
-        flying_suffix = "，飞鸟加成" if is_flying else ""
+        flying_suffix = self.i18n.t("rating_engine.flying_suffix") if is_flying else ""
         
         return RatingResult(
             rating=rating,
             pick=0,
-            reason=f"{rating_name}照片（{base_reason}{exposure_suffix}{focus_suffix}{visibility_suffix}{flying_suffix}）"
+            reason=self.i18n.t("rating_engine.reason_fmt", 
+                rating_name=rating_name,
+                base_reason=base_reason,
+                exposure=exposure_suffix,
+                focus=focus_suffix,
+                visibility=visibility_suffix,
+                flying=flying_suffix
+            )
         )
     
     def update_thresholds(

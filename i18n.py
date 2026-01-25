@@ -65,16 +65,22 @@ class I18n:
                 timeout=2
             )
             if result.returncode == 0:
-                output = result.stdout.lower()
-                if 'zh-hans' in output or 'zh_cn' in output:
-                    return 'zh_CN'
-                elif 'zh-hant' in output or 'zh_tw' in output:
-                    return 'zh_TW'
+                # 输出格式类似: ( "en-US", "zh-Hans-CN" )
+                # 提取第一个引号内的内容
+                output = result.stdout
+                import re
+                match = re.search(r'"([^"]+)"', output)
+                if match:
+                    first_lang = match.group(1).lower()
+                    if 'zh-hans' in first_lang or 'zh_cn' in first_lang:
+                        return 'zh_CN'
+                    elif 'zh-hant' in first_lang or 'zh_tw' in first_lang:
+                        return 'zh_TW'
         except Exception:
             pass
 
-        # 4. 默认使用简体中文
-        return 'zh_CN'
+        # 4. 默认使用英语 (If not Chinese, use English)
+        return 'en_US'
 
     def _load_translations(self) -> None:
         """加载当前语言的翻译"""

@@ -1,0 +1,300 @@
+8301|黑眉拟啄木鸟|Chinese Barbet|Psilopogon faber
+8302|黄纹拟啄木鸟|Green-eared Barbet|Psilopogon faiostrictus
+8303|黄额拟䴕|Yellow-fronted Barbet|Psilopogon flavifrons
+8304|金喉拟啄木鸟|Golden-throated Barbet|Psilopogon franklinii
+8305|赤胸拟啄木鸟|Coppersmith Barbet|Psilopogon haemacephalus
+8306|黄顶拟䴕|Yellow-crowned Barbet|Psilopogon henricii
+8307|印尼蓝喉拟啄木|Moustached Barbet|Psilopogon incognitus
+8308|黑斑拟䴕|Black-banded Barbet|Psilopogon javensis
+8309|红臀拟䴕|Red-vented Barbet|Psilopogon lagrandieri
+8310|斑头绿拟啄木鸟|Lineated Barbet|Psilopogon lineatus
+8311|马拉巴拟啄木鸟|Malabar Barbet|Psilopogon malabaricus
+8312|山拟䴕|Mountain Barbet|Psilopogon monticola
+8313|丽色拟䴕|Red-throated Barbet|Psilopogon mystacophanos
+8314|台湾拟啄木鸟|Taiwan Barbet|Psilopogon nuchalis
+8315|马来拟啄木鸟|Black-browed Barbet|Psilopogon oorti
+8316|金枕拟䴕|Golden-naped Barbet|Psilopogon pulcherrimus
+8317|火簇拟䴕|Fire-tufted Barbet|Psilopogon pyrolophus
+8318|花彩拟䴕|Red-crowned Barbet|Psilopogon rafflesii
+8319|绯喉拟啄木|Crimson-fronted Barbet|Psilopogon rubricapillus
+8320|大拟啄木鸟|Great Barbet|Psilopogon virens
+8321|小绿拟䴕|White-cheeked Barbet|Psilopogon viridis
+8322|斑头绿拟啄木|Brown-headed Barbet|Psilopogon zeylanicus
+8323|山鹦哥|Mountain Parakeet|Psilopsiagon aurifrons
+8324|灰顶鹦哥|Grey-hooded Parakeet|Psilopsiagon aymara
+8325|斑竹鹩|Spotted Bamboowren|Psilorhamphus guttatus
+8326|美洲角鸮|Flammulated Owl|Psiloscops flammeolus
+8327|索岛鹦哥|Socorro Parakeet|Psittacara brevipes
+8328|伊岛鹦哥|Hispaniolan Parakeet|Psittacara chloropterus
+8329|红头鹦哥|Red-masked Parakeet|Psittacara erythrogenys
+8330|古巴鹦哥|Cuban Parakeet|Psittacara euops
+8331|绯额鹦哥|Finsch's Parakeet|Psittacara finschi
+8332|高山鹦哥|Cordilleran Parakeet|Psittacara frontatus
+8333|绿鹦哥|Green Parakeet|Psittacara holochlorus
+8334|白眼鹦哥|White-eyed Parakeet|Psittacara leucophthalmus
+8335|波多黎各鹦鹉|Puerto Rican Parakeet|Psittacara maugei †
+8336|红耳绿鹦哥|Mitred Parakeet|Psittacara mitratus
+8337|红喉鹦哥|Red-throated Parakeet|Psittacara rubritorquis
+8338|尼加拉瓜绿鹦哥|Pacific Parakeet|Psittacara strenuus
+8339|红额鹦哥|Scarlet-fronted Parakeet|Psittacara wagleri
+8340|布氏鹦鹉|Brehm's Tiger Parrot|Psittacella brehmii
+8341|纹背绿鹦鹉|Madarasz's Tiger Parrot|Psittacella madaraszi
+8342|羞怯鹦鹉|Modest Tiger Parrot|Psittacella modesta
+8343|彩鹦鹉|Painted Tiger Parrot|Psittacella picta
+8344|绯胸鹦鹉|Red-breasted Parakeet|Psittacula alexandri
+8345|毛里求斯灰鹦鹉|Mascarene Grey Parakeet|Psittacula bensoni ††
+8346|艳绿领鹦鹉|Layard's Parakeet|Psittacula calthrapae
+8347|布莱氏鹦鹉|Nicobar Parakeet|Psittacula caniceps
+8348|马拉巴鹦鹉|Blue-winged Parakeet|Psittacula columboides
+8349|梅头鹦鹉|Plum-headed Parakeet|Psittacula cyanocephala
+8350|大紫胸鹦鹉|Lord Derby's Parakeet|Psittacula derbiana
+8351|毛里求斯鹦鹉|Echo Parakeet|Psittacula eques
+8352|亚历山大鹦鹉|Alexandrine Parakeet|Psittacula eupatria
+8353|牛顿鹦鹉|Newton's Parakeet|Psittacula exsul †
+8354|灰头鹦鹉|Grey-headed Parakeet|Psittacula finschii
+8355|青头鹦鹉|Slaty-headed Parakeet|Psittacula himalayana
+8356|红领绿鹦鹉|Rose-ringed Parakeet|Psittacula krameri
+8357|长尾鹦鹉|Long-tailed Parakeet|Psittacula longicauda
+8358|花头鹦鹉|Blossom-headed Parakeet|Psittacula roseata
+8359|塞席尔绿鹦鹉|Seychelles Parakeet|Psittacula wardi †
+8360|德氏果鹦鹉|Large Fig Parrot|Psittaculirostris desmarestii
+8361|爱氏果鹦鹉|Edwards's Fig Parrot|Psittaculirostris edwardsii
+8362|萨氏果鹦鹉|Salvadori's Fig Parrot|Psittaculirostris salvadorii
+8363|非洲灰鹦鹉|Grey Parrot|Psittacus erithacus
+8364|狮子山棕颈鹦鹉|Timneh Parrot|Psittacus timneh
+8365|杂色鹦鹉|Varied Lorikeet|Psitteuteles versicolor
+8366|蓝腰短尾鹦鹉|Blue-rumped Parrot|Psittinus cyanurus
+8367|鹦嘴管舌雀|Ou|Psittirostra † psittacea †
+8368|彼氏鹦鹉|Pesquet's Parrot|Psittrichas fulgidus
+8369|灰翅喇叭声鹤|Grey-winged Trumpeter|Psophia crepitans
+8370|白翅喇叭声鹤|Pale-winged Trumpeter|Psophia leucoptera
+8371|绿翅喇叭声鹤|Dark-winged Trumpeter|Psophia viridis
+8372|东啸冠鸫|Chirruping Wedgebill|Psophodes cristatus
+8373|白腹冠鸫|White-bellied Whipbird|Psophodes leucogaster
+8374|黑喉啸冠鸫|Black-throated Whipbird|Psophodes nigrogularis
+8375|西啸冠鸫|Chiming Wedgebill|Psophodes occidentalis
+8376|绿啸冠鸫|Eastern Whipbird|Psophodes olivaceus
+8377|萨克森极乐鸟|King of Saxony Bird-of-paradise|Pteridophora alberti
+8378|红嘴鹧鸪|Red-billed Spurfowl|Pternistis adspersus
+8379|裸喉鹧鸪|Red-necked Spurfowl|Pternistis afer
+8380|褐顶鹧鸪|Ahanta Spurfowl|Pternistis ahantensis
+8381|黑额鹧鸪|Black-fronted Spurfowl|Pternistis atrifrons
+8382|双距鹧鸪|Double-spurred Spurfowl|Pternistis bicalcaratus
+8383|喀麦隆鹧鸪|Mount Cameroon Spurfowl|Pternistis camerunensis
+8384|南非鹧鸪|Cape Spurfowl|Pternistis capensis
+8385|栗枕鹧鸪|Chestnut-naped Spurfowl|Pternistis castaneicollis
+8386|红眶鹧鸪|Clapperton's Spurfowl|Pternistis clappertoni
+8387|棕顶鹧鸪|Erckel's Spurfowl|Pternistis erckelii
+8388|灰纹鹧鸪|Grey-striped Spurfowl|Pternistis griseostriatus
+8389|哈氏鹧鸪|Hartlaub's Spurfowl|Pternistis hartlaubi
+8390|海氏鹧鸪|Harwood's Spurfowl|Pternistis harwoodi
+8391|希氏鹧鸪|Hildebrandt's Spurfowl|Pternistis hildebrandti
+8392|黄嘴鹧鸪|Heuglin's Spurfowl|Pternistis icterorhynchus
+8393|肯尼亚鹧鸪|Jackson's Spurfowl|Pternistis jacksoni
+8394|黄颈裸喉鹧鸪|Yellow-necked Spurfowl|Pternistis leucoscepus
+8395|纳塔尔鹧鸪|Natal Spurfowl|Pternistis natalensis
+8396|艳鹧鸪|Handsome Spurfowl|Pternistis nobilis
+8397|淡腹鹧鸪|Djibouti Spurfowl|Pternistis ochropectus
+8398|彩鹧鸪|Grey-breasted Spurfowl|Pternistis rufopictus
+8399|鳞斑鹧鸪|Scaly Spurfowl|Pternistis squamatus
+8400|斯氏鹧鸪|Swainson's Spurfowl|Pternistis swainsonii
+8401|斯维氏鹧鸪|Swierstra's Spurfowl|Pternistis swierstrai
+8402|白腹沙鸡|Pin-tailed Sandgrouse|Pterocles alchata
+8403|二斑沙鸡|Double-banded Sandgrouse|Pterocles bicinctus
+8404|杂色沙鸡|Burchell's Sandgrouse|Pterocles burchelli
+8405|花头沙鸡|Crowned Sandgrouse|Pterocles coronatus
+8406|黑臉沙雞|Black-faced Sandgrouse|Pterocles decoratus
+8407|栗腹沙鸡|Chestnut-bellied Sandgrouse|Pterocles exustus
+8408|黄喉沙鸡|Yellow-throated Sandgrouse|Pterocles gutturalis
+8409|彩沙鸡|Painted Sandgrouse|Pterocles indicus
+8410|里氏沙鸡|Lichtenstein's Sandgrouse|Pterocles lichtensteinii
+8411|那马瓜沙鸡|Namaqua Sandgrouse|Pterocles namaqua
+8412|黑腹沙鸡|Black-bellied Sandgrouse|Pterocles orientalis
+8413|马岛沙鸡|Madagascan Sandgrouse|Pterocles personatus
+8414|四斑沙鸡|Four-banded Sandgrouse|Pterocles quadricinctus
+8415|斑沙鸡|Spotted Sandgrouse|Pterocles senegallus
+8416|白腹圆尾鹱|Phoenix Petrel|Pterodroma alba
+8417|特岛圆尾鹱|Trindade Petrel|Pterodroma arminjoniana
+8418|亨氏圆尾鹱|Henderson Petrel|Pterodroma atrata
+8419|查岛圆尾鹱|Chatham Petrel|Pterodroma axillaris
+8420|留尼汪圆尾鹱|Barau's Petrel|Pterodroma baraui
+8421|领圆尾鹱|Collared Petrel|Pterodroma brevipes
+8422|百慕大圆尾鹱|Bermuda Petrel|Pterodroma cahow
+8423|牙买加圆尾鹱|Jamaican Petrel|Pterodroma caribbaea †
+8424|白领圆尾鹱|White-necked Petrel|Pterodroma cervicalis
+8425|黑脚圆尾鹱|Cook's Petrel|Pterodroma cookii
+8426|迪氏圆尾鹱|De Filippi's Petrel|Pterodroma defilippiana
+8427|佛得角圆尾鹱|Desertas Petrel|Pterodroma deserta
+8428|百颈圆尾鹱|Juan Fernandez Petrel|Pterodroma externa
+8429|菲氏圆尾鹱|Fea's Petrel|Pterodroma feae
+8430|灰脸圆尾鹱|Grey-faced Petrel|Pterodroma gouldi
+8431|黑顶圆尾鹱|Black-capped Petrel|Pterodroma hasitata
+8432|信使圆尾鹱|Herald Petrel|Pterodroma heraldica
+8433|白额圆尾鹱|Bonin Petrel|Pterodroma hypoleuca
+8434|大西洋圆尾鹱|Atlantic Petrel|Pterodroma incerta
+8435|鳞斑圆尾鹱|Mottled Petrel|Pterodroma inexpectata
+8436|白头圆尾鹱|White-headed Petrel|Pterodroma lessonii
+8437|白翅圆尾鹱|Gould's Petrel|Pterodroma leucoptera
+8438|长嘴圆尾鹱|Stejneger's Petrel|Pterodroma longirostris
+8439|巨翅圆尾鹱|Great-winged Petrel|Pterodroma macroptera
+8440|马德拉圆尾鹱|Zino's Petrel|Pterodroma madeira
+8441|红圆尾鹱|Magenta Petrel|Pterodroma magentae
+8442|柔羽圆尾鹱|Soft-plumaged Petrel|Pterodroma mollis
+8443|克岛圆尾鹱|Kermadec Petrel|Pterodroma neglecta
+8444|黑翅圆尾鹱|Black-winged Petrel|Pterodroma nigripennis
+8445|瓦努阿图圆尾鹱|Vanuatu Petrel|Pterodroma occulta
+8446|暗腰圆尾鹱|Galapagos Petrel|Pterodroma phaeopygia
+8447|新西兰圆尾鹱|Pycroft's Petrel|Pterodroma pycrofti
+8448|夏威夷圆尾鹱|Hawaiian Petrel|Pterodroma sandwichensis
+8449|棕头圆尾鹱|Providence Petrel|Pterodroma solandri
+8450|墨氏圆尾鹱|Murphy's Petrel|Pterodroma ultima
+8451|黑颈簇舌巨嘴鸟|Black-necked Aracari|Pteroglossus aracari
+8452|白嘴簇舌巨嘴鸟|Ivory-billed Aracari|Pteroglossus azara
+8453|橘黄巨嘴鸟|Saffron Toucanet|Pteroglossus bailloni
+8454|曲冠簇舌巨嘴鸟|Curl-crested Aracari|Pteroglossus beauharnaisii
+8455|红颈簇舌巨嘴鸟|Red-necked Aracari|Pteroglossus bitorquatus
+8456|栗耳簇舌巨嘴鸟|Chestnut-eared Aracari|Pteroglossus castanotis
+8457|淡嘴簇舌巨嘴鸟|Pale-mandibled Aracari|Pteroglossus erythropygius
+8458|红嘴簇舌巨嘴鸟|Fiery-billed Aracari|Pteroglossus frantzii
+8459|巴西簇舌巨嘴鸟|Lettered Aracari|Pteroglossus inscriptus
+8460|褐嘴簇舌巨嘴鸟|Brown-mandibled Aracari|Pteroglossus mariae
+8461|多斑簇舌巨嘴鸟|Many-banded Aracari|Pteroglossus pluricinctus
+8462|斑嘴簇舌巨嘴鸟|Stripe-billed Aracari|Pteroglossus sanguineus
+8463|领簇舌巨嘴鸟|Collared Aracari|Pteroglossus torquatus
+8464|绿簇舌巨嘴鸟|Green Aracari|Pteroglossus viridis
+8465|黑头凫|Hartlaub's Duck|Pteronetta hartlaubii
+8466|蓝翅大蜂鸟|Great Sapphirewing|Pterophanes cyanopterus
+8467|栗喉隐窜鸟|Chestnut-throated Huet-huet|Pteroptochos castaneus
+8468|须隐窜鸟|Moustached Turca|Pteroptochos megapodius
+8469|黑喉隐窜鸟|Black-throated Huet-huet|Pteroptochos tarnii
+8470|白喉噪鹛|White-throated Laughingthrush|Pterorhinus albogularis
+8471|棕噪鹛|Buffy Laughingthrush|Pterorhinus berthemyi
+8472|灰胁噪鹛|Grey-sided Laughingthrush|Pterorhinus caerulatus
+8473|黑喉噪鹛|Black-throated Laughingthrush|Pterorhinus chinensis
+8474|靛冠噪鹛|Blue-crowned Laughingthrush|Pterorhinus courtoisi
+8475|山噪鹛|Plain Laughingthrush|Pterorhinus davidi
+8476|灰胸噪鹛|Wayanad Laughingthrush|Pterorhinus delesserti
+8477|黄喉噪鹛|Yellow-throated Laughingthrush|Pterorhinus galbanus
+8478|棕臀噪鹛|Rufous-vented Laughingthrush|Pterorhinus gularis
+8479|棕草鹛|Tibetan Babax|Pterorhinus koslowi
+8480|矛纹草鹛|Chinese Babax|Pterorhinus lanceolatus
+8481|栗头噪鹛|Chestnut-capped Laughingthrush|Pterorhinus mitratus
+8482|栗背噪鹛|Chestnut-backed Laughingthrush|Pterorhinus nuchalis
+8483|黑领噪鹛|Greater Necklaced Laughingthrush|Pterorhinus pectoralis
+8484|黑脸噪鹛|Masked Laughingthrush|Pterorhinus perspicillatus
+8485|台湾棕噪鹛|Rusty Laughingthrush|Pterorhinus poecilorhynchus
+8486|台湾白喉噪鹛|Rufous-crowned Laughingthrush|Pterorhinus ruficeps
+8487|栗颈噪鹛|Rufous-necked Laughingthrush|Pterorhinus ruficollis
+8488|白颊噪鹛|White-browed Laughingthrush|Pterorhinus sannio
+8489|栗冠噪鹛|Chestnut-hooded Laughingthrush|Pterorhinus treacheri
+8490|白脸噪鹛|White-cheeked Laughingthrush|Pterorhinus vassali
+8491|大草鹛|Giant Babax|Pterorhinus waddelli
+8492|维多利亚山草鹛|Mount Victoria Babax|Pterorhinus woodi
+8493|颤声栗额鵙鹛|Trilling Shrike-babbler|Pteruthius aenobarbus
+8494|红翅鵙鹛|Blyth's Shrike-babbler|Pteruthius aeralatus
+8495|大叻鵙鹛|Dalat Shrike-babbler|Pteruthius annamensis
+8496|斑鵙鹛|Pied Shrike-babbler|Pteruthius flaviscapis
+8497|栗额鵙鹛|Clicking Shrike-babbler|Pteruthius intermedius
+8498|栗喉鵙鹛|Black-eared Shrike-babbler|Pteruthius melanotis
+8499|喜马拉雅鵙鹛|Himalayan Shrike-babbler|Pteruthius ripleyi
+8500|棕腹鵙鹛|Black-headed Shrike-babbler|Pteruthius rufiventer
+8501|淡绿鵙鹛|Green Shrike-babbler|Pteruthius xanthochlorus
+8502|黑斑果鸠|Black-banded Fruit Dove|Ptilinopus alligator
+8503|里氏果鸠|Negros Fruit Dove|Ptilinopus arcanus
+8504|橙额果鸠|Orange-fronted Fruit Dove|Ptilinopus aurantiifrons
+8505|红胸果鸠|Scarlet-breasted Fruit Dove|Ptilinopus bernsteinii
+8506|马喀岛果鸠|Makatea Fruit Dove|Ptilinopus chalcurus
+8507|黑背果鸠|Banded Fruit Dove|Ptilinopus cinctus
+8508|土岛果鸠|Atoll Fruit Dove|Ptilinopus coralensis
+8509|小紫顶果鸠|Coroneted Fruit Dove|Ptilinopus coronulatus
+8510|红枕果鸠|Red-naped Fruit Dove|Ptilinopus dohertyi
+8511|白顶果鸠|White-capped Fruit Dove|Ptilinopus dupetithouarsii
+8512|白头果鸠|White-headed Fruit Dove|Ptilinopus eugeniae
+8513|费氏果鸠|Red-eared Fruit Dove|Ptilinopus fischeri
+8514|花鼻果鸠|Carunculated Fruit Dove|Ptilinopus granulifrons
+8515|红嘴果鸠|Red-bellied Fruit Dove|Ptilinopus greyi
+8516|奥氏果鸠|Oberholser's Fruit Dove|Ptilinopus gularis
+8517|库岛果鸠|Kosrae Fruit Dove|Ptilinopus hernsheimi
+8518|拉帕岛果鸠|Rapa Fruit Dove|Ptilinopus huttoni
+8519|灰头果鸠|Grey-headed Fruit Dove|Ptilinopus hyogastrus
+8520|瘤鼻果鸠|Knob-billed Fruit Dove|Ptilinopus insolitus
+8521|亨岛果鸠|Henderson Fruit Dove|Ptilinopus insularis
+8522|橙腹果鸠|Orange-bellied Fruit Dove|Ptilinopus iozonus
+8523|粉头果鸠|Jambu Fruit Dove|Ptilinopus jambu
+8524|黄头果鸠|Whistling Fruit Dove|Ptilinopus layardi
+8525|黑颏果鸠|Black-chinned Fruit Dove|Ptilinopus leclancheri
+8526|金果鸠|Golden Fruit Dove|Ptilinopus luteovirens
+8527|巨果鸠|Wompoo Fruit Dove|Ptilinopus magnificus
+8528|苏拉果鸠|Sula Fruit Dove|Ptilinopus mangoliensis
+8529|黑耳果鸠|Flame-breasted Fruit Dove|Ptilinopus marchei
+8530|黑项果鸠|Black-naped Fruit Dove|Ptilinopus melanospilus
+8531|赤髯果鸠|Red-moustached Fruit Dove|Ptilinopus mercierii †
+8532|梅氏果鸠|Cream-breasted Fruit Dove|Ptilinopus merrilli
+8533|蓝顶果鸠|Blue-capped Fruit Dove|Ptilinopus monacha
+8534|小绿果鸠|Dwarf Fruit Dove|Ptilinopus nainus
+8535|栗耳果鸠|Yellow-breasted Fruit Dove|Ptilinopus occipitalis
+8536|丽色果鸠|Ornate Fruit Dove|Ptilinopus ornatus
+8537|帕岛果鸠|Palau Fruit Dove|Ptilinopus pelewensis
+8538|粉斑果鸠|Pink-spotted Fruit Dove|Ptilinopus perlatus
+8539|多色果鸠|Many-colored Fruit Dove|Ptilinopus perousii
+8540|紫额果鸠|Purple-capped Fruit Dove|Ptilinopus ponapensis
+8541|紫顶果鸠|Crimson-crowned Fruit Dove|Ptilinopus porphyraceus
+8542|粉红颈果鸠|Pink-headed Fruit Dove|Ptilinopus porphyreus
+8543|深红顶果鸠|Beautiful Fruit Dove|Ptilinopus pulchellus
+8544|灰绿果鸠|Grey-green Fruit Dove|Ptilinopus purpuratus
+8545|拉罗果鸠|Lilac-crowned Fruit Dove|Ptilinopus rarotongensis
+8546|粉顶果鸠|Rose-crowned Fruit Dove|Ptilinopus regina
+8547|银顶果鸠|Silver-capped Fruit Dove|Ptilinopus richardsii
+8548|白胸果鸠|White-bibbed Fruit Dove|Ptilinopus rivoli
+8549|马里岛果鸠|Mariana Fruit Dove|Ptilinopus roseicapilla
+8550|黄胸果鸠|Yellow-bibbed Fruit Dove|Ptilinopus solomonensis
+8551|暗颏果鸠|Banggai Fruit Dove|Ptilinopus subgularis
+8552|华丽果鸠|Superb Fruit Dove|Ptilinopus superbus
+8553|银肩果鸠|Tanna Fruit Dove|Ptilinopus tannensis
+8554|橙色果鸠|Orange Fruit Dove|Ptilinopus victor
+8555|紫红胸果鸠|Claret-breasted Fruit Dove|Ptilinopus viridis
+8556|金肩果鸠|Wallace's Fruit Dove|Ptilinopus wallacii
+8557|长尾丝鹟|Long-tailed Silky-flycatcher|Ptiliogonys caudatus
+8558|灰丝鹟|Grey Silky-flycatcher|Ptiliogonys cinereus
+8559|菲律宾地鹛|Falcated Wren-Babbler|Ptilocichla falcata
+8560|加里曼丹地鹛|Bornean Wren-Babbler|Ptilocichla leucogrammica
+8561|条纹地鹛|Striated Wren-Babbler|Ptilocichla mindanensis
+8562|缎蓝园丁鸟|Satin Bowerbird|Ptilonorhynchus violaceus
+8563|纳氏鹧鸪|Nahan's Partridge|Ptilopachus nahani
+8564|石鹑|Stone Partridge|Ptilopachus petrosus
+8565|红胁嗜蜜鸟|Rufous-sided Honeyeater|Ptiloprora erythropleura
+8566|红背嗜蜜鸟|Rufous-backed Honeyeater|Ptiloprora guisei
+8567|麦氏嗜蜜鸟|Mayr's Honeyeater|Ptiloprora mayri
+8568|绿纹嗜蜜鸟|Yellowish-streaked Honeyeater|Ptiloprora meekiana
+8569|黑背嗜蜜鸟|Grey-streaked Honeyeater|Ptiloprora perstriata
+8570|铅色嗜蜜鸟|Leaden Honeyeater|Ptiloprora plumbea
+8571|南白脸角鸮|Southern White-faced Owl|Ptilopsis granti
+8572|白脸角鸮|Northern White-faced Owl|Ptilopsis leucotis
+8573|东裙风鸟|Growling Riflebird|Ptiloris intercedens
+8574|丽色掩鼻风鸟|Magnificent Riflebird|Ptiloris magnificus
+8575|大掩鼻风鸟|Paradise Riflebird|Ptiloris paradiseus
+8576|小掩鼻风鸟|Victoria's Riflebird|Ptiloris victoriae
+8577|蓝丽鸫|Blue Jewel-babbler|Ptilorrhoa caerulescens
+8578|栗背丽鸫|Chestnut-backed Jewel-babbler|Ptilorrhoa castanonota
+8579|棕头丽鸫|Brown-headed Jewel-babbler|Ptilorrhoa geislerorum
+8580|斑丽鸫|Spotted Jewel-babbler|Ptilorrhoa leucosticta
+8581|须嘴鸦|Piapiac|Ptilostomus afer
+8582|淡黄吸蜜鸟|Yellow-tinted Honeyeater|Ptilotula flavescens
+8583|黄翅灰吸蜜鸟|Fuscous Honeyeater|Ptilotula fusca
+8584|灰头吸蜜鸟|Grey-headed Honeyeater|Ptilotula keartlandi
+8585|黄痣吸蜜鸟|Yellow-plumed Honeyeater|Ptilotula ornata
+8586|白痣吸蜜鸟|White-plumed Honeyeater|Ptilotula penicillata
+8587|澳洲灰额吸蜜鸟|Grey-fronted Honeyeater|Ptilotula plumula
+8588|古巴黑鹂|Cuban Blackbird|Ptiloxena atroviolacea
+8589|海雀|Cassin's Auklet|Ptychoramphus aleuticus
+8590|纯色岩燕|Dusky Crag Martin|Ptyonoprogne concolor
+8591|非洲岩燕|Rock Martin|Ptyonoprogne fuligula
+8592|灰喉燕|Pale Crag Martin|Ptyonoprogne obsoleta
+8593|岩燕|Eurasian Crag Martin|Ptyonoprogne rupestris
+8594|勺鸡|Koklass Pheasant|Pucrasia macrolopha
+8595|小鹱|Little Shearwater|Puffinus assimilis
+8596|汤氏鹱|Townsend's Shearwater|Puffinus auricularis
+8597|热带鹱|Tropical Shearwater|Puffinus bailloni
+8598|班氏鹱|Bannerman's Shearwater|Puffinus bannermani
+8599|北大西洋小鹱|Barolo Shearwater|Puffinus baroli
+8600|佛得角小鹱|Boyd's Shearwater|Puffinus boydi

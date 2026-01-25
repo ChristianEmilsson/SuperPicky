@@ -65,10 +65,12 @@ local function parseJSON(jsonString)
             local cn_name_raw = string.match(itemBlock, '"cn_name"%s*:%s*"([^"]*)"')
             local en_name_raw = string.match(itemBlock, '"en_name"%s*:%s*"([^"]*)"')
             local sci_name_raw = string.match(itemBlock, '"scientific_name"%s*:%s*"([^"]*)"')
+            local desc_raw = string.match(itemBlock, '"description"%s*:%s*"([^"]*)"')
 
             item.cn_name = decodeUnicodeEscape(cn_name_raw)
             item.en_name = decodeUnicodeEscape(en_name_raw)
             item.scientific_name = decodeUnicodeEscape(sci_name_raw)
+            item.description = decodeUnicodeEscape(desc_raw)
 
             local confStr = string.match(itemBlock, '"confidence"%s*:%s*([%d%.]+)')
             item.confidence = confStr and tonumber(confStr) or 0
@@ -149,12 +151,22 @@ local function recognizePhoto(photo, apiUrl)
 end
 
 -- 保存识别结果到照片元数据
-local function saveRecognitionResult(photo, species, enName)
+-- 写入 Title (鸟名) 和 Caption (描述)
+local function saveRecognitionResult(photo, species, enName, scientificName, description)
     local catalog = LrApplication.activeCatalog()
+
+    -- 构建 Title 内容：中文名 (英文名)
     local title = species .. " (" .. enName .. ")"
+
+    -- 构建 Caption 内容：只写入简介
+    local caption = description or ""
 
     catalog:withWriteAccessDo("保存鸟类识别结果", function()
         photo:setRawMetadata("title", title)
+        -- 写入 Caption (描述)
+        if caption ~= "" then
+            photo:setRawMetadata("caption", caption)
+        end
     end)
 end
 
@@ -336,8 +348,9 @@ LrTasks.startAsyncTask(function()
             local selectedBird = result.results[selectedIndex]
             local species = selectedBird.cn_name or "未知"
             local enName = selectedBird.en_name or ""
+            local scientificName = selectedBird.scientific_name or ""
 
-            saveRecognitionResult(targetPhoto, species, enName)
+            saveRecognitionResult(targetPhoto, species, enName, scientificName, selectedBird.description)
         end
     else
         local errorMsg = result.error or "未知错误"
