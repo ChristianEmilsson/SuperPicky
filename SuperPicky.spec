@@ -30,7 +30,8 @@ all_datas = [
     # AI模型文件
     (os.path.join(base_path, 'models'), 'models'),
     # ExifTool 完整打包
-    (os.path.join(base_path, 'exiftool_bundle'), 'exiftool_bundle'),
+    (os.path.join(base_path, 'exiftools_mac'), 'exiftools_mac'),
+    (os.path.join(base_path, 'exiftools_win'), 'exiftools_win'),
     # 图片资源
     (os.path.join(base_path, 'img'), 'img'),
     # 国际化语言包
