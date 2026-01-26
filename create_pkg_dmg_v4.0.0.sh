@@ -10,7 +10,7 @@ set -e  # 遇到错误立即退出
 # ============================================
 # 配置参数
 # ============================================
-VERSION="4.0.0"
+VERSION="4.0.1"
 APP_NAME="SuperPicky"
 APP_NAME_CN="慧眼选鸟"
 BUNDLE_ID="com.jamesphotography.superpicky"
@@ -18,7 +18,7 @@ DEVELOPER_ID="Developer ID Application: James Zhen Yu (JWR6FDB52H)"
 INSTALLER_ID="Developer ID Installer: James Zhen Yu (JWR6FDB52H)"
 APPLE_ID="james@jamesphotography.com.au"
 TEAM_ID="JWR6FDB52H"
-APP_PASSWORD="vfmy-vjcb-injx-guid"  # App-Specific Password
+APP_PASSWORD=$(security find-generic-password -a "${APPLE_ID}" -s "SuperPicky-Notarize" -w)
 
 PKG_NAME="${APP_NAME}_v${VERSION}_Installer.pkg"
 DMG_NAME="${APP_NAME}_v${VERSION}.dmg"
