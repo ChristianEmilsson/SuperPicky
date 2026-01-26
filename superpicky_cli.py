@@ -37,6 +37,7 @@ import argparse
 import sys
 import os
 from pathlib import Path
+from tools.i18n import t
 
 # 确保模块路径正确
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -45,7 +46,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 def print_banner():
     """打印 CLI 横幅"""
     print("\n" + "━" * 60)
-    print("  🐦 SuperPicky CLI v3.9.3 - 慧眼选鸟 (命令行版)")
+    print(t("cli.banner", version="3.9.3"))
     print("━" * 60)
 
 
@@ -55,11 +56,11 @@ def cmd_burst(args):
     from exiftool_manager import ExifToolManager
     
     print_banner()
-    print(f"\n📁 目标目录: {args.directory}")
-    print(f"⚙️  最小连拍张数: {args.min_count}")
-    print(f"⚙️  时间阈值: {args.threshold}ms")
-    print(f"⚙️  pHash验证: {'启用' if args.phash else '禁用'}")
-    print(f"⚙️  执行模式: {'实际处理' if args.execute else '仅预览'}")
+    print(t("cli.target_dir", directory=args.directory))
+    print(t("cli.min_burst", count=args.min_count))
+    print(t("cli.time_threshold", ms=args.threshold))
+    print(t("cli.phash", status=t("cli.enabled") if args.phash else t("cli.disabled")))
+    print(t("cli.execute_mode", mode=t("cli.mode_real") if args.execute else t("cli.mode_preview")))
     print()
     
     # 创建检测器
@@ -68,17 +69,17 @@ def cmd_burst(args):
     detector.TIME_THRESHOLD_MS = args.threshold
     
     # 运行检测
-    print("🔍 正在检测连拍组...")
+    print(t("cli.detecting_burst"))
     results = detector.run_full_detection(args.directory)
     
     # 显示结果
     print(f"\n{'═' * 50}")
-    print("  连拍检测结果")
+    print(t("cli.burst_result_title"))
     print(f"{'═' * 50}")
-    print(f"\n📊 总览:")
-    print(f"  总照片数: {results['total_photos']}")
-    print(f"  有毫秒时间戳: {results['photos_with_subsec']}")
-    print(f"  连拍组数: {results['groups_detected']}")
+    print(t("cli.total_overview"))
+    print(t("cli.total_photos", count=results['total_photos']))
+    print(t("cli.photos_subsec", count=results['photos_with_subsec']))
+    print(t("cli.groups_detected", count=results['groups_detected']))
     
     for dir_name, data in results['groups_by_dir'].items():
         print(f"\n📂 {dir_name}:")
@@ -90,7 +91,7 @@ def cmd_burst(args):
     
     # 执行模式
     if args.execute and results['groups_detected'] > 0:
-        print(f"\n🚀 开始处理连拍组...")
+        print(t("cli.processing_burst"))
         
         exiftool_mgr = ExifToolManager()
         total_stats = {'groups_processed': 0, 'photos_moved': 0, 'best_marked': 0}
@@ -125,12 +126,12 @@ def cmd_burst(args):
             total_stats['photos_moved'] += stats['photos_moved']
             total_stats['best_marked'] += stats['best_marked']
         
-        print(f"\n✅ 处理完成!")
-        print(f"  处理组数: {total_stats['groups_processed']}")
-        print(f"  移动照片: {total_stats['photos_moved']}")
-        print(f"  紫色标记: {total_stats['best_marked']}")
+        print(t("cli.processing_complete"))
+        print(t("cli.processed_groups", count=total_stats['groups_processed']))
+        print(t("cli.moved_photos", count=total_stats['photos_moved']))
+        print(t("cli.marked_purple", count=total_stats['best_marked']))
     elif not args.execute:
-        print(f"\n💡 预览模式，未实际处理。添加 --execute 参数执行实际处理。")
+        print(t("cli.preview_hint"))
     
     print()
     return 0
@@ -138,16 +139,16 @@ def cmd_burst(args):
 
 def cmd_process(args):
     """处理照片目录"""
-    from cli_processor import CLIProcessor
+    from tools.cli_processor import CLIProcessor
     from core.photo_processor import ProcessingSettings
     
     print_banner()
-    print(f"\n📁 目标目录: {args.directory}")
-    print(f"⚙️  锐度阈值: {args.sharpness}")
-    print(f"  🎨 美学阈值: {args.nima_threshold} (默认: 5.0, TOPIQ)")
-    print(f"⚙️  识别飞鸟: {'是' if args.flight else '否'}")
-    print(f"⚙️  连拍检测: {'是' if args.burst else '否'}")
-    print(f"⚙️  整理文件: {'是' if args.organize else '否'}")
+    print(t("cli.target_dir", directory=args.directory))
+    print(t("cli.sharpness", value=args.sharpness))
+    print(t("cli.aesthetics", value=args.nima_threshold))
+    print(t("cli.detect_flight", value=t("cli.enabled") if args.flight else t("cli.disabled")))
+    print(t("cli.detect_burst", value=t("cli.enabled") if args.burst else t("cli.disabled")))
+    print(t("cli.organize_files", value=t("cli.enabled") if args.organize else t("cli.disabled")))
     print(f"⚙️  清理临时: {'是' if args.cleanup else '否'}")
     
     # V4.0: 显示自动识鸟设置
@@ -726,7 +727,7 @@ def main():
     """主入口"""
     parser = argparse.ArgumentParser(
         prog='superpicky_cli',
-        description='SuperPicky CLI - 慧眼选鸟命令行工具',
+        description=t("cli.sp_description"),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -743,7 +744,7 @@ Examples:
     subparsers = parser.add_subparsers(dest='command', help='可用命令')
     
     # ===== process 命令 =====
-    p_process = subparsers.add_parser('process', help='处理照片目录')
+    p_process = subparsers.add_parser('process', help=t("cli.cmd_process"))
     p_process.add_argument('directory', help='照片目录路径')
     p_process.add_argument('-s', '--sharpness', type=int, default=400,
                           help='锐度阈值 (默认: 400, 范围: 200-600)')
@@ -780,13 +781,13 @@ Examples:
     p_process.set_defaults(organize=True, cleanup=True, burst=True, flight=True, auto_identify=False)
     
     # ===== reset 命令 =====
-    p_reset = subparsers.add_parser('reset', help='重置目录')
+    p_reset = subparsers.add_parser('reset', help=t("cli.cmd_reset"))
     p_reset.add_argument('directory', help='照片目录路径')
     p_reset.add_argument('-y', '--yes', action='store_true',
                         help='跳过确认提示')
     
     # ===== restar 命令 =====
-    p_restar = subparsers.add_parser('restar', help='重新评星')
+    p_restar = subparsers.add_parser('restar', help=t("cli.cmd_restar"))
     p_restar.add_argument('directory', help='照片目录路径')
     p_restar.add_argument('-s', '--sharpness', type=int, default=400,
                          help='新锐度阈值 (默认: 400, 范围: 200-600)')
@@ -805,11 +806,11 @@ Examples:
     p_restar.set_defaults(organize=True, burst=True)
     
     # ===== info 命令 =====
-    p_info = subparsers.add_parser('info', help='查看目录信息')
+    p_info = subparsers.add_parser('info', help=t("cli.cmd_info"))
     p_info.add_argument('directory', help='照片目录路径')
     
     # ===== burst 命令 =====
-    p_burst = subparsers.add_parser('burst', help='连拍检测与分组')
+    p_burst = subparsers.add_parser('burst', help=t("cli.cmd_burst"))
     p_burst.add_argument('directory', help='照片目录路径')
     p_burst.add_argument('-m', '--min-count', type=int, default=4,
                          help='最小连拍张数 (默认: 4)')
@@ -822,7 +823,7 @@ Examples:
     p_burst.set_defaults(phash=True)
 
     # ===== identify 命令 =====
-    p_identify = subparsers.add_parser('identify', help='识别鸟类')
+    p_identify = subparsers.add_parser('identify', help=t("cli.cmd_identify"))
     p_identify.add_argument('image', help='图片文件路径')
     p_identify.add_argument('-t', '--top', type=int, default=5,
                            help='返回前 N 个结果 (默认: 5)')
@@ -844,13 +845,13 @@ Examples:
     # identify 命令验证文件，其他命令验证目录
     if args.command == 'identify':
         if not os.path.isfile(args.image):
-            print(f"❌ 文件不存在: {args.image}")
+            print(t("cli.file_not_found", path=args.image))
             return 1
         args.image = os.path.abspath(args.image)
     else:
         # 验证目录
         if not os.path.isdir(args.directory):
-            print(f"❌ 目录不存在: {args.directory}")
+            print(t("cli.dir_not_found", path=args.directory))
             return 1
         args.directory = os.path.abspath(args.directory)
 

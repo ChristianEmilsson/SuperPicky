@@ -10,6 +10,7 @@ import os
 import csv
 from typing import List, Dict, Set, Optional, Tuple
 from constants import RAW_EXTENSIONS, JPG_EXTENSIONS, IMAGE_EXTENSIONS
+from tools.i18n import t
 
 
 def safe_float(value, default=0.0) -> float:
@@ -74,7 +75,7 @@ class PostAdjustmentEngine:
         """
         # 检查文件是否存在
         if not os.path.exists(self.report_path):
-            return False, f"未找到分析报告文件：{self.report_path}"
+            return False, t("engine.report_not_found", path=self.report_path)
 
         try:
             with open(self.report_path, 'r', encoding='utf-8-sig') as f:
@@ -93,10 +94,10 @@ class PostAdjustmentEngine:
                 total_count = len(all_photos)
                 bird_count = len(self.photos_data)
 
-                return True, f"成功加载 {bird_count} 张有鸟照片数据（共 {total_count} 张）"
+                return True, t("engine.load_success", bird=bird_count, total=total_count)
 
         except Exception as e:
-            return False, f"读取CSV文件失败：{str(e)}"
+            return False, t("engine.csv_read_failed", error=str(e))
 
     def find_image_file(self, filename_without_ext: str) -> Optional[str]:
         """
@@ -317,7 +318,7 @@ class PostAdjustmentEngine:
                 writer.writeheader()
                 writer.writerows(all_rows)
 
-            return True, f"成功更新 {updated_count} 条记录"
+            return True, t("engine.csv_update_success", count=updated_count)
 
         except Exception as e:
-            return False, f"更新CSV失败: {str(e)}"
+            return False, t("engine.csv_update_failed", error=str(e))

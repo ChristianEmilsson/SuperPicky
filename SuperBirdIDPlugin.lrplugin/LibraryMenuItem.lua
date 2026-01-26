@@ -12,9 +12,11 @@ local LrBinding = import 'LrBinding'
 local LrFunctionContext = import 'LrFunctionContext'
 local LrColor = import 'LrColor'
 local LrFileUtils = import 'LrFileUtils'
+local LrL10n = import 'LrL10n'
+local LOC = LrL10n.loc
 
 -- 插件名称
-local PLUGIN_NAME = "慧眼选鸟"
+local PLUGIN_NAME = LOC "$$$/SuperBirdID/PluginName=SuperPicky BirdID"
 
 -- 默认设置
 local DEFAULT_API_URL = "http://127.0.0.1:5156"
@@ -115,7 +117,7 @@ local function recognizePhoto(photo, apiUrl)
     if not LrFileUtils.exists(photoPath) then
         return {
             success = false,
-            error = "文件不存在: " .. photoName,
+            error = LOC("$$$/SuperBirdID/Error/FileNotFound=File not found: ^1", photoName),
             photoName = photoName
         }
     end
@@ -138,7 +140,7 @@ local function recognizePhoto(photo, apiUrl)
     if not response then
         return {
             success = false,
-            error = "API调用失败",
+            error = LOC("$$$/SuperBirdID/Error/ApiFailed=API Call Failed"),
             photoName = photoName
         }
     end
@@ -161,7 +163,7 @@ local function saveRecognitionResult(photo, species, enName, scientificName, des
     -- 构建 Caption 内容：只写入简介
     local caption = description or ""
 
-    catalog:withWriteAccessDo("保存鸟类识别结果", function()
+    catalog:withWriteAccessDo(LOC "$$$/SuperBirdID/Undo/SaveResult=Save Bird Recognition Result", function()
         photo:setRawMetadata("title", title)
         -- 写入 Caption (描述)
         if caption ~= "" then
@@ -184,7 +186,7 @@ local function showResultSelectionDialog(results, photoName)
 
         for i, bird in ipairs(results) do
             local confidence = bird.confidence or 0
-            local cnName = bird.cn_name or "未知"
+            local cnName = bird.cn_name or LOC "$$$/SuperBirdID/Dialog/Unknown=Unknown"
             local enName = bird.en_name or ""
             
             local confColor
@@ -253,7 +255,7 @@ local function showResultSelectionDialog(results, photoName)
                 width = 20,
             },
             f:static_text {
-                title = "跳过此照片，不写入",
+                title = LOC "$$$/SuperBirdID/Dialog/Skip=Skip photo, do not write",
                 text_color = LrColor(0.5, 0.5, 0.5),
             },
         }
@@ -268,7 +270,7 @@ local function showResultSelectionDialog(results, photoName)
 
             f:row {
                 f:static_text {
-                    title = photoName .. " 的识别结果",
+                    title = LOC("$$$/SuperBirdID/Dialog/ResultTitle=Result for ^1", photoName),
                     font = "<system/bold>",
                 },
             },
@@ -285,8 +287,8 @@ local function showResultSelectionDialog(results, photoName)
         local dialogResult = LrDialogs.presentModalDialog({
             title = PLUGIN_NAME,
             contents = dialogContent,
-            actionVerb = "写入 EXIF",
-            cancelVerb = "取消",
+            actionVerb = LOC "$$$/SuperBirdID/Dialog/Action=Write EXIF",
+            cancelVerb = LOC "$$$/SuperBirdID/Dialog/Cancel=Cancel",
             resizable = true,
         })
 
@@ -308,7 +310,7 @@ LrTasks.startAsyncTask(function()
     -- 检查是否选中了照片
     if not targetPhoto then
         LrDialogs.message(PLUGIN_NAME,
-            "请先选中一张照片",
+            LOC "$$$/SuperBirdID/Message/SelectOne=Please select one photo first",
             "warning")
         return
     end
@@ -317,9 +319,7 @@ LrTasks.startAsyncTask(function()
     local selectedPhotos = catalog:getTargetPhotos()
     if #selectedPhotos > 1 then
         LrDialogs.message(PLUGIN_NAME,
-            "一次只能识别一张照片\n\n" ..
-            "当前选中: " .. #selectedPhotos .. " 张\n\n" ..
-            "请只选中一张照片后重试",
+            LOC("$$$/SuperBirdID/Message/MultiSelect=Can only identify one photo at a time\n\nSelected: ^1 photos\n\nPlease select only one photo and try again", #selectedPhotos),
             "warning")
         return
     end
@@ -329,10 +329,7 @@ LrTasks.startAsyncTask(function()
 
     if not healthCheck or string.find(healthCheck, '"status"%s*:%s*"ok"') == nil then
         LrDialogs.message(PLUGIN_NAME,
-            "无法连接到慧眼选鸟 API 服务\n\n" ..
-            "请确保:\n" ..
-            "1. 慧眼选鸟主程序已启动\n" ..
-            "2. 识鸟 API 服务已开启",
+            LOC "$$$/SuperBirdID/Message/ApiError=Cannot connect to SuperPicky API Service\n\nPlease ensure:\n1. SuperPicky App is running\n2. BirdID API Service is started",
             "error")
         return
     end
@@ -346,24 +343,17 @@ LrTasks.startAsyncTask(function()
 
         if selectedIndex and selectedIndex > 0 then
             local selectedBird = result.results[selectedIndex]
-            local species = selectedBird.cn_name or "未知"
+            local species = selectedBird.cn_name or LOC "$$$/SuperBirdID/Dialog/Unknown=Unknown"
             local enName = selectedBird.en_name or ""
             local scientificName = selectedBird.scientific_name or ""
 
             saveRecognitionResult(targetPhoto, species, enName, scientificName, selectedBird.description)
         end
     else
-        local errorMsg = result.error or "未知错误"
+        local errorMsg = result.error or LOC "$$$/SuperBirdID/Dialog/Unknown=Unknown"
 
-        local failMsg = "无法识别此照片中的鸟类\n\n" ..
-            "━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" ..
-            "错误信息:\n" .. errorMsg .. "\n\n" ..
-            "━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" ..
-            "可能的原因:\n" ..
-            "• 照片中没有鸟类或鸟类不清晰\n" ..
-            "• 图片文件损坏或格式不支持\n" ..
-            "• 识别模型未正确加载"
+        local failMsg = LOC("$$$/SuperBirdID/Message/IdentifyFail=Cannot identify bird in this photo\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nError:\n^1\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nPossible reasons:\n• No bird or bird unclear\n• File corrupted or unsupported\n• Model not loaded", errorMsg)
 
-        LrDialogs.message(PLUGIN_NAME .. " - 识别失败", failMsg, "error")
+        LrDialogs.message(PLUGIN_NAME .. " - " .. LOC("$$$/SuperBirdID/Dialog/IdentifyFailTitle=Identify Failed"), failMsg, "error")
     end
 end)

@@ -15,6 +15,7 @@ from io import BytesIO
 
 # 确保模块路径正确
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from tools.i18n import t
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -84,7 +85,7 @@ def get_gui_settings():
                 if match:
                     settings['region_code'] = match.group(1)
         except Exception as e:
-            print(f"[API] 读取 GUI 设置失败: {e}")
+            print(t("server.read_gui_settings_failed", error=e))
     
     return settings
 
@@ -139,30 +140,29 @@ def update_gui_settings_from_gps(region_code: str, region_name: str = None):
         with open(settings_path, 'w', encoding='utf-8') as f:
             json.dump(settings, f, ensure_ascii=False, indent=2)
         
-        print(f"[API] 📍 已同步 GPS 检测区域到 GUI: {country_display}" + 
-              (f" / {region_name}" if region_name else ""))
+        print(t("server.sync_gps_success", country=country_display, region=region_name if region_name else ""))
         
     except Exception as e:
-        print(f"[API] ⚠️ 同步 GPS 区域到 GUI 失败: {e}")
+        print(t("server.sync_gps_failed", error=e))
 
 
 def ensure_models_loaded():
     """确保模型已加载"""
-    print("正在加载模型...")
+    print(t("server.loading_models_cli"))
     get_classifier()
-    print("  分类器模型加载完成")
+    print(t("server.classifier_loaded"))
 
     get_bird_info()
-    print("  鸟类信息加载完成")
+    print(t("server.bird_info_loaded"))
 
     db = get_database_manager()
     if db:
-        print("  数据库加载完成")
+        print(t("server.db_loaded"))
 
     if YOLO_AVAILABLE:
         detector = get_yolo_detector()
         if detector:
-            print("  YOLO 检测器加载完成")
+            print(t("server.yolo_loaded_simple"))
 
 
 @app.route('/health', methods=['GET'])
@@ -215,8 +215,8 @@ def recognize_bird():
         data = request.get_json()
 
         if not data:
-            print("[API] ❌ 无效的请求体")
-            return jsonify({'success': False, 'error': '无效的请求体'}), 400
+            print(f"[API] ❌ {t('server.invalid_request')}")
+            return jsonify({'success': False, 'error': t("server.invalid_request")}), 400
 
         # 获取图片
         image = None
@@ -226,15 +226,15 @@ def recognize_bird():
         
         # 日志：显示请求信息
         if image_path:
-            print(f"[API] 📷 收到识别请求: {os.path.basename(image_path)}")
+            print(t("server.log_request_file", file=os.path.basename(image_path)))
         elif image_base64:
-            print(f"[API] 📷 收到 Base64 图片识别请求")
+            print(t("server.log_request_base64"))
 
         if image_path:
             # 从文件路径加载
             if not os.path.exists(image_path):
-                print(f"[API] ❌ 文件不存在: {image_path}")
-                return jsonify({'success': False, 'error': f'文件不存在: {image_path}'}), 404
+                print(t("server.file_not_found", path=image_path))
+                return jsonify({'success': False, 'error': t("server.file_not_found", path=image_path)}), 404
         elif image_base64:
             # 从 Base64 解码
             try:
@@ -246,9 +246,9 @@ def recognize_bird():
                 image.save(temp_file.name, 'JPEG')
                 image_path = temp_file.name
             except Exception as e:
-                return jsonify({'success': False, 'error': f'Base64解码失败: {e}'}), 400
+                return jsonify({'success': False, 'error': t("server.base64_decode_failed", error=e)}), 400
         else:
-            return jsonify({'success': False, 'error': '必须提供 image_path 或 image_base64'}), 400
+            return jsonify({'success': False, 'error': t("server.missing_params")}), 400
 
         # 获取参数
         use_yolo = data.get('use_yolo', True)
@@ -262,11 +262,11 @@ def recognize_bird():
         use_ebird = data.get('use_ebird', gui_settings['use_ebird'])
         
         # 日志：显示识别参数
-        print(f"[API] ⚙️  识别参数:")
-        print(f"[API]     YOLO裁剪: {'✅ 是' if use_yolo else '❌ 否'}")
-        print(f"[API]     GPS过滤: {'✅ 是' if use_gps else '❌ 否'}")
-        print(f"[API]     eBird过滤: {'✅ 是' if use_ebird else '❌ 否'}")
-        print(f"[API]     国家: {country_code or '无'}, 地区: {region_code or '无'}")
+        print(t("server.log_params"))
+        print(t("server.log_yolo", value=t("server.yes") if use_yolo else t("server.no")))
+        print(t("server.log_gps", value=t("server.yes") if use_gps else t("server.no")))
+        print(t("server.log_ebird", value=t("server.yes") if use_ebird else t("server.no")))
+        print(t("server.log_location", country=country_code or 'N/A', region=region_code or 'N/A'))
 
         # 执行识别
         result = identify_bird(
@@ -284,11 +284,11 @@ def recognize_bird():
             results = result.get('results', [])
             if results:
                 top_result = results[0]
-                print(f"[API] ✅ 识别成功! 第1候选: {top_result.get('cn_name', '?')} ({top_result.get('confidence', 0):.1f}%)")
+                print(t("server.log_success", name=top_result.get('cn_name', '?'), conf=top_result.get('confidence', 0)))
             else:
-                print(f"[API] ⚠️  识别完成但没有结果")
+                print(t("server.log_no_result"))
         else:
-            print(f"[API] ❌ 识别失败: {result.get('error', '未知错误')}")
+            print(t("server.log_fail", error=result.get('error', 'Unknown')))
 
         # 清理临时文件
         if temp_file:
@@ -300,7 +300,7 @@ def recognize_bird():
         if not result['success']:
             return jsonify({
                 'success': False,
-                'error': result.get('error', '识别失败')
+                'error': result.get('error', t("server.identify_failed_default"))
             }), 500
 
         # 格式化结果（兼容 Lightroom 插件格式）
@@ -335,9 +335,9 @@ def recognize_bird():
             
             # 日志：显示筛选结果
             if len(smart_results) == 1:
-                print(f"[API] 🎯 第1名置信度({top_confidence:.1f}%)远高于其他，仅返回1个候选")
+                print(t("server.log_smart_filter_1", conf=top_confidence))
             else:
-                print(f"[API] 🎯 候选置信度接近，返回 {len(smart_results)} 个候选")
+                print(t("server.log_smart_filter_n", count=len(smart_results)))
             
             formatted_results = smart_results
         
@@ -345,9 +345,9 @@ def recognize_bird():
         if not formatted_results:
             ebird_info = result.get('ebird_info')
             if ebird_info and ebird_info.get('enabled'):
-                region = ebird_info.get('region', '未知区域')
+                region = ebird_info.get('region', 'Unknown')
                 species_count = ebird_info.get('species_count', 0)
-                error_msg = f"eBird 区域过滤：所有候选鸟种都不在 {region} 的 {species_count} 种记录中。建议：1) 确认拍摄地点正确 2) 尝试关闭 eBird 过滤"
+                error_msg = t("server.ebird_filter_error", region=region, species_count=species_count)
                 print(f"[API] ⚠️  {error_msg}")
                 return jsonify({
                     'success': False,
@@ -357,7 +357,7 @@ def recognize_bird():
             else:
                 return jsonify({
                     'success': False,
-                    'error': '未能识别图片中的鸟类，请确保照片中有清晰的鸟类'
+                    'error': t("server.identify_no_bird")
                 })
 
         response = {
@@ -395,7 +395,7 @@ def recognize_bird():
                     region_name = state_name_map.get(detected_region, region_name_raw)
                     update_gui_settings_from_gps(detected_region, region_name)
             except Exception as e:
-                print(f"[API] ⚠️ GPS 区域检测失败: {e}")
+                print(t("server.gps_detect_failed", error=e))
 
         return jsonify(response)
 
@@ -425,10 +425,10 @@ def write_exif_title():
         bird_name = data.get('bird_name')
 
         if not image_path or not bird_name:
-            return jsonify({'success': False, 'error': '缺少必需参数'}), 400
+            return jsonify({'success': False, 'error': t("server.missing_required_params")}), 400
 
         if not os.path.exists(image_path):
-            return jsonify({'success': False, 'error': f'文件不存在: {image_path}'}), 404
+            return jsonify({'success': False, 'error': t("server.file_not_found", path=image_path)}), 404
 
         from tools.exiftool_manager import get_exiftool_manager
         exiftool_mgr = get_exiftool_manager()
@@ -436,7 +436,7 @@ def write_exif_title():
 
         return jsonify({
             'success': success,
-            'message': f'已写入: {bird_name}' if success else '写入失败'
+            'message': t("server.write_success", value=bird_name) if success else t("server.write_failed")
         })
 
     except Exception as e:
@@ -463,10 +463,10 @@ def write_exif_caption():
         caption = data.get('caption')
 
         if not image_path or not caption:
-            return jsonify({'success': False, 'error': '缺少必需参数'}), 400
+            return jsonify({'success': False, 'error': t("server.missing_required_params")}), 400
 
         if not os.path.exists(image_path):
-            return jsonify({'success': False, 'error': f'文件不存在: {image_path}'}), 404
+            return jsonify({'success': False, 'error': t("server.file_not_found", path=image_path)}), 404
 
         from tools.exiftool_manager import get_exiftool_manager
         exiftool_mgr = get_exiftool_manager()
@@ -474,7 +474,7 @@ def write_exif_caption():
 
         return jsonify({
             'success': success,
-            'message': f'已写入描述' if success else '写入失败'
+            'message': t("server.write_caption_success") if success else t("server.write_failed")
         })
 
     except Exception as e:
@@ -488,29 +488,29 @@ def main():
     """主入口"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='SuperPicky BirdID API 服务器')
-    parser.add_argument('--host', default=DEFAULT_HOST, help=f'监听地址 (默认: {DEFAULT_HOST})')
-    parser.add_argument('--port', type=int, default=DEFAULT_PORT, help=f'监听端口 (默认: {DEFAULT_PORT})')
-    parser.add_argument('--debug', action='store_true', help='启用调试模式')
-    parser.add_argument('--no-preload', action='store_true', help='跳过模型预加载')
+    parser = argparse.ArgumentParser(description=t("server.server_desc"))
+    parser.add_argument('--host', default=DEFAULT_HOST, help=t("server.arg_host", default=DEFAULT_HOST))
+    parser.add_argument('--port', type=int, default=DEFAULT_PORT, help=t("server.arg_port", default=DEFAULT_PORT))
+    parser.add_argument('--debug', action='store_true', help=t("server.arg_debug"))
+    parser.add_argument('--no-preload', action='store_true', help=t("server.arg_no_preload"))
 
     args = parser.parse_args()
 
     print("=" * 60)
-    print(f"  SuperPicky BirdID API 服务器 v{__version__}")
+    print(f"  {t('server.server_desc')} v{__version__}")
     print("=" * 60)
-    print(f"监听地址: http://{args.host}:{args.port}")
-    print(f"健康检查: http://{args.host}:{args.port}/health")
-    print(f"识别接口: POST http://{args.host}:{args.port}/recognize")
+    print(t("server.server_listen", host=args.host, port=args.port))
+    print(t("server.server_health", host=args.host, port=args.port))
+    print(t("server.server_recognize", host=args.host, port=args.port))
     print("=" * 60)
-    print("按 Ctrl+C 停止服务器")
+    print(t("server.server_stop_hint"))
     print("=" * 60)
 
     # 预加载模型
     if not args.no_preload:
-        print("\n正在预加载模型...")
+        print(t("server.preload_start"))
         ensure_models_loaded()
-        print("模型预加载完成\n")
+        print(t("server.preload_done"))
 
     # 启动服务器
     app.run(host=args.host, port=args.port, debug=args.debug, threaded=True)

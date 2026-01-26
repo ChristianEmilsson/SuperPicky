@@ -8,10 +8,12 @@ local LrFileUtils = import 'LrFileUtils'
 local LrView = import 'LrView'
 local LrBinding = import 'LrBinding'
 local LrFunctionContext = import 'LrFunctionContext'
+local LrL10n = import 'LrL10n'
+local LOC = LrL10n.loc
 
 -- 版本信息
 local VERSION = "v4.0.0"
-local PLUGIN_NAME = "慧眼选鸟"
+local PLUGIN_NAME = LOC "$$$/SuperBirdID/PluginName=SuperPicky BirdID"
 
 local myLogger = LrLogger( 'SuperBirdIDExportServiceProvider' )
 myLogger:enable( "logfile" )
@@ -387,7 +389,8 @@ function exportServiceProvider.sectionsForTopOfDialog( f, propertyTable )
 
     return {
         {
-            title = PLUGIN_NAME .. " API 配置",
+            title = LOC "$$$/SuperBirdID/Export/Config/Title=SuperPicky BirdID API Config",
+
 
             synopsis = bind { key = 'apiUrl', object = propertyTable },
 
@@ -395,14 +398,14 @@ function exportServiceProvider.sectionsForTopOfDialog( f, propertyTable )
                 spacing = f:control_spacing(),
 
                 f:static_text {
-                    title = "API 地址:",
+                    title = LOC "$$$/SuperBirdID/Export/Config/ApiLabel=API Address:",
                     width = LrView.share "label_width",
                 },
 
                 f:edit_field {
                     value = bind 'apiUrl',
                     width_in_chars = 30,
-                    tooltip = "慧眼选鸟 API 服务器地址，默认: http://127.0.0.1:5156",
+                    tooltip = LOC "$$$/SuperBirdID/Export/Config/ApiTooltip=API Server Address, Default: http://127.0.0.1:5156",
                 },
             },
 
@@ -410,7 +413,7 @@ function exportServiceProvider.sectionsForTopOfDialog( f, propertyTable )
                 spacing = f:control_spacing(),
 
                 f:static_text {
-                    title = "返回结果数:",
+                    title = LOC "$$$/SuperBirdID/Export/Config/TopKLabel=Result Count:",
                     width = LrView.share "label_width",
                 },
 
@@ -431,9 +434,9 @@ function exportServiceProvider.sectionsForTopOfDialog( f, propertyTable )
                 spacing = f:control_spacing(),
 
                 f:checkbox {
-                    title = "启用YOLO检测",
+                    title = LOC "$$$/SuperBirdID/Export/Config/UseYolo=Enable YOLO Detection",
                     value = bind 'useYolo',
-                    tooltip = "使用YOLO模型预检测鸟类位置",
+                    tooltip = LOC "$$$/SuperBirdID/Export/Config/UseYoloTooltip=Use YOLO model to pre-detect bird location",
                 },
             },
 
@@ -441,9 +444,9 @@ function exportServiceProvider.sectionsForTopOfDialog( f, propertyTable )
                 spacing = f:control_spacing(),
 
                 f:checkbox {
-                    title = "启用GPS定位",
+                    title = LOC "$$$/SuperBirdID/Export/Config/UseGps=Enable GPS Location",
                     value = bind 'useGps',
-                    tooltip = "从EXIF读取GPS信息辅助识别",
+                    tooltip = LOC "$$$/SuperBirdID/Export/Config/UseGpsTooltip=Use GPS info from EXIF to assist identification",
                 },
             },
 
@@ -451,11 +454,11 @@ function exportServiceProvider.sectionsForTopOfDialog( f, propertyTable )
                 spacing = f:control_spacing(),
 
                 f:checkbox {
-                    title = "自动写入EXIF",
+                    title = LOC "$$$/SuperBirdID/Export/Config/WriteExif=Auto Write EXIF",
                     value = bind 'writeExif',
                     checked_value = true,
                     unchecked_value = false,
-                    tooltip = "识别成功后自动写入鸟种名称到照片标题",
+                    tooltip = LOC "$$$/SuperBirdID/Export/Config/WriteExifTooltip=Automatically write bird name to Title after identification",
                 },
             },
 
@@ -463,7 +466,7 @@ function exportServiceProvider.sectionsForTopOfDialog( f, propertyTable )
                 spacing = f:control_spacing(),
 
                 f:static_text {
-                    title = "提示: 请先启动慧眼选鸟主程序",
+                    title = LOC "$$$/SuperBirdID/Export/Config/Hint=Hint: Please start SuperPicky app first",
                     text_color = import 'LrColor'( 0.5, 0.5, 0.5 ),
                 },
             },
@@ -492,14 +495,12 @@ function exportServiceProvider.processRenderedPhotos( functionContext, exportCon
     -- 限制只处理一张照片
     if nPhotos == 0 then
         LrDialogs.message(PLUGIN_NAME,
-            "没有选中要处理的照片\n\n请先选择一张照片再进行识别",
+            LOC "$$$/SuperBirdID/Message/SelectOne=Please select one photo first",
             "error")
         return
     elseif nPhotos > 1 then
         LrDialogs.message(PLUGIN_NAME,
-            "一次只能识别一张照片\n\n" ..
-            "当前选中: " .. nPhotos .. " 张照片\n\n" ..
-            "请重新选择，只选中一张照片后再次导出",
+            LOC("$$$/SuperBirdID/Message/MultiSelect=Can only identify one photo at a time\n\nSelected: ^1 photos\n\nPlease select only one photo and try again", nPhotos),
             "warning")
         return
     end
@@ -510,11 +511,7 @@ function exportServiceProvider.processRenderedPhotos( functionContext, exportCon
 
     if not healthCheck or string.find(healthCheck, '"status"%s*:%s*"ok"') == nil then
         LrDialogs.message(PLUGIN_NAME,
-            "无法连接到慧眼选鸟 API 服务\n\n" ..
-            "请确保:\n" ..
-            "1. 慧眼选鸟主程序已启动\n" ..
-            "2. 识鸟 API 服务已开启\n" ..
-            "3. 服务地址正确: " .. apiUrl,
+            LOC "$$$/SuperBirdID/Message/ApiError=Cannot connect to SuperPicky API Service\n\nPlease ensure:\n1. SuperPicky App is running\n2. BirdID API Service is started",
             "error")
         return
     end
@@ -557,16 +554,10 @@ function exportServiceProvider.processRenderedPhotos( functionContext, exportCon
             myLogger:info( "识别失败: " .. errorMsg )
 
             -- 美化的错误消息
-            local failMsg = "无法识别此照片中的鸟类\n\n" ..
-                "━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" ..
-                "错误信息:\n" .. errorMsg .. "\n\n" ..
-                "━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" ..
-                "可能的原因:\n" ..
-                "• 照片中没有鸟类或鸟类不清晰\n" ..
-                "• 图片文件损坏或格式不支持\n" ..
-                "• 识别模型未正确加载"
+            -- 美化的错误消息
+            local failMsg = LOC("$$$/SuperBirdID/Message/IdentifyFail=Cannot identify bird in this photo\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nError:\n^1\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nPossible reasons:\n• No bird or bird unclear\n• File corrupted or unsupported\n• Model not loaded", errorMsg)
 
-            LrDialogs.message(PLUGIN_NAME .. " - 识别失败", failMsg, "error")
+            LrDialogs.message(PLUGIN_NAME .. " - " .. LOC("$$$/SuperBirdID/Dialog/IdentifyFailTitle=Identify Failed"), failMsg, "error")
         end
         break
     end

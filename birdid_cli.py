@@ -18,12 +18,13 @@ from pathlib import Path
 
 # 确保模块路径正确
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from tools.i18n import t
 
 
 def print_banner():
     """打印 CLI 横幅"""
     print("\n" + "=" * 60)
-    print("🐦 BirdID CLI - 慧眼识鸟 命令行版")
+    print(t("cli.birdid_banner"))
     print("=" * 60)
 
 
@@ -47,30 +48,30 @@ def identify_single(args, image_path: str) -> dict:
 def display_result(result: dict, verbose: bool = True):
     """显示识别结果"""
     if not result['success']:
-        print(f"❌ 识别失败: {result.get('error', '未知错误')}")
+        print(t("cli.identify_fail", error=result.get('error', 'Unknown')))
         return False
     
     if verbose:
         print(f"\n{'─' * 50}")
         
         if result.get('yolo_info'):
-            print(f"📍 YOLO检测: {result['yolo_info']}")
+            print(t("cli.yolo_info", info=result['yolo_info']))
         
         if result.get('gps_info'):
             gps = result['gps_info']
-            print(f"🌍 GPS位置: {gps['info']}")
+            print(t("cli.gps_info", info=gps['info']))
         
         if result.get('ebird_info'):
             ebird = result['ebird_info']
             if ebird.get('enabled'):
-                print(f"🗺️  eBird过滤: {ebird.get('region', 'N/A')} ({ebird.get('species_count', 0)} 种)")
+                print(t("cli.ebird_info", region=ebird.get('region', 'N/A'), count=ebird.get('species_count', 0)))
     
     results = result.get('results', [])
     if not results:
-        print("⚠️  未能识别出鸟类")
+        print(t("cli.no_bird"))
         return False
     
-    print(f"\n🐦 识别结果 (Top-{len(results)}):")
+    print(t("cli.result_title", count=len(results)))
     for i, r in enumerate(results, 1):
         cn_name = r.get('cn_name', '未知')
         en_name = r.get('en_name', 'Unknown')
@@ -95,7 +96,7 @@ def write_exif(image_path: str, result: dict, threshold: float = 70.0) -> bool:
     confidence = best.get('confidence', 0)
     
     if confidence < threshold:
-        print(f"  ⚠️  置信度 {confidence:.1f}% < {threshold}%，跳过写入")
+        print(t("cli.confidence_skip", confidence=confidence, threshold=threshold))
         return False
     
     bird_name = f"{best['cn_name']} ({best['en_name']})"
@@ -143,7 +144,7 @@ def cmd_identify(args):
     images = [img for img in expanded_images if os.path.isfile(img)]
     
     if not images:
-        print("❌ 未找到有效的图片文件")
+        print(t("cli.no_files"))
         return 1
     
     # 显示设置
@@ -584,7 +585,7 @@ def main():
     """主入口"""
     parser = argparse.ArgumentParser(
         prog='birdid_cli',
-        description='BirdID CLI - 慧眼识鸟命令行工具',
+        description=t("cli.bid_description"),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
