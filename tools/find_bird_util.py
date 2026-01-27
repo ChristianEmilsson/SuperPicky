@@ -10,12 +10,13 @@ def raw_to_jpeg(raw_file_path):
     filename = os.path.basename(raw_file_path)
     file_prefix, _ = os.path.splitext(filename)
     directory_path = raw_file_path[:-len(filename)]
-    jpg_file_path = os.path.join(directory_path, (file_prefix + ".jpg"))
+    # V4.0.3: 使用 tmp_ 前缀命名临时 JPEG，便于识别和清理
+    jpg_file_path = os.path.join(directory_path, f"tmp_{file_prefix}.jpg")
     log_message(f"CONVERSION: Filename is [{filename}], Destination file path is [{jpg_file_path}]", directory_path)
 
     if os.path.exists(jpg_file_path):
-        log_message(f"ERROR, file [{filename}] already exists in JPG/JPEG format", directory_path)
-        return False
+        log_message(f"TEMP JPEG already exists: [{jpg_file_path}]", directory_path)
+        return True  # 临时文件已存在，视为成功
     if not os.path.exists(raw_file_path):
         log_message(f"ERROR, file [{filename}] cannot be found in RAW form", directory_path)
         return False

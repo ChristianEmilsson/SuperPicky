@@ -290,7 +290,8 @@ class PhotoProcessor:
             for future in as_completed(future_to_raw):
                 key, success, error = future.result()
                 if success:
-                    jpeg_filename = key + ".jpg"
+                    # V4.0.3: 临时 JPEG 使用 tmp_ 前缀
+                    jpeg_filename = f"tmp_{key}.jpg"
                     files_tbr.append(jpeg_filename)
                     self.temp_converted_jpegs.add(jpeg_filename)  # V4.0: 标记为临时转换的 JPEG
                     converted_count += 1
@@ -1471,65 +1472,23 @@ class PhotoProcessor:
             self._log(f"  ⚠️  Manifest save failed: {e}", "warning")
     
     def _cleanup_temp_files(self, files_tbr, raw_dict):
-        """Clean up temporary JPG files (V4.0: only delete converted JPEGs, protect user originals)"""
+        """V4.0.3: Clean up temporary JPG files (tmp_*.jpg pattern)"""
         self._log(self.i18n.t("logs.cleaning_temp"))
         deleted_count = 0
-        for filename in files_tbr:
-            file_prefix, file_ext = os.path.splitext(filename)
-            # V4.0: Only delete temp converted JPEGs, not user's original RAW+JPEG
-            if (file_prefix in raw_dict and 
-                file_ext.lower() in ['.jpg', '.jpeg'] and
-                filename in self.temp_converted_jpegs):
-                
-                # 首先在原目录查找
-                jpg_path = os.path.join(self.dir_path, filename)
-                file_found = False
-                
-                try:
-                    # 尝试在原目录删除
-                    if os.path.exists(jpg_path):
-                        os.remove(jpg_path)
-                        deleted_count += 1
-                        file_found = True
-                    else:
-                        # V4.0.2 FIX: 文件已被移动到分类文件夹，需要在子文件夹中查找并删除
-                        # 根据 file_ratings 找到文件的评分和对应的文件夹
-                        if file_prefix in self.file_ratings:
-                            rating = self.file_ratings[file_prefix]
-                            base_folder = get_rating_folder_name(rating)
-                            
-                            # 确定实际的目标文件夹（包括鸟种子目录）
-                            if rating >= 2 and file_prefix in self.file_bird_species:
-                                # 有鸟种识别，在鸟种子目录中
-                                bird_info = self.file_bird_species[file_prefix]
-                                if self.i18n.current_lang.startswith('en'):
-                                    bird_name = bird_info.get('en_name', '').replace(' ', '_')
-                                else:
-                                    bird_name = bird_info.get('cn_name', '')
-                                if not bird_name:
-                                    bird_name = bird_info.get('cn_name', '') or bird_info.get('en_name', '').replace(' ', '_') or 'Unknown'
-                                folder = os.path.join(base_folder, bird_name)
-                            elif rating >= 2:
-                                # 2-star/3-star without species ID
-                                other_birds = self.i18n.t("logs.folder_other_birds")
-                                folder = os.path.join(base_folder, other_birds)
-                            else:
-                                # 0-star, 1-star, -1-star
-                                folder = base_folder
-                            
-                            # 在分类文件夹中查找并删除
-                            jpg_path_in_folder = os.path.join(self.dir_path, folder, filename)
-                            if os.path.exists(jpg_path_in_folder):
-                                os.remove(jpg_path_in_folder)
-                                deleted_count += 1
-                                file_found = True
-                
-                except Exception as e:
-                    # 记录错误但不中断处理
-                    error_msg = str(e)
-                    self._log(f"  ⚠️ 清理失败: {filename} ({error_msg})", "warning")
+        
+        # V4.0.3: 临时 JPEG 使用 tmp_ 前缀，直接在原目录删除
+        # 不会被移动到分类目录，因为只移动 RAW 文件
+        for filename in self.temp_converted_jpegs:
+            jpg_path = os.path.join(self.dir_path, filename)
+            try:
+                if os.path.exists(jpg_path):
+                    os.remove(jpg_path)
+                    deleted_count += 1
+            except Exception as e:
+                self._log(f"  ⚠️ 清理失败: {filename} ({e})", "warning")
         
         if deleted_count > 0:
             self._log(self.i18n.t("logs.temp_deleted", count=deleted_count))
         else:
             self._log("  ℹ️  No temp files to clean")
+
