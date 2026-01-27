@@ -355,6 +355,12 @@ class PhotoProcessor:
             filepath = os.path.join(self.dir_path, filename)
             file_prefix, _ = os.path.splitext(filename)
             
+            # V4.0.4: 从 tmp_*.jpg 提取原始文件前缀用于匹配 raw_dict
+            # 例如: tmp__Z9W0898.jpg -> tmp__Z9W0898 -> _Z9W0898
+            original_prefix = file_prefix
+            if file_prefix.startswith('tmp_'):
+                original_prefix = file_prefix[4:]  # 去掉 "tmp_" 前缀
+            
             # 更新进度
             should_update = (i % 5 == 0 or i == total_files or i == 1)
             if should_update:
@@ -378,9 +384,9 @@ class PhotoProcessor:
             detected, _, confidence, sharpness, _, bird_bbox, img_dims, bird_mask, bird_count = result
             
             # V4.2: 多鸟对焦点选择 - 如果检测到多只鸟，读取对焦点重新选择
-            if bird_count > 1 and file_prefix in raw_dict:
-                raw_ext = raw_dict[file_prefix]
-                raw_path = os.path.join(self.dir_path, file_prefix + raw_ext)
+            if bird_count > 1 and original_prefix in raw_dict:
+                raw_ext = raw_dict[original_prefix]
+                raw_path = os.path.join(self.dir_path, original_prefix + raw_ext)
                 if raw_ext.lower() in ['.nef', '.nrw', '.arw', '.cr3', '.cr2', '.orf', '.raf', '.rw2']:
                     try:
                         focus_detector = get_focus_detector()
@@ -417,13 +423,13 @@ class PhotoProcessor:
                 # 记录统计
                 self._update_stats(rating_value, False, False)
                 
-                # 记录评分（用于文件移动）
-                self.file_ratings[file_prefix] = rating_value
+                # 记录评分（用于文件移动）- V4.0.4: 使用 original_prefix 确保匹配 NEF
+                self.file_ratings[original_prefix] = rating_value
                 
                 # 写入简化 EXIF
-                if file_prefix in raw_dict:
-                    raw_extension = raw_dict[file_prefix]
-                    target_file_path = os.path.join(self.dir_path, file_prefix + raw_extension)
+                if original_prefix in raw_dict:
+                    raw_extension = raw_dict[original_prefix]
+                    target_file_path = os.path.join(self.dir_path, original_prefix + raw_extension)
                     if os.path.exists(target_file_path):
                         single_batch = [{
                             'file': target_file_path,
@@ -640,9 +646,9 @@ class PhotoProcessor:
             # V3.9.3: 对焦点坐标获取（始终执行，用于调试图显示）
             # 即使是 0 星照片，也需要在调试图中显示对焦点位置
             if detected and bird_bbox is not None and img_dims is not None:
-                if file_prefix in raw_dict:
-                    raw_ext = raw_dict[file_prefix]
-                    raw_path = os.path.join(self.dir_path, file_prefix + raw_ext)
+                if original_prefix in raw_dict:
+                    raw_ext = raw_dict[original_prefix]
+                    raw_path = os.path.join(self.dir_path, original_prefix + raw_ext)
                     # Nikon, Sony, Canon, Olympus, Fujifilm, Panasonic 全支持
                     if raw_ext.lower() in ['.nef', '.nrw', '.arw', '.cr3', '.cr2', '.orf', '.raf', '.rw2']:
                         try:
@@ -687,9 +693,9 @@ class PhotoProcessor:
                         head_center=head_center_orig,
                         head_radius=head_radius_val,
                     )
-                elif file_prefix in raw_dict:
+                elif original_prefix in raw_dict:
                     # V3.9.3: 支持对焦检测的 RAW 文件但无法获取对焦点数据
-                    raw_ext = raw_dict[file_prefix]
+                    raw_ext = raw_dict[original_prefix]
                     if raw_ext.lower() in ['.nef', '.nrw', '.arw', '.cr3', '.cr2', '.orf', '.raf', '.rw2']:
                         # 检查是否是手动对焦模式
                         is_manual_focus = False
@@ -697,7 +703,7 @@ class PhotoProcessor:
                             import subprocess
                             focus_detector = get_focus_detector()
                             exiftool_path = focus_detector._get_exiftool_path()
-                            raw_path = os.path.join(self.dir_path, file_prefix + raw_ext)
+                            raw_path = os.path.join(self.dir_path, original_prefix + raw_ext)
                             # V3.9.4: 在 Windows 上隐藏控制台窗口
                             creationflags = subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0
                             result = subprocess.run(
@@ -823,10 +829,10 @@ class PhotoProcessor:
             target_file_path = None
             target_extension = None
             
-            if file_prefix in raw_dict:
+            if original_prefix in raw_dict:
                 # 有对应的 RAW 文件
-                raw_extension = raw_dict[file_prefix]
-                target_file_path = os.path.join(self.dir_path, file_prefix + raw_extension)
+                raw_extension = raw_dict[original_prefix]
+                target_file_path = os.path.join(self.dir_path, original_prefix + raw_extension)
                 target_extension = raw_extension
                 
                 # 写入 EXIF（仅限 RAW 文件）
@@ -921,7 +927,7 @@ class PhotoProcessor:
                                         self.stats['bird_species'].append(species_entry)
                                     # V4.0: Record file's bird species for folder organization
                                     if cn_name:
-                                        self.file_bird_species[file_prefix] = {
+                                        self.file_bird_species[original_prefix] = {
                                             'cn_name': cn_name,
                                             'en_name': en_name
                                         }
@@ -985,14 +991,14 @@ class PhotoProcessor:
                         'sharpness': adj_sharpness_csv  # V4.1: 调整后锐度
                     })
                 
-                # 记录评分（用于文件移动）
-                self.file_ratings[file_prefix] = rating_value
+                # 记录评分（用于文件移动）- V4.0.4: 使用 original_prefix 确保匹配 NEF
+                self.file_ratings[original_prefix] = rating_value
                 
                 # V4.0.1: 自动鸟种识别（移至共同路径，对 RAW 和纯 JPG 都执行）
                 # 注意：对于 RAW 文件，在上面的分支中已经执行过；这里主要处理纯 JPG
                 if self.settings.auto_identify and rating_value >= 2:
                     # 检查是否已经识别过（RAW 文件在上面已处理）
-                    if file_prefix not in self.file_bird_species:
+                    if original_prefix not in self.file_bird_species:
                         try:
                             from birdid.bird_identifier import identify_bird
                             
@@ -1024,7 +1030,7 @@ class PhotoProcessor:
                                     if not any(s.get('cn_name') == cn_name for s in self.stats['bird_species']):
                                         self.stats['bird_species'].append(species_entry)
                                     if cn_name:
-                                        self.file_bird_species[file_prefix] = {
+                                        self.file_bird_species[original_prefix] = {
                                             'cn_name': cn_name,
                                             'en_name': en_name
                                         }

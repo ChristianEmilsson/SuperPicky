@@ -11,16 +11,19 @@ OUTPUT_DIR = "/Users/jameszhenyu/Documents/JamesAPPS/SuperPicky2026/promo_video/
 # 创建输出目录
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# TTS 文案段落
+# TTS 文案段落 - v4 最终版本
 segments = [
     ("01_hook", "拍片一时爽，选片火葬场"),
-    ("02_problem", "800张照片，哪张最锐？让AI帮你3分钟搞定"),
-    ("03_feature1", "自动检测鸟眼位置"),
-    ("04_feature2", "计算头部锐度"),
-    ("05_feature3", "识别飞行姿态"),
-    ("06_feature4", "一键评分分类"),
-    ("07_result", "精选照片，张张能打"),
-    ("08_cta", "免费下载 able SuperPicky 慧眼选鸟"),
+    ("02_problem", "拍了一天鸟，回来8000张照片，哪张最锐？眼睛都看花了"),
+    ("03_solution", "让AI帮你，3分钟全部搞定"),
+    ("04_feature1", "自动检测鸟眼位置，锐度不够的直接淘汰"),
+    ("05_feature2", "还能识别鸟的种类，自动写入照片信息"),
+    ("06_feature3", "飞版照片单独标记，想找飞版一秒筛出来"),
+    ("07_feature4", "按质量自动分成0到3星，精品照片一目了然"),
+    ("08_result", "从此选片不头疼，张张都是能打的"),
+    ("09_platform", "苹果电脑、Windows都能用"),
+    ("10_free", "真开源、真免费，没有VIP、不要会员、绝对没套路"),
+    ("11_cta", "搜索 SuperPicky 慧眼选鸟，从此拍鸟无烦恼！"),
 ]
 
 def generate_tts(filename, text):
@@ -28,7 +31,7 @@ def generate_tts(filename, text):
     payload = {
         "text": text,
         "language": "Chinese",
-        "speaker": "Vivian",
+        "speaker": "Eric",  # 四川方言男声
         "output_format": "wav"
     }
 

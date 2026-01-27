@@ -740,12 +740,8 @@ class SuperPickyMainWindow(QMainWindow):
         # 2. 显示提示
         QMessageBox.information(
             self,
-            "后台模式",
-            "应用将进入后台模式\n\n"
-            "• 识鸟服务继续在后台运行\n"
-            "• Lightroom 插件可以正常使用\n"
-            "• 再次打开应用可恢复界面\n\n"
-            "提示：服务器内存占用约 250MB",
+            self.i18n.t("menu.background_mode_title"),
+            self.i18n.t("menu.background_mode_msg"),
             QMessageBox.Ok
         )
         
@@ -1658,11 +1654,14 @@ class SuperPickyMainWindow(QMainWindow):
         # 保存设置
         self.config.set_language(lang_code)
         if self.config.save():
-            StyledMessageBox.information(
-                self,
-                "语言已更改",
-                "界面语言已更改，重启应用后生效。"
-            )
+            # 根据目标语言显示对应的提示
+            if lang_code == "en":
+                title = "Language Changed"
+                msg = "Language changed. Restart the app to take effect."
+            else:
+                title = "语言已更改"
+                msg = "界面语言已更改，重启应用后生效。"
+            StyledMessageBox.information(self, title, msg)
 
     @Slot()
     def _show_about(self):
@@ -2046,7 +2045,7 @@ class SuperPickyMainWindow(QMainWindow):
         def _do_check():
             try:
                 from tools.update_checker import UpdateChecker
-                checker = UpdateChecker("4.0.1")  # 使用测试版本号
+                checker = UpdateChecker()  # 使用 update_checker.CURRENT_VERSION
                 has_update, update_info = checker.check_for_updates()
                 print(f"[DEBUG] 更新检查完成: has_update={has_update}, silent={silent}")
                 

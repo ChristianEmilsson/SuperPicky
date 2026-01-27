@@ -90,6 +90,27 @@ def get_gui_settings():
     return settings
 
 
+def get_gui_language():
+    """
+    获取 GUI 界面的语言设置
+    
+    Returns:
+        'zh_CN' 或 'en' 或 None (默认自动)
+    """
+    config_path = os.path.expanduser('~/Documents/SuperPicky_Data/advanced_config.json')
+    
+    if os.path.exists(config_path):
+        try:
+            import json
+            with open(config_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return data.get('language')
+        except Exception:
+            pass
+    
+    return None
+
+
 def update_gui_settings_from_gps(region_code: str, region_name: str = None):
     """
     将 GPS 检测到的区域同步到 GUI 设置文件
@@ -305,11 +326,25 @@ def recognize_bird():
 
         # 格式化结果（兼容 Lightroom 插件格式）
         formatted_results = []
+        
+        # 获取语言设置，决定 display_name 使用中文还是英文
+        gui_language = get_gui_language()
+        use_chinese = gui_language is None or gui_language == 'zh_CN'
+        
         for i, r in enumerate(result.get('results', []), 1):
+            cn_name = r.get('cn_name', '')
+            en_name = r.get('en_name', '')
+            # 根据语言设置选择 display_name
+            if use_chinese:
+                display_name = cn_name if cn_name else en_name
+            else:
+                display_name = en_name if en_name else cn_name
+            
             formatted_results.append({
                 'rank': i,
-                'cn_name': r.get('cn_name', ''),
-                'en_name': r.get('en_name', ''),
+                'cn_name': cn_name,
+                'en_name': en_name,
+                'display_name': display_name,  # 根据语言设置自动选择
                 'scientific_name': r.get('scientific_name', ''),
                 'confidence': float(r.get('confidence', 0)),
                 'ebird_match': r.get('ebird_match', False),

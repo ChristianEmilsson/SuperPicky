@@ -75,3 +75,9 @@ package_unsigned.sh
 advanced_config.json
 
 *.pkg
+
+# Media files
+*.mov
+*.wav
+*.mp4
+*.mp3

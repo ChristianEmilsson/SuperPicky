@@ -12,8 +12,24 @@ local LrBinding = import 'LrBinding'
 local LrFunctionContext = import 'LrFunctionContext'
 local LrColor = import 'LrColor'
 local LrFileUtils = import 'LrFileUtils'
-local LrL10n = import 'LrL10n'
-local LOC = LrL10n.loc
+local LrL10n
+local LOC
+
+-- 安全导入 LrL10n（某些 Lightroom 环境可能不支持）
+local status, result = pcall(import, 'LrL10n')
+if status then
+    LrL10n = result
+    LOC = LrL10n.loc
+else
+    -- 降级：从 key 中提取默认文本
+    LOC = function(key, ...)
+        if type(key) == "string" then
+            local val = key:match("=(.*)")
+            if val then return val end
+        end
+        return key
+    end
+end
 
 -- 插件名称
 local PLUGIN_NAME = LOC "$$$/SuperBirdID/PluginName=SuperPicky BirdID"
@@ -66,18 +82,20 @@ local function parseJSON(jsonString)
 
             local cn_name_raw = string.match(itemBlock, '"cn_name"%s*:%s*"([^"]*)"')
             local en_name_raw = string.match(itemBlock, '"en_name"%s*:%s*"([^"]*)"')
+            local display_name_raw = string.match(itemBlock, '"display_name"%s*:%s*"([^"]*)"')
             local sci_name_raw = string.match(itemBlock, '"scientific_name"%s*:%s*"([^"]*)"')
             local desc_raw = string.match(itemBlock, '"description"%s*:%s*"([^"]*)"')
 
             item.cn_name = decodeUnicodeEscape(cn_name_raw)
             item.en_name = decodeUnicodeEscape(en_name_raw)
+            item.display_name = decodeUnicodeEscape(display_name_raw) or item.cn_name  -- 兼容旧版本 API
             item.scientific_name = decodeUnicodeEscape(sci_name_raw)
             item.description = decodeUnicodeEscape(desc_raw)
 
             local confStr = string.match(itemBlock, '"confidence"%s*:%s*([%d%.]+)')
             item.confidence = confStr and tonumber(confStr) or 0
 
-            if item.cn_name then
+            if item.display_name or item.cn_name then
                 table.insert(result.results, item)
             end
         end
@@ -186,7 +204,7 @@ local function showResultSelectionDialog(results, photoName)
 
         for i, bird in ipairs(results) do
             local confidence = bird.confidence or 0
-            local cnName = bird.cn_name or LOC "$$$/SuperBirdID/Dialog/Unknown=Unknown"
+            local displayName = bird.display_name or bird.cn_name or LOC "$$$/SuperBirdID/Dialog/Unknown=Unknown"
             local enName = bird.en_name or ""
             
             local confColor
@@ -218,7 +236,7 @@ local function showResultSelectionDialog(results, photoName)
                             width = 20,
                         },
                         f:static_text {
-                            title = cnName,
+                            title = displayName,
                             font = "<system/bold>",
                         },
                         f:static_text {
@@ -343,7 +361,7 @@ LrTasks.startAsyncTask(function()
 
         if selectedIndex and selectedIndex > 0 then
             local selectedBird = result.results[selectedIndex]
-            local species = selectedBird.cn_name or LOC "$$$/SuperBirdID/Dialog/Unknown=Unknown"
+            local species = selectedBird.display_name or selectedBird.cn_name or LOC "$$$/SuperBirdID/Dialog/Unknown=Unknown"
             local enName = selectedBird.en_name or ""
             local scientificName = selectedBird.scientific_name or ""
 

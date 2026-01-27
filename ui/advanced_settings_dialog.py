@@ -32,7 +32,7 @@ class AdvancedSettingsDialog(QDialog):
 
     def _setup_ui(self):
         """设置 UI"""
-        self.setWindowTitle("参数设置")
+        self.setWindowTitle(self.i18n.t("advanced_settings.window_title"))
         self.setMinimumSize(500, 520)
         self.resize(520, 560)
         self.setModal(True)
@@ -125,7 +125,7 @@ class AdvancedSettingsDialog(QDialog):
         layout.setSpacing(20)
 
         # 标题
-        title = QLabel("参数设置")
+        title = QLabel(self.i18n.t("advanced_settings.title"))
         title.setStyleSheet(f"""
             color: {COLORS['text_primary']};
             font-size: 18px;
@@ -134,13 +134,13 @@ class AdvancedSettingsDialog(QDialog):
         layout.addWidget(title)
 
         # === 选片标准 ===
-        self._create_section_title(layout, "选片标准")
+        self._create_section_title(layout, self.i18n.t("advanced_settings.section_selection"))
         
         # 检测敏感度（原 AI 置信度）
         self.vars["min_confidence"] = self._create_slider_setting(
             layout,
-            "检测敏感度",
-            "越低越敏感，更容易发现鸟",
+            self.i18n.t("advanced_settings.detection_sensitivity"),
+            self.i18n.t("advanced_settings.detection_sensitivity_hint"),
             min_val=30, max_val=70, default=50,
             format_func=lambda v: f"{v}%"
         )
@@ -148,8 +148,8 @@ class AdvancedSettingsDialog(QDialog):
         # 清晰度要求
         self.vars["min_sharpness"] = self._create_slider_setting(
             layout,
-            "清晰度要求",
-            "越高越严格，只保留最清晰的照片",
+            self.i18n.t("advanced_settings.sharpness_requirement"),
+            self.i18n.t("advanced_settings.sharpness_requirement_hint"),
             min_val=100, max_val=500, default=100,
             step=50
         )
@@ -157,8 +157,8 @@ class AdvancedSettingsDialog(QDialog):
         # 画面美感要求
         self.vars["min_nima"] = self._create_slider_setting(
             layout,
-            "画面美感",
-            "越高越严格，只保留构图美观的照片",
+            self.i18n.t("advanced_settings.aesthetics_requirement"),
+            self.i18n.t("advanced_settings.aesthetics_requirement_hint"),
             min_val=30, max_val=50, default=40,
             format_func=lambda v: f"{v/10:.1f}",
             scale=10
@@ -171,13 +171,13 @@ class AdvancedSettingsDialog(QDialog):
         layout.addWidget(divider)
 
         # === 识鸟设置 ===
-        self._create_section_title(layout, "自动识鸟")
+        self._create_section_title(layout, self.i18n.t("advanced_settings.section_birdid"))
         
         # 识别确信度
         self.vars["birdid_confidence"] = self._create_slider_setting(
             layout,
-            "识别确信度",
-            "越高越准确，但可能识别不出一些鸟种",
+            self.i18n.t("advanced_settings.birdid_confidence"),
+            self.i18n.t("advanced_settings.birdid_confidence_hint"),
             min_val=50, max_val=95, default=70,
             step=5,
             format_func=lambda v: f"{v}%"
@@ -254,7 +254,7 @@ class AdvancedSettingsDialog(QDialog):
         btn_layout = QHBoxLayout()
 
         # 恢复默认
-        reset_btn = QPushButton("恢复默认")
+        reset_btn = QPushButton(self.i18n.t("advanced_settings.reset_defaults"))
         reset_btn.setObjectName("tertiary")
         reset_btn.clicked.connect(self._reset_to_default)
         btn_layout.addWidget(reset_btn)
@@ -262,14 +262,14 @@ class AdvancedSettingsDialog(QDialog):
         btn_layout.addStretch()
 
         # 取消
-        cancel_btn = QPushButton("取消")
+        cancel_btn = QPushButton(self.i18n.t("advanced_settings.cancel"))
         cancel_btn.setObjectName("secondary")
         cancel_btn.setMinimumWidth(80)
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(cancel_btn)
 
         # 保存
-        save_btn = QPushButton("保存")
+        save_btn = QPushButton(self.i18n.t("advanced_settings.save"))
         save_btn.setMinimumWidth(80)
         save_btn.clicked.connect(self._save_settings)
         btn_layout.addWidget(save_btn)
@@ -288,10 +288,10 @@ class AdvancedSettingsDialog(QDialog):
         """恢复默认设置"""
         reply = StyledMessageBox.question(
             self,
-            "确认恢复",
-            "确定要恢复所有设置为默认值吗？",
-            yes_text="确定",
-            no_text="取消"
+            self.i18n.t("advanced_settings.confirm_reset_title"),
+            self.i18n.t("advanced_settings.confirm_reset_msg"),
+            yes_text=self.i18n.t("advanced_settings.yes"),
+            no_text=self.i18n.t("advanced_settings.cancel")
         )
 
         if reply == StyledMessageBox.Yes:
@@ -299,8 +299,9 @@ class AdvancedSettingsDialog(QDialog):
             self._load_current_config()
             StyledMessageBox.information(
                 self,
-                "已恢复",
-                "所有设置已恢复为默认值。"
+                self.i18n.t("advanced_settings.reset_done_title"),
+                self.i18n.t("advanced_settings.reset_done_msg"),
+                ok_text=self.i18n.t("buttons.close")
             )
 
     @Slot()
@@ -320,13 +321,15 @@ class AdvancedSettingsDialog(QDialog):
         if self.config.save():
             StyledMessageBox.information(
                 self,
-                "保存成功",
-                "设置已保存。"
+                self.i18n.t("advanced_settings.save_success_title"),
+                self.i18n.t("advanced_settings.save_success_msg"),
+                ok_text=self.i18n.t("buttons.close")
             )
             self.accept()
         else:
             StyledMessageBox.critical(
                 self,
-                "保存失败",
-                "无法保存设置，请检查权限。"
+                self.i18n.t("advanced_settings.save_error_title"),
+                self.i18n.t("advanced_settings.save_error_msg"),
+                ok_text=self.i18n.t("buttons.close")
             )

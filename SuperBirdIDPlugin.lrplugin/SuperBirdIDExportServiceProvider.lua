@@ -8,11 +8,27 @@ local LrFileUtils = import 'LrFileUtils'
 local LrView = import 'LrView'
 local LrBinding = import 'LrBinding'
 local LrFunctionContext = import 'LrFunctionContext'
-local LrL10n = import 'LrL10n'
-local LOC = LrL10n.loc
+local LrL10n
+local LOC
+
+-- 安全导入 LrL10n（某些 Lightroom 环境可能不支持）
+local status, result = pcall(import, 'LrL10n')
+if status then
+    LrL10n = result
+    LOC = LrL10n.loc
+else
+    -- 降级：从 key 中提取默认文本
+    LOC = function(key, ...)
+        if type(key) == "string" then
+            local val = key:match("=(.*)")
+            if val then return val end
+        end
+        return key
+    end
+end
 
 -- 版本信息
-local VERSION = "v4.0.0"
+local VERSION = "v4.0.2"
 local PLUGIN_NAME = LOC "$$$/SuperBirdID/PluginName=SuperPicky BirdID"
 
 local myLogger = LrLogger( 'SuperBirdIDExportServiceProvider' )
@@ -92,11 +108,13 @@ local function parseJSON(jsonString)
             -- 提取字段并解码Unicode
             local cn_name_raw = string.match(itemBlock, '"cn_name"%s*:%s*"([^"]*)"')
             local en_name_raw = string.match(itemBlock, '"en_name"%s*:%s*"([^"]*)"')
+            local display_name_raw = string.match(itemBlock, '"display_name"%s*:%s*"([^"]*)"')
             local sci_name_raw = string.match(itemBlock, '"scientific_name"%s*:%s*"([^"]*)"')
             local desc_raw = string.match(itemBlock, '"description"%s*:%s*"([^"]*)"')
 
             item.cn_name = decodeUnicodeEscape(cn_name_raw)
             item.en_name = decodeUnicodeEscape(en_name_raw)
+            item.display_name = decodeUnicodeEscape(display_name_raw) or item.cn_name  -- 兼容旧版本
             item.scientific_name = decodeUnicodeEscape(sci_name_raw)
             item.description = decodeUnicodeEscape(desc_raw)
 
@@ -106,7 +124,7 @@ local function parseJSON(jsonString)
             local rankStr = string.match(itemBlock, '"rank"%s*:%s*(%d+)')
             item.rank = rankStr and tonumber(rankStr) or (#result.results + 1)
 
-            if item.cn_name then
+            if item.display_name or item.cn_name then
                 table.insert(result.results, item)
             end
         end
@@ -254,7 +272,7 @@ local function showResultSelectionDialog(results, photoName)
 
         for i, bird in ipairs(results) do
             local confidence = bird.confidence or 0
-            local cnName = bird.cn_name or "未知"
+            local displayName = bird.display_name or bird.cn_name or "Unknown"
             local enName = bird.en_name or ""
             
             -- 置信度颜色提示
@@ -288,7 +306,7 @@ local function showResultSelectionDialog(results, photoName)
                             width = 20,
                         },
                         f:static_text {
-                            title = cnName,
+                            title = displayName,
                             font = "<system/bold>",
                         },
                         f:static_text {
@@ -327,7 +345,7 @@ local function showResultSelectionDialog(results, photoName)
                 width = 20,
             },
             f:static_text {
-                title = "跳过此照片，不写入",
+                title = LOC "$$$/SuperBirdID/Dialog/Skip=Skip this photo",
                 text_color = LrColor(0.5, 0.5, 0.5),
             },
         }
@@ -346,7 +364,7 @@ local function showResultSelectionDialog(results, photoName)
             -- 文件名标题
             f:row {
                 f:static_text {
-                    title = photoName .. " 的识别结果",
+                    title = LOC("$$$/SuperBirdID/Dialog/ResultsFor=Results for ^1", photoName),
                     font = "<system/bold>",
                 },
             },
@@ -365,8 +383,8 @@ local function showResultSelectionDialog(results, photoName)
         local dialogResult = LrDialogs.presentModalDialog({
             title = PLUGIN_NAME,
             contents = dialogContent,
-            actionVerb = "写入 EXIF",
-            cancelVerb = "取消",
+            actionVerb = LOC "$$$/SuperBirdID/Dialog/WriteExif=Write to EXIF",
+            cancelVerb = LOC "$$$/SuperBirdID/Dialog/Cancel=Cancel",
             resizable = true,
         })
 
@@ -532,7 +550,7 @@ function exportServiceProvider.processRenderedPhotos( functionContext, exportCon
             if selectedIndex and selectedIndex > 0 then
                 -- 用户选择了一个结果
                 local selectedBird = result.results[selectedIndex]
-                local species = selectedBird.cn_name or "未知"
+                local species = selectedBird.display_name or selectedBird.cn_name or "Unknown"
                 local enName = selectedBird.en_name or ""
                 local scientificName = selectedBird.scientific_name or ""
 

@@ -119,9 +119,9 @@ ditto "${APP_PATH}" "pkg_root/Applications/${APP_NAME_CN}.app"
 log_info "创建 postinstall 脚本..."
 cat > pkg_scripts/postinstall << 'POSTINSTALL_EOF'
 #!/bin/bash
-# SuperPicky V4.0.0 - 安装后配置脚本
+# SuperPicky V4.0.2 - 安装后配置脚本
 
-echo "正在配置 慧眼选鸟 SuperPicky V4.0.0..."
+echo "正在配置 慧眼选鸟 SuperPicky V4.0.2..."
 
 APP_PATH="/Applications/慧眼选鸟.app"
 
@@ -298,7 +298,7 @@ echo "✓ 隔离标记已清除"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✅ 慧眼选鸟 SuperPicky V4.0.0 安装完成！"
+echo "✅ 慧眼选鸟 SuperPicky V4.0.2 安装完成！"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "📍 应用位置: /Applications/慧眼选鸟.app"
@@ -385,11 +385,11 @@ cat > welcome.html << 'WELCOME_EOF'
 </head>
 <body>
     <h1>欢迎安装 慧眼选鸟 SuperPicky</h1>
-    <p class="version">版本 4.0.0</p>
+    <p class="version">版本 4.0.2</p>
 
     <p>本安装程序将在您的计算机上安装 <strong>慧眼选鸟 SuperPicky</strong> 和 <strong>Lightroom 插件</strong>。</p>
 
-    <h2>V4.0.0 新功能 <span class="new-badge">NEW</span></h2>
+    <h2>V4.0.2 新功能 <span class="new-badge">NEW</span></h2>
     <ul>
         <li><span class="highlight">🦜 鸟类识别</span> - AI 自动识别鸟类物种，写入照片元数据</li>
         <li><span class="highlight">📷 Lightroom 插件</span> - 在 Lightroom 中直接识别鸟类</li>
@@ -455,7 +455,7 @@ cat > conclusion.html << 'CONCLUSION_EOF'
     <h1>✓ 安装成功</h1>
 
     <div class="success">
-        <strong>慧眼选鸟 SuperPicky V4.0.0</strong> 已成功安装！
+        <strong>慧眼选鸟 SuperPicky V4.0.2</strong> 已成功安装！
     </div>
 
     <h2>已安装内容</h2>
@@ -613,13 +613,13 @@ cat > "${TEMP_DMG_DIR}/Lightroom插件手动安装说明.txt" << 'PLUGIN_README_
   - 确保主程序的「识鸟 API」开关已开启
 
 ==========================================
-版本: 4.0.0
+版本: 4.0.2
 © 2026 James Zhen Yu
 PLUGIN_README_EOF
 
 # 创建总说明文件
 cat > "${TEMP_DMG_DIR}/安装说明.txt" << README_EOF
-慧眼选鸟 SuperPicky V4.0.0 安装说明
+慧眼选鸟 SuperPicky V4.0.2 安装说明
 =====================================
 
 【推荐安装方式】
