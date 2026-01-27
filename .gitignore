@@ -48,9 +48,8 @@ temp/
 .venv/
 venv/
 
-# 模型文件（太大，不上传到GitHub）
+# 模型文件（临时模型不上传，基础模型需要上传）
 temp_models/
-*.pth
 
 # 构建和发布文件
 *.dmg
