@@ -120,6 +120,12 @@ class BurstDetector:
                 return builtin_win
 
         # 非 Windows 平台或 Windows 平台的其他检查
+        # V4.0.2: 优先检查 exiftools_mac 目录
+        exiftools_mac = os.path.join(project_root, 'exiftools_mac', 'exiftool')
+        if os.path.exists(exiftools_mac):
+            return exiftools_mac
+        
+        # 后备：项目根目录
         builtin = os.path.join(project_root, 'exiftool')
         if os.path.exists(builtin):
             return builtin
