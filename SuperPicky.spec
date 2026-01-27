@@ -36,8 +36,9 @@ all_datas = [
     (os.path.join(base_path, 'img'), 'img'),
     # 国际化语言包
     (os.path.join(base_path, 'locales'), 'locales'),
-    # 本地化资源
-    (os.path.join(base_path, 'Resources'), 'Resources'),
+    # macOS 本地化 (应用名称) - 必须放在 Resources 根目录
+    (os.path.join(base_path, 'locales', 'en.lproj'), 'en.lproj'),
+    (os.path.join(base_path, 'locales', 'zh-Hans.lproj'), 'zh-Hans.lproj'),
     # Ultralytics 配置
     (os.path.join(ultralytics_base, 'ultralytics/cfg'), 'ultralytics/cfg'),
     # V4.0.0: 鸟类识别模块数据
