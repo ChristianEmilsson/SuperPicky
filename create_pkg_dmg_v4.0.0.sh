@@ -137,14 +137,14 @@ chmod -R 755 "$APP_PATH"
 echo "✓ 应用权限已设置"
 
 # 2. 设置 ExifTool 可执行权限
-EXIFTOOL_PATH="$APP_PATH/Contents/MacOS/exiftool_bundle/exiftool"
+EXIFTOOL_PATH="$APP_PATH/Contents/Frameworks/exiftools_mac/exiftool"
 if [ -f "$EXIFTOOL_PATH" ]; then
     chmod +x "$EXIFTOOL_PATH"
     echo "✓ ExifTool 权限已设置"
 fi
 
 # 3. 设置 ExifTool lib 目录权限
-LIB_DIR="$APP_PATH/Contents/MacOS/exiftool_bundle/lib"
+LIB_DIR="$APP_PATH/Contents/Frameworks/exiftools_mac/lib"
 if [ -d "$LIB_DIR" ]; then
     chmod -R 755 "$LIB_DIR"
 fi

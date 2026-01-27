@@ -92,11 +92,15 @@ class BurstDetector:
 
         # V3.9: 优先检查 PyInstaller 打包环境
         if hasattr(sys, '_MEIPASS'):
-            bundled = os.path.join(sys._MEIPASS, 'exiftool_bundle', exe_name)
+            # V4.0.2: 使用平台特定目录
+            if is_windows:
+                bundled = os.path.join(sys._MEIPASS, 'exiftools_win', exe_name)
+            else:
+                bundled = os.path.join(sys._MEIPASS, 'exiftools_mac', exe_name)
             if os.path.exists(bundled):
                 return bundled
             # 备选
-            fallback = os.path.join(sys._MEIPASS, 'exiftool_bundle', 'exiftool')
+            fallback = os.path.join(sys._MEIPASS, 'exiftools_mac', 'exiftool')
             if os.path.exists(fallback):
                 return fallback
         
