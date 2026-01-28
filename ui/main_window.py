@@ -512,11 +512,6 @@ class SuperPickyMainWindow(QMainWindow):
         self.birdid_dock_action.triggered.connect(self._toggle_birdid_dock)
         birdid_menu.addAction(self.birdid_dock_action)
 
-        # 启动/停止识鸟 API 服务
-        self.birdid_server_action = QAction(self.i18n.t("menu.start_server"), self)
-        self.birdid_server_action.triggered.connect(self._toggle_birdid_server)
-        birdid_menu.addAction(self.birdid_server_action)
-
         # 帮助菜单
         help_menu = menubar.addMenu(self.i18n.t("menu.help"))
         
@@ -1687,41 +1682,6 @@ class SuperPickyMainWindow(QMainWindow):
             from PySide6.QtWidgets import QMessageBox
             QMessageBox.critical(self, "错误", f"无法打开鸟类识别界面:\n{e}")
 
-    @Slot()
-    def _toggle_birdid_server(self):
-        """启动/停止识鸟 API 服务"""
-        import subprocess
-        import sys as system_module
-
-        if not hasattr(self, '_birdid_server_process') or self._birdid_server_process is None:
-            # 启动服务
-            try:
-                script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'birdid_server.py')
-                self._birdid_server_process = subprocess.Popen(
-                    [system_module.executable, script_path],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    start_new_session=True
-                )
-                self.birdid_server_action.setText(self.i18n.t("menu.stop_server"))
-                self._log(self.i18n.t("server.api_started", port=5156), "success")
-            except Exception as e:
-                from PySide6.QtWidgets import QMessageBox
-                QMessageBox.critical(self, self.i18n.t("errors.error_title"), self.i18n.t("server.api_start_failed", error=str(e)))
-        else:
-            # 停止服务
-            try:
-                self._birdid_server_process.terminate()
-                self._birdid_server_process.wait(timeout=3)
-            except:
-                try:
-                    self._birdid_server_process.kill()
-                except:
-                    pass
-            self._birdid_server_process = None
-            self.birdid_server_action.setText(self.i18n.t("menu.start_server"))
-            self._log(self.i18n.t("server.api_stopped"), "info")
-
     def _auto_start_birdid_server(self):
         """自动启动识鸟 API 服务器（使用服务器管理器） - 在后台线程中运行"""
         import threading
@@ -1734,16 +1694,12 @@ class SuperPickyMainWindow(QMainWindow):
                 status = get_server_status()
                 if status['healthy']:
                     self.log_signal.emit(self.i18n.t("server.api_reused"), "success")
-                    # 在主线程中更新UI（使用QTimer.singleShot确保在主线程执行）
-                    QTimer.singleShot(0, lambda: self.birdid_server_action.setText(self.i18n.t("menu.stop_server")))
                     return
                 
                 # 启动服务器（守护进程模式）
                 success, msg, pid = start_server_daemon(log_callback=lambda m: print(m))
                 
                 if success:
-                    # 在主线程中更新UI（使用QTimer.singleShot确保在主线程执行）
-                    QTimer.singleShot(0, lambda: self.birdid_server_action.setText(self.i18n.t("menu.stop_server")))
                     self.log_signal.emit(self.i18n.t("server.api_auto_started", port=5156), "success")
                 else:
                     self.log_signal.emit(self.i18n.t("server.start_failed", error=msg), "warning")
