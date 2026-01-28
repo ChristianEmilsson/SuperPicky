@@ -303,6 +303,20 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo "📍 应用位置: /Applications/慧眼选鸟.app"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "⚠️  Lightroom 插件首次使用说明："
+echo ""
+echo "   1. 打开 Lightroom → 文件 → 增效工具管理器"
+echo "   2. 在左侧列表找到 SuperPicky BirdID Plugin"
+echo "   3. 点击右侧「启用」按钮"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "⚠️  Lightroom Plugin First-time Setup:"
+echo ""
+echo "   1. Open Lightroom → File → Plug-in Manager"
+echo "   2. Find 'SuperPicky BirdID Plugin' in the list"
+echo "   3. Click the 'Enable' button on the right"
+echo ""
 
 exit 0
 POSTINSTALL_EOF
