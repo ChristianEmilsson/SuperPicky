@@ -1,6 +1,6 @@
 # SuperPicky - 慧眼选鸟 🦅
 
-[![Version](https://img.shields.io/badge/version-4.0.0-blue.svg)](https://github.com/jamesphotography/SuperPicky)
+[![Version](https://img.shields.io/badge/version-4.0.3-blue.svg)](https://github.com/jamesphotography/SuperPicky)
 [![Platform](https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg)](https://github.com/jamesphotography/SuperPicky/releases)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -25,6 +25,13 @@
 | ⭐⭐ | 锐度达标 或 美学达标 | 良好照片，可考虑保留 |
 | ⭐ | 有鸟但都未达标 | 普通照片，通常可删除 |
 | 0 | 无鸟/质量太差 | 建议删除 |
+
+### ⚙️ 摄影水平预设 (New)
+根据您的拍摄经验自动设定筛选标准：
+- **🐣 新手 Beginner**: 锐度>300, 美学>4.5 (保留更多)
+- **📷 初级 Intermediate**: 锐度>380, 美学>4.8 (平衡)
+- **👑 大师 Master**: 锐度>520, 美学>5.5 (严苛)
+
 
 ### 🏷️ 特殊标记
 - **Pick 精选**: 3星照片中锐度+美学双排名前25%的交集
@@ -89,6 +96,12 @@ python main.py
 ---
 
 ## 📝 更新日志
+
+### v4.0.3 (2026-01-30)
+- ⚙️ **新增摄影水平预设**: 新手/初级/大师三种模式，一键设定最佳筛选阈值
+- 🦜 **AI 鸟类识别**: 集成 11,000+ 种鸟类识别模型，自动写入元数据
+- 🔌 **Lightroom 插件**: 支持在 LR 中直接调用 AI 识别
+- 🌏 **eBird 集成**: 基于地理位置优化识别结果
 
 ### v3.9.0 (2026-01-09)
 - 📷 **新增连拍检测**: 自动识别连拍组，选出最佳照片
