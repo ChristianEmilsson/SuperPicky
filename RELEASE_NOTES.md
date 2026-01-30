@@ -46,4 +46,5 @@
 ---
 
 ## 📥 下载地址 (Downloads)
-请访问 [Releases 页面](https://github.com/jamesphotography/SuperPicky/releases) 下载最新版本。
+- **GitHub**: [Releases 页面](https://github.com/jamesphotography/SuperPicky/releases) (推荐 Recommended)
+- **Google Drive**: [macOS Apple Silicon (v4.0.3)](https://drive.google.com/file/d/1TcW4fZD7J5Aq0mixXNvCQZukyZIO2-e4/view?usp=sharing)
