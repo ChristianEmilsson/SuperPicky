@@ -686,7 +686,9 @@
     "country_hk": "Hong Kong",
     "country_tw": "Taiwan",
     "country_jp": "Japan",
-    "region_entire_country": "Entire Country"
+    "region_entire_country": "Entire Country",
+    "search_country_placeholder": "Search country...",
+    "country_dialog_title": "Select Country"
   },
   "rating_engine": {
     "reject_no_bird": "No bird detected",

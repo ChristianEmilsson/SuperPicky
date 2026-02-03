@@ -130,7 +130,9 @@ mkdir -p pkg_scripts
 
 # 复制应用（重命名为中文名）
 log_info "复制应用到安装目录..."
-ditto "${APP_PATH}" "pkg_root/Applications/${APP_NAME_CN}.app"
+# 复制应用（使用英文名 SuperPicky.app 以支持国际化）
+log_info "复制应用到安装目录..."
+ditto "${APP_PATH}" "pkg_root/Applications/${APP_NAME}.app"
 
 # 创建 postinstall 脚本
 log_info "创建 postinstall 脚本..."
@@ -140,7 +142,7 @@ cat > pkg_scripts/postinstall << 'POSTINSTALL_EOF'
 
 echo "正在配置 慧眼选鸟 SuperPicky V4.0.3..."
 
-APP_PATH="/Applications/慧眼选鸟.app"
+APP_PATH="/Applications/SuperPicky.app"
 
 # 获取真实用户（而非 root）
 REAL_USER=$(stat -f '%Su' /dev/console)
@@ -318,7 +320,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "✅ 慧眼选鸟 SuperPicky V4.0.3 安装完成！"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "📍 应用位置: /Applications/慧眼选鸟.app"
+echo "📍 应用位置: /Applications/SuperPicky.app"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "⚠️  Lightroom 插件首次使用说明："
@@ -357,7 +359,7 @@ cat > pkg_components.plist << 'COMPONENT_PLIST_EOF'
         <key>BundleOverwriteAction</key>
         <string>upgrade</string>
         <key>RootRelativeBundlePath</key>
-        <string>Applications/慧眼选鸟.app</string>
+        <string>Applications/SuperPicky.app</string>
     </dict>
 </array>
 </plist>
@@ -491,7 +493,7 @@ cat > conclusion.html << 'CONCLUSION_EOF'
 
     <h2>已安装内容</h2>
     <div class="info-box">
-        <p><strong>📍 主应用:</strong> /Applications/慧眼选鸟.app</p>
+        <p><strong>📍 主应用:</strong> /Applications/SuperPicky.app</p>
         <p><strong>📍 Lightroom 插件:</strong> ~/Library/Application Support/Adobe/Lightroom/Modules/</p>
     </div>
 
@@ -676,7 +678,7 @@ README_EOF
 
 # 创建 DMG
 log_info "创建 DMG 镜像..."
-hdiutil create -volname "${APP_NAME_CN}" \
+hdiutil create -volname "${APP_NAME} ${VERSION}" \
     -srcfolder "${TEMP_DMG_DIR}" \
     -ov -format UDZO \
     "dist/${DMG_NAME}"

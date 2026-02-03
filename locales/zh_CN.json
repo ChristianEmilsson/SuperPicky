@@ -685,7 +685,9 @@
     "country_hk": "香港",
     "country_tw": "台湾",
     "country_jp": "日本",
-    "region_entire_country": "整个国家"
+    "region_entire_country": "整个国家",
+    "search_country_placeholder": "搜索国家...",
+    "country_dialog_title": "选择国家"
   },
   "rating_engine": {
     "reject_no_bird": "未检测到鸟类",

@@ -159,7 +159,7 @@ app = BUNDLE(
     bundle_identifier='com.jamesphotography.superpicky',
     info_plist={
         'CFBundleName': 'SuperPicky',
-        'CFBundleDisplayName': '慧眼选鸟',
+        'CFBundleDisplayName': 'SuperPicky',
         'CFBundleVersion': '4.0.3',
         'CFBundleShortVersionString': '4.0.3',
         'NSHighResolutionCapable': True,

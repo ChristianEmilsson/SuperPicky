@@ -202,35 +202,19 @@ class ResultCard(QFrame):
         """)
         layout.addWidget(self.rank_label)
 
-        # 名称
-        name_layout = QVBoxLayout()
-        name_layout.setSpacing(2)
-
-        # Language-dependent name display
+        # 名称 - 只显示当前语言
         is_en = self.i18n.current_lang.startswith('en')
-        main_name = en_name if is_en else cn_name
-        sub_name = cn_name if is_en else en_name
+        display_name = en_name if is_en else cn_name
 
-        # Main Name
-        self.cn_label = QLabel(main_name)
-        self.cn_label.setStyleSheet(f"""
+        self.name_label = QLabel(display_name)
+        self.name_label.setStyleSheet(f"""
             font-size: 14px;
             font-weight: bold;
             color: {COLORS['text_primary']};
             background: transparent;
         """)
-        name_layout.addWidget(self.cn_label)
 
-        # Sub Name
-        self.en_label = QLabel(sub_name)
-        self.en_label.setStyleSheet(f"""
-            font-size: 11px;
-            color: {COLORS['text_tertiary']};
-            background: transparent;
-        """)
-        name_layout.addWidget(self.en_label)
-
-        layout.addLayout(name_layout, 1)
+        layout.addWidget(self.name_label, 1)
 
         # 置信度
         if confidence >= 70:
@@ -545,15 +529,29 @@ class BirdIDDockWidget(QDockWidget):
         self._reidentify_if_needed()
 
     def _show_more_countries_dialog(self):
-        """显示更多国家选择对话框"""
-        from PySide6.QtWidgets import QDialog, QListWidget, QDialogButtonBox, QListWidgetItem
+        """显示更多国家选择对话框 - 支持国际化和搜索"""
+        from PySide6.QtWidgets import QDialog, QListWidget, QDialogButtonBox, QListWidgetItem, QLineEdit
+        
+        t = self.i18n.t
+        is_english = self.i18n.current_lang.startswith('en')
         
         dialog = QDialog(self)
-        dialog.setWindowTitle("选择国家")
-        dialog.setMinimumSize(300, 400)
+        dialog.setWindowTitle(t("birdid.country_dialog_title"))
+        dialog.setMinimumSize(320, 450)
         dialog.setStyleSheet(f"""
             QDialog {{
                 background-color: {COLORS['bg_primary']};
+            }}
+            QLineEdit {{
+                background-color: {COLORS['bg_input']};
+                border: 1px solid {COLORS['border_subtle']};
+                border-radius: 6px;
+                padding: 8px;
+                color: {COLORS['text_primary']};
+                font-size: 13px;
+            }}
+            QLineEdit:focus {{
+                border-color: {COLORS['accent']};
             }}
             QListWidget {{
                 background-color: {COLORS['bg_elevated']};
@@ -573,29 +571,54 @@ class BirdIDDockWidget(QDockWidget):
         
         layout = QVBoxLayout(dialog)
         layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(8)
+        
+        # 搜索框
+        search_input = QLineEdit()
+        search_input.setPlaceholderText(t("birdid.search_country_placeholder"))
+        layout.addWidget(search_input)
         
         list_widget = QListWidget()
         
-        # 添加所有国家（按英文名排序）
+        # 根据当前语言决定显示格式
         all_countries = []
         for country in self.regions_data.get('countries', []):
             code = country.get('code', '')
-            name = country.get('name', '')
+            name_en = country.get('name', '')
             name_cn = country.get('name_cn', '')
-            if name_cn:
-                display = f"{name_cn} ({name})"
+            
+            if is_english:
+                # 英文环境：只显示英文名
+                display = name_en
             else:
-                display = name
-            all_countries.append((display, code, name))
+                # 中文环境：只显示中文名（如无中文则显示英文）
+                display = name_cn if name_cn else name_en
+            
+            # 按英文名排序以保持一致性
+            sort_key = name_en.lower()
+            all_countries.append((display, code, sort_key, name_en))
         
-        all_countries.sort(key=lambda x: x[2].lower())
+        all_countries.sort(key=lambda x: x[2])
         
-        for display, code, _ in all_countries:
+        for display, code, _, name_en in all_countries:
             item = QListWidgetItem(display)
             item.setData(Qt.UserRole, code)
+            item.setData(Qt.UserRole + 1, name_en)  # 用于搜索
             list_widget.addItem(item)
         
         layout.addWidget(list_widget)
+        
+        # 搜索过滤功能
+        def filter_countries(text):
+            text = text.lower()
+            for i in range(list_widget.count()):
+                item = list_widget.item(i)
+                display_name = item.text().lower()
+                en_name = (item.data(Qt.UserRole + 1) or "").lower()
+                visible = text in display_name or text in en_name
+                item.setHidden(not visible)
+        
+        search_input.textChanged.connect(filter_countries)
         
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(dialog.accept)
@@ -611,14 +634,14 @@ class BirdIDDockWidget(QDockWidget):
                 existing = [self.country_combo.itemText(i) for i in range(self.country_combo.count())]
                 if display not in existing:
                     # 在"更多国家"之前插入
-                    idx = self.country_combo.findText("── 更多国家 ──")
+                    idx = self.country_combo.findText(t("birdid.country_more"))
                     if idx >= 0:
                         self.country_combo.insertItem(idx, display)
                         self.country_list[display] = code
                 self.country_combo.setCurrentText(display)
         else:
             # 用户取消，恢复到之前的选择
-            saved = self.settings.get('selected_country', '自动检测 (GPS)')
+            saved = self.settings.get('selected_country', t('birdid.country_auto_gps'))
             self.country_combo.setCurrentText(saved)
 
     def _setup_ui(self):
@@ -832,29 +855,7 @@ class BirdIDDockWidget(QDockWidget):
         self.btn_new.clicked.connect(self.drop_area.selectFile)
         btn_layout.addWidget(self.btn_new)
 
-        # 写入 EXIF 按钮 - 主按钮样式（青绿色）
-        self.btn_write_exif = QPushButton(self.i18n.t("birdid.btn_write_exif"))
-        self.btn_write_exif.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {COLORS['accent']};
-                border: none;
-                color: {COLORS['bg_void']};
-                border-radius: 6px;
-                padding: 10px 16px;
-                font-size: 13px;
-                font-weight: 500;
-            }}
-            QPushButton:hover {{
-                background-color: #00e6b8;
-            }}
-            QPushButton:disabled {{
-                background-color: {COLORS['bg_card']};
-                color: {COLORS['text_muted']};
-            }}
-        """)
-        self.btn_write_exif.clicked.connect(self.write_exif)
-        self.btn_write_exif.setEnabled(False)
-        btn_layout.addWidget(self.btn_write_exif)
+
 
         layout.addLayout(btn_layout)
 
@@ -923,7 +924,7 @@ class BirdIDDockWidget(QDockWidget):
                 # 显示进度
                 self.progress.show()
                 self.results_frame.hide()
-                self.btn_write_exif.setEnabled(False)
+
                 
                 # 获取过滤设置并启动识别
                 self._start_identify(temp_path)
@@ -975,7 +976,7 @@ class BirdIDDockWidget(QDockWidget):
         # 显示进度
         self.progress.show()
         self.results_frame.hide()
-        self.btn_write_exif.setEnabled(False)
+
         
         # 启动识别
         self._start_identify(file_path)
@@ -994,7 +995,7 @@ class BirdIDDockWidget(QDockWidget):
                 # 显示进度
                 self.progress.show()
                 self.results_frame.hide()
-                self.btn_write_exif.setEnabled(False)
+
                 
                 # 重新启动识别
                 self._start_identify(self.current_image_path)
@@ -1199,7 +1200,7 @@ class BirdIDDockWidget(QDockWidget):
 
         # 保存结果
         self.identify_results = results
-        self.btn_write_exif.setEnabled(True)
+
 
         # 状态显示选中的候选
         self._update_status_label()
@@ -1237,34 +1238,7 @@ class BirdIDDockWidget(QDockWidget):
                 self.status_label.setText(f"✓ {selected['cn_name']} ({selected['confidence']:.0f}%)")
                 self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['success']};")
 
-    def write_exif(self):
-        """写入 EXIF - 使用选中的候选"""
-        if not self.current_image_path or not self.identify_results:
-            return
 
-        # 使用选中的候选（默认是第一个）
-        selected_index = getattr(self, 'selected_index', 0)
-        if selected_index >= len(self.identify_results):
-            selected_index = 0
-        
-        selected = self.identify_results[selected_index]
-        # 使用中文名为主，英文名为辅
-        bird_name = f"{selected['cn_name']} ({selected['en_name']})"
-
-        try:
-            from tools.exiftool_manager import get_exiftool_manager
-            exiftool_mgr = get_exiftool_manager()
-            success = exiftool_mgr.set_metadata(self.current_image_path, {'Title': bird_name})
-
-            if success:
-                self.status_label.setText(f"已写入: {selected['cn_name']}")
-                self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['success']};")
-            else:
-                self.status_label.setText("EXIF 写入失败")
-                self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['error']};")
-        except Exception as e:
-            self.status_label.setText(f"错误: {str(e)[:20]}")
-            self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['error']};")
 
     def reset_view(self):
         """重置视图"""
@@ -1272,7 +1246,7 @@ class BirdIDDockWidget(QDockWidget):
         self.preview_label.hide()
         self.filename_label.hide()
         self.results_frame.hide()
-        self.btn_write_exif.setEnabled(False)
+
         self.status_label.setText("准备就绪")
         self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['text_muted']};")
         self.current_image_path = None
