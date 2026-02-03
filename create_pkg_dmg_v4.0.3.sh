@@ -389,7 +389,7 @@ cat > welcome.html << 'WELCOME_EOF'
 <head>
     <meta charset="utf-8">
     <style>
-        /* 支持深色和浅色模式 - 使用透明背景避免白底问题 */
+        /* Support dark and light mode with transparent background */
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; 
             padding: 20px; 
@@ -417,38 +417,37 @@ cat > welcome.html << 'WELCOME_EOF'
     </style>
 </head>
 <body>
-    <h1>欢迎安装 慧眼选鸟 SuperPicky</h1>
-    <p class="version">版本 4.0.3</p>
+    <h1>Welcome to SuperPicky</h1>
+    <p class="version">Version 4.0.3</p>
 
-    <p>本安装程序将在您的计算机上安装 <strong>慧眼选鸟 SuperPicky</strong> 和 <strong>Lightroom 插件</strong>。</p>
+    <p>This installer will install <strong>SuperPicky</strong> and its <strong>Lightroom Plugin</strong> on your computer.</p>
 
-    <h2>V4.0.3 新功能 <span class="new-badge">NEW</span></h2>
+    <h2>What's New in V4.0.3 <span class="new-badge">NEW</span></h2>
     <ul>
-        <li><span class="highlight">⚙️ 摄影水平预设</span> - 新手/初级/大师模式，智能调整筛选标准</li>
-        <li><span class="highlight">🦜 鸟类识别</span> - AI 自动识别鸟类物种，写入照片元数据</li>
-        <li><span class="highlight">📷 Lightroom 插件</span> - 在 Lightroom 中直接识别鸟类</li>
+        <li><span class="highlight">⚙️ Skill Level Presets</span> - Beginner/Intermediate/Master modes with adaptive culling thresholds</li>
+        <li><span class="highlight">🦜 Bird Species ID</span> - AI-powered bird identification with metadata embedding</li>
+        <li><span class="highlight">📷 Lightroom Plugin</span> - Identify bird species directly within Lightroom</li>
     </ul>
 
-    <h3>系统要求</h3>
+    <h3>System Requirements</h3>
     <ul>
-        <li>macOS 11.0 或更高版本</li>
-        <li>Apple Silicon (M1/M2/M3/M4) 或 Intel 处理器</li>
-        <li>约 2GB 可用磁盘空间</li>
+        <li>macOS 11.0 (Big Sur) or later</li>
+        <li>Apple Silicon (M1/M2/M3/M4) or Intel processor</li>
+        <li>Approximately 2GB of available disk space</li>
     </ul>
 
-    <p>点击「继续」开始安装。</p>
+    <p>Click "Continue" to proceed with the installation.</p>
 </body>
 </html>
 WELCOME_EOF
 
-# 创建完成页面
 cat > conclusion.html << 'CONCLUSION_EOF'
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <style>
-        /* 支持深色和浅色模式 - 使用透明背景避免白底问题 */
+        /* Support dark and light mode with transparent background */
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; 
             padding: 20px; 
@@ -485,43 +484,43 @@ cat > conclusion.html << 'CONCLUSION_EOF'
     </style>
 </head>
 <body>
-    <h1>✓ 安装成功</h1>
+    <h1>✓ Installation Complete</h1>
 
     <div class="success">
-        <strong>慧眼选鸟 SuperPicky V4.0.3</strong> 已成功安装！
+        <strong>SuperPicky V4.0.3</strong> has been successfully installed!
     </div>
 
-    <h2>已安装内容</h2>
+    <h2>Installed Components</h2>
     <div class="info-box">
-        <p><strong>📍 主应用:</strong> /Applications/SuperPicky.app</p>
-        <p><strong>📍 Lightroom 插件:</strong> ~/Library/Application Support/Adobe/Lightroom/Modules/</p>
+        <p><strong>📍 Main Application:</strong> /Applications/SuperPicky.app</p>
+        <p><strong>📍 Lightroom Plugin:</strong> ~/Library/Application Support/Adobe/Lightroom/Modules/</p>
     </div>
 
-    <h2>开始使用</h2>
+    <h2>Getting Started</h2>
     <div class="info-box">
-        <p><strong>主应用:</strong></p>
+        <p><strong>Main Application:</strong></p>
         <ul>
-            <li>从「启动台」找到并点击「慧眼选鸟」</li>
-            <li>或前往「应用程序」文件夹</li>
+            <li>Find and launch "SuperPicky" from Launchpad</li>
+            <li>Or navigate to the Applications folder</li>
         </ul>
-        <p><strong>Lightroom 插件:</strong></p>
+        <p><strong>Lightroom Plugin:</strong></p>
         <ul>
-            <li>打开 Lightroom，选中一张照片</li>
-            <li>菜单: 图库 → 增效工具 → 慧眼选鸟 - 识别当前照片</li>
+            <li>Open Lightroom and select a photo</li>
+            <li>Menu: Library → Plug-in Extras → SuperPicky - Identify Current Photo</li>
         </ul>
     </div>
 
     <div class="warning">
-        <p><strong>⚠️ 首次使用注意:</strong></p>
+        <p><strong>⚠️ First-Time Usage Notes:</strong></p>
         <ul>
-            <li>首次运行可能需要 10-30 秒加载 AI 模型</li>
-            <li>使用 Lightroom 插件前需先启动主应用</li>
-            <li><strong>Lightroom 插件需手动启用:</strong> 文件 → 增效工具管理器 → 找到「慧眼选鸟」→ 点击「启用」</li>
+            <li>First launch may take 10-30 seconds to load AI models</li>
+            <li>The main app must be running before using the Lightroom plugin</li>
+            <li><strong>Enable Lightroom Plugin:</strong> File → Plug-in Manager → Find "SuperPicky" → Click "Enable"</li>
         </ul>
     </div>
 
     <p style="margin-top: 30px; font-size: 0.9em;">
-        感谢使用慧眼选鸟！如有问题请访问 <a href="https://github.com/jamesphotography/SuperPicky">GitHub</a>
+        Thank you for using SuperPicky! For support, visit <a href="https://github.com/jamesphotography/SuperPicky">GitHub</a>
     </p>
 </body>
 </html>
