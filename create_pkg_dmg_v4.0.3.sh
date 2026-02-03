@@ -601,13 +601,13 @@ log_info "生成 PDF 安装指南..."
 if [ -f "docs/安装指南_v4.0.0.html" ]; then
     # 使用 cupsfilter 或 wkhtmltopdf 生成 PDF（如果可用）
     # 备选：直接复制 HTML，用户可用浏览器打印为 PDF
-    cp "docs/安装指南_v4.0.0.html" "${TEMP_DMG_DIR}/安装指南.html"
+    cp "docs/安装指南_v4.0.0.html" "${TEMP_DMG_DIR}/Installation Guide 安装指南.html"
     log_info "  已复制 HTML 安装指南（可在浏览器中打印为 PDF）"
 fi
 
 # 创建网站使用教程快捷方式
 log_info "创建网站快捷方式..."
-cat > "${TEMP_DMG_DIR}/在线使用教程.webloc" << 'WEBLOC_EOF'
+cat > "${TEMP_DMG_DIR}/Online Tutorial 在线教程.webloc" << 'WEBLOC_EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -619,61 +619,105 @@ cat > "${TEMP_DMG_DIR}/在线使用教程.webloc" << 'WEBLOC_EOF'
 WEBLOC_EOF
 
 # 创建插件安装说明
-cat > "${TEMP_DMG_DIR}/Lightroom插件手动安装说明.txt" << 'PLUGIN_README_EOF'
+cat > "${TEMP_DMG_DIR}/Lightroom Plugin Manual Installation 插件手动安装.txt" << 'PLUGIN_README_EOF'
+================================================================================
 慧眼选鸟 Lightroom 插件 - 手动安装说明
-==========================================
+SuperPicky Lightroom Plugin - Manual Installation Guide
+================================================================================
 
 如果自动安装没有成功，或者您使用的是 Lightroom Classic 以外的版本，
 请按照以下步骤手动安装插件：
 
+If automatic installation failed, or you're using a version other than
+Lightroom Classic, please follow these steps to install manually:
+
+--------------------------------------------------------------------------------
 【Lightroom Classic】
+--------------------------------------------------------------------------------
   1. 复制 SuperBirdIDPlugin.lrplugin 文件夹到:
+     Copy the SuperBirdIDPlugin.lrplugin folder to:
      ~/Library/Application Support/Adobe/Lightroom/Modules/
 
-【Lightroom Classic (旧版)】
+--------------------------------------------------------------------------------
+【Lightroom Classic (旧版 / Older versions)】
+--------------------------------------------------------------------------------
   1. 打开 Lightroom → 文件 → 增效工具管理器
+     Open Lightroom → File → Plug-in Manager
   2. 点击「添加」
+     Click "Add"
   3. 选择 SuperBirdIDPlugin.lrplugin 文件夹
+     Select the SuperBirdIDPlugin.lrplugin folder
   4. 重启 Lightroom
+     Restart Lightroom
 
-【使用方法】
+--------------------------------------------------------------------------------
+【使用方法 / How to Use】
+--------------------------------------------------------------------------------
   1. 先启动「慧眼选鸟」主程序，开启识鸟 API
+     Launch SuperPicky first and enable the Bird ID API
   2. 在 Lightroom 中选中一张照片
+     Select a photo in Lightroom
   3. 菜单: 图库 → 增效工具 → 慧眼选鸟 - 识别当前照片
+     Menu: Library → Plug-in Extras → SuperPicky - Identify Current Photo
 
-【注意事项】
+--------------------------------------------------------------------------------
+【注意事项 / Important Notes】
+--------------------------------------------------------------------------------
   - 使用插件前需要先启动主程序
+    The main app must be running before using the plugin
   - 确保主程序的「识鸟 API」开关已开启
+    Make sure the "Bird ID API" toggle is enabled in the main app
 
-==========================================
-版本: 4.0.3
+================================================================================
+版本 Version: 4.0.3
 © 2026 James Zhen Yu
+================================================================================
 PLUGIN_README_EOF
 
 # 创建总说明文件
-cat > "${TEMP_DMG_DIR}/安装说明.txt" << README_EOF
+cat > "${TEMP_DMG_DIR}/README 安装说明.txt" << README_EOF
+================================================================================
 慧眼选鸟 SuperPicky V4.0.3 安装说明
-=====================================
+SuperPicky V4.0.3 Installation Guide
+================================================================================
 
-【推荐安装方式】
+--------------------------------------------------------------------------------
+【推荐安装方式 / Recommended Installation】
+--------------------------------------------------------------------------------
 双击「${PKG_NAME}」按向导安装
-  - 会自动安装主应用到 /Applications
-  - 会自动安装 Lightroom 插件
+Double-click "${PKG_NAME}" and follow the installer wizard
 
-【手动安装 Lightroom 插件】
-如果自动安装失败，请参考「Lightroom插件手动安装说明.txt」
+  - 会自动安装主应用到 /Applications
+    Automatically installs the app to /Applications
+  - 会自动安装 Lightroom 插件
+    Automatically installs the Lightroom plugin
+
+--------------------------------------------------------------------------------
+【手动安装 Lightroom 插件 / Manual Lightroom Plugin Installation】
+--------------------------------------------------------------------------------
+如果自动安装失败，请参考「Lightroom Plugin Manual Installation 插件手动安装.txt」
+If automatic installation fails, see "Lightroom Plugin Manual Installation 插件手动安装.txt"
+
 或直接将 SuperBirdIDPlugin.lrplugin 文件夹复制到:
+Or copy the SuperBirdIDPlugin.lrplugin folder to:
   ~/Library/Application Support/Adobe/Lightroom/Modules/
 
-【首次使用】
+--------------------------------------------------------------------------------
+【首次使用 / Getting Started】
+--------------------------------------------------------------------------------
   - 从启动台打开「慧眼选鸟」
+    Launch "SuperPicky" from Launchpad
   - Lightroom 插件: 图库 → 增效工具 → 慧眼选鸟
+    Lightroom Plugin: Library → Plug-in Extras → SuperPicky
 
-【问题反馈】
+--------------------------------------------------------------------------------
+【问题反馈 / Feedback & Issues】
+--------------------------------------------------------------------------------
 https://github.com/jamesphotography/SuperPicky
 
-=====================================
+================================================================================
 © 2026 James Zhen Yu
+================================================================================
 README_EOF
 
 # 创建 DMG
