@@ -1711,16 +1711,7 @@ class SuperPickyMainWindow(QMainWindow):
         if hasattr(self, 'birdid_dock'):
             self.birdid_dock.setVisible(checked)
 
-    @Slot()
-    def _open_birdid_gui(self):
-        """打开鸟类识别 GUI（独立窗口）"""
-        try:
-            from birdid_gui import BirdIDWindow
-            self.birdid_window = BirdIDWindow()
-            self.birdid_window.show()
-        except Exception as e:
-            from PySide6.QtWidgets import QMessageBox
-            QMessageBox.critical(self, "错误", f"无法打开鸟类识别界面:\n{e}")
+
 
     def _auto_start_birdid_server(self):
         """自动启动识鸟 API 服务器（使用服务器管理器） - 在后台线程中运行"""
