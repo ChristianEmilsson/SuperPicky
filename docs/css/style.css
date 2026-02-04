@@ -38,7 +38,7 @@
     --space-md: 16px;
     --space-lg: 24px;
     --space-xl: 48px;
-    --space-2xl: 80px;
+    --space-2xl: 50px;
 
     /* Border radius - matching app */
     --radius-sm: 6px;
@@ -169,8 +169,22 @@ header {
 
 /* === Hero Section === */
 .hero {
-    padding: 160px 0 var(--space-xl);
+    padding: 100px 0 var(--space-xl);
     text-align: center;
+}
+
+/* Hero Video */
+.hero-video {
+    margin-bottom: var(--space-xl);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.hero-video video {
+    width: 100%;
+    display: block;
 }
 
 .hero-badge {
@@ -1312,7 +1326,7 @@ footer {
     }
 
     .hero {
-        padding: 120px 0 var(--space-xl);
+        padding: 100px 0 var(--space-xl);
     }
 
     .hero h1 {
@@ -1730,7 +1744,7 @@ footer {
 
 /* === FAQ Section === */
 .faq-section {
-    padding: 140px 0 var(--space-2xl);
+    padding: 100px 0 var(--space-2xl);
 }
 
 .faq-list {
@@ -1961,7 +1975,7 @@ footer {
 
 /* === Tutorial Page === */
 .tutorial-hero {
-    padding: 140px 0 var(--space-xl);
+    padding: 100px 0 var(--space-xl);
     text-align: center;
 }
 
