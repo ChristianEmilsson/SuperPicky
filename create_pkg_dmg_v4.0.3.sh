@@ -139,27 +139,65 @@ log_info "创建 postinstall 脚本..."
 cat > pkg_scripts/postinstall << 'POSTINSTALL_EOF'
 #!/bin/bash
 # SuperPicky V4.0.3 - 安装后配置脚本
+# Post-install configuration script
 
-echo "正在配置 慧眼选鸟 SuperPicky V4.0.3..."
+echo "Configuring SuperPicky V4.0.3..."
 
 APP_PATH="/Applications/SuperPicky.app"
 
 # 获取真实用户（而非 root）
+# Get real user (not root)
 REAL_USER=$(stat -f '%Su' /dev/console)
 REAL_HOME=$(eval echo ~$REAL_USER)
 
-echo "安装用户: $REAL_USER"
-echo "用户主目录: $REAL_HOME"
+echo "User: $REAL_USER"
+echo "Home: $REAL_HOME"
 
-# 1. 设置应用权限
+# ============================================
+# Language Detection / 语言检测
+# ============================================
+IS_CHINESE=0
+# Check global preferences for Simplified Chinese
+if defaults read -g AppleLanguages 2>/dev/null | grep -q "zh-Hans"; then
+    IS_CHINESE=1
+fi
+
+# Define Strings based on language
+if [ "$IS_CHINESE" -eq 1 ]; then
+    TXT_TITLE="慧眼选鸟 - Lightroom 插件安装"
+    TXT_PROMPT="请选择要安装插件的 Lightroom 版本："
+    TXT_NOTE="(可按住 Command 键多选)"
+    TXT_OPT_USER="Lightroom 用户模块 (推荐)"
+    TXT_OPT_CLASSIC="Lightroom Classic 应用内 (需重启LR)"
+    TXT_OPT_APP_IN="应用内"
+    TXT_MSG_NO_LR="⚠ 未检测到 Lightroom 安装"
+    TXT_MSG_MANUAL="插件已保存在应用包内，您可以稍后手动安装"
+    TXT_MSG_CANCEL="用户取消了插件安装"
+    TXT_MSG_MANUAL_HINT="您可以稍后从应用包内手动复制插件"
+    TXT_MSG_SUCCESS="✓ Lightroom 插件安装完成"
+else
+    TXT_TITLE="SuperPicky - Lightroom Plugin Installer"
+    TXT_PROMPT="Please select Lightroom versions to install the plugin:"
+    TXT_NOTE="(Hold Command key to select multiple)"
+    TXT_OPT_USER="Lightroom User Modules (Recommended)"
+    TXT_OPT_CLASSIC="Lightroom Classic Internal (Requires Restart)"
+    TXT_OPT_APP_IN="Inside App"
+    TXT_MSG_NO_LR="⚠ No Lightroom installation detected"
+    TXT_MSG_MANUAL="Plugin is inside the app bundle, you can install manually later"
+    TXT_MSG_CANCEL="User cancelled plugin installation"
+    TXT_MSG_MANUAL_HINT="You can manually copy the plugin from the app bundle later"
+    TXT_MSG_SUCCESS="✓ Lightroom Plugin installation completed"
+fi
+
+# 1. 设置应用权限 / Set permissions
 chmod -R 755 "$APP_PATH"
-echo "✓ 应用权限已设置"
+echo "✓ Application permissions set"
 
-# 2. 设置 ExifTool 可执行权限
+# 2. 设置 ExifTool 可执行权限 / Set ExifTool permissions
 EXIFTOOL_PATH="$APP_PATH/Contents/Frameworks/exiftools_mac/exiftool"
 if [ -f "$EXIFTOOL_PATH" ]; then
     chmod +x "$EXIFTOOL_PATH"
-    echo "✓ ExifTool 权限已设置"
+    echo "✓ ExifTool permissions set"
 fi
 
 # 3. 设置 ExifTool lib 目录权限
@@ -168,10 +206,10 @@ if [ -d "$LIB_DIR" ]; then
     chmod -R 755 "$LIB_DIR"
 fi
 
-# 4. 安装 Lightroom 插件
+# 4. 安装 Lightroom 插件 / Install Lightroom Plugin
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "正在检测 Lightroom 版本..."
+echo "Detecting Lightroom versions..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 PLUGIN_SOURCE="$APP_PATH/Contents/Resources/SuperBirdIDPlugin.lrplugin"
@@ -184,40 +222,40 @@ declare -a LR_NAMES
 # 用户 Modules 目录（推荐）
 USER_MODULES="$REAL_HOME/Library/Application Support/Adobe/Lightroom/Modules"
 if [ -d "$REAL_HOME/Library/Application Support/Adobe/Lightroom" ]; then
-    LR_OPTIONS+=("Lightroom 用户模块 (推荐)")
+    LR_OPTIONS+=("$TXT_OPT_USER")
     LR_PATHS+=("$USER_MODULES")
-    LR_NAMES+=("Lightroom 用户模块")
-    echo "  ✓ 发现: Lightroom 用户模块目录"
+    LR_NAMES+=("Lightroom User Modules")
+    echo "  ✓ Found: Lightroom User Directory"
 fi
 
 # Lightroom Classic 应用内 PlugIns（需要 admin）
 LR_CLASSIC_PLUGINS="/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app/Contents/PlugIns"
 if [ -d "$LR_CLASSIC_PLUGINS" ]; then
-    LR_OPTIONS+=("Lightroom Classic 应用内 (需重启LR)")
+    LR_OPTIONS+=("$TXT_OPT_CLASSIC")
     LR_PATHS+=("$LR_CLASSIC_PLUGINS")
-    LR_NAMES+=("Lightroom Classic 应用内")
-    echo "  ✓ 发现: Lightroom Classic 应用"
+    LR_NAMES+=("Lightroom Classic App")
+    echo "  ✓ Found: Lightroom Classic App"
 fi
 
 # 检测其他可能的 Lightroom 安装
 for lr_app in /Applications/Adobe\ Lightroom*/Adobe\ Lightroom*.app/Contents/PlugIns; do
     if [ -d "$lr_app" ] && [[ "$lr_app" != "$LR_CLASSIC_PLUGINS" ]]; then
         app_name=$(basename "$(dirname "$(dirname "$lr_app")")" | sed 's/Adobe //')
-        LR_OPTIONS+=("$app_name 应用内")
+        LR_OPTIONS+=("$app_name $TXT_OPT_APP_IN")
         LR_PATHS+=("$lr_app")
         LR_NAMES+=("$app_name")
-        echo "  ✓ 发现: $app_name"
+        echo "  ✓ Found: $app_name"
     fi
 done
 
 # 如果没有检测到任何 Lightroom
 if [ ${#LR_OPTIONS[@]} -eq 0 ]; then
-    echo "⚠ 未检测到 Lightroom 安装"
-    echo "插件已保存在应用包内，您可以稍后手动安装"
-    echo "插件位置: $PLUGIN_SOURCE"
+    echo "$TXT_MSG_NO_LR"
+    echo "$TXT_MSG_MANUAL"
+    echo "Path: $PLUGIN_SOURCE"
 else
     echo ""
-    echo "检测到 ${#LR_OPTIONS[@]} 个可用安装位置"
+    echo "Found ${#LR_OPTIONS[@]} install locations"
     
     # 构建 osascript 选项列表
     OPTIONS_STR=""
@@ -230,13 +268,17 @@ else
     done
     
     # 使用 osascript 弹出多选对话框
-    echo "正在显示安装选择对话框..."
+    # Using osascript to show dialog
+    echo "Showing selection dialog..."
+    
+    # Passing variables to osascript is tricky with heredoc variables inside heredoc
+    # We construct the Applescript string with our bash variables
     
     SELECTED=$(osascript -e "
         set theChoices to {$OPTIONS_STR}
-        set selectedItems to choose from list theChoices with title \"慧眼选鸟 - Lightroom 插件安装\" with prompt \"请选择要安装插件的 Lightroom 版本：
+        set selectedItems to choose from list theChoices with title \"$TXT_TITLE\" with prompt \"$TXT_PROMPT
         
-(可按住 Command 键多选)\" default items {item 1 of theChoices} with multiple selections allowed
+$TXT_NOTE\" default items {item 1 of theChoices} with multiple selections allowed
         if selectedItems is false then
             return \"CANCELLED\"
         else
@@ -246,10 +288,10 @@ else
     " 2>/dev/null)
     
     if [ "$SELECTED" = "CANCELLED" ] || [ -z "$SELECTED" ]; then
-        echo "用户取消了插件安装"
-        echo "您可以稍后从应用包内手动复制插件"
+        echo "$TXT_MSG_CANCEL"
+        echo "$TXT_MSG_MANUAL_HINT"
     else
-        echo "用户选择: $SELECTED"
+        echo "User selection: $SELECTED"
         echo ""
         
         INSTALLED_COUNT=0
@@ -263,7 +305,7 @@ else
                     TARGET_PATH="${LR_PATHS[$i]}"
                     TARGET_NAME="${LR_NAMES[$i]}"
                     
-                    echo "正在安装到: $TARGET_NAME..."
+                    echo "Installing to: $TARGET_NAME..."
                     
                     # 创建目录（如果不存在）
                     mkdir -p "$TARGET_PATH"
@@ -279,10 +321,10 @@ else
                         if [[ "$TARGET_PATH" == "$REAL_HOME"* ]]; then
                             chown -R "$REAL_USER" "$TARGET_PATH/SuperBirdIDPlugin.lrplugin"
                         fi
-                        echo "  ✓ 已安装到: $TARGET_NAME"
+                        echo "  ✓ Installed to: $TARGET_NAME"
                         INSTALLED_COUNT=$((INSTALLED_COUNT + 1))
                     else
-                        echo "  ✗ 安装失败: $TARGET_NAME"
+                        echo "  ✗ Failed to install: $TARGET_NAME"
                     fi
                     break
                 fi
@@ -291,14 +333,14 @@ else
         
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "✓ Lightroom 插件安装完成 (共 $INSTALLED_COUNT 个位置)"
+        echo "$TXT_MSG_SUCCESS ($INSTALLED_COUNT locations)"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     fi
 fi
 
-# 6. 安装 Lightroom 导出预设
+# 6. 安装 Lightroom 导出预设 / Install Export Presets
 echo ""
-echo "正在安装 Lightroom 导出预设..."
+echo "Installing Lightroom Export Presets..."
 PRESET_SOURCE="$APP_PATH/Contents/Resources/SuperBirdIDPlugin.lrplugin/SuperPicky.lrtemplate"
 PRESET_DIR="$REAL_HOME/Library/Application Support/Adobe/Lightroom/Export Presets/User Presets"
 
@@ -306,35 +348,38 @@ if [ -f "$PRESET_SOURCE" ]; then
     mkdir -p "$PRESET_DIR"
     cp "$PRESET_SOURCE" "$PRESET_DIR/"
     chown "$REAL_USER" "$PRESET_DIR/SuperPicky.lrtemplate"
-    echo "✓ 导出预设已安装到: $PRESET_DIR"
+    echo "✓ Export preset installed to: $PRESET_DIR"
 else
-    echo "⚠ 未找到导出预设文件，跳过"
+    echo "⚠ Export preset file not found, skipping"
 fi
 
-# 7. 清除隔离标记
+# 7. 清除隔离标记 / Clear quarantine
 xattr -cr "$APP_PATH" 2>/dev/null || true
-echo "✓ 隔离标记已清除"
+echo "✓ Quarantine cleared"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✅ 慧眼选鸟 SuperPicky V4.0.3 安装完成！"
+echo "✅ SuperPicky V4.0.3 Installation Completed!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "📍 应用位置: /Applications/SuperPicky.app"
+echo "📍 Location: /Applications/SuperPicky.app"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "⚠️  Lightroom 插件首次使用说明："
-echo ""
-echo "   1. 打开 Lightroom → 文件 → 增效工具管理器"
-echo "   2. 在左侧列表找到 SuperPicky BirdID Plugin"
-echo "   3. 点击右侧「启用」按钮"
+if [ "$IS_CHINESE" -eq 1 ]; then
+    echo "⚠️  Lightroom 插件首次使用说明："
+    echo ""
+    echo "   1. 打开 Lightroom → 文件 → 增效工具管理器"
+    echo "   2. 在左侧列表找到 SuperPicky BirdID Plugin"
+    echo "   3. 点击右侧「启用」按钮"
+else
+    echo "⚠️  Lightroom Plugin First-time Setup:"
+    echo ""
+    echo "   1. Open Lightroom → File → Plug-in Manager"
+    echo "   2. Find 'SuperPicky BirdID Plugin' in the list"
+    echo "   3. Click the 'Enable' button on the right"
+fi
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "⚠️  Lightroom Plugin First-time Setup:"
-echo ""
-echo "   1. Open Lightroom → File → Plug-in Manager"
-echo "   2. Find 'SuperPicky BirdID Plugin' in the list"
-echo "   3. Click the 'Enable' button on the right"
 echo ""
 
 exit 0
