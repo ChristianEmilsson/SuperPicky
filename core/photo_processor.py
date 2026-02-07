@@ -160,6 +160,7 @@ class PhotoProcessor:
         self.star_3_photos = []
         self.temp_converted_jpegs = set()  # V4.0: Track temp-converted JPEGs to avoid deleting user originals
         self.file_bird_species = {}  # V4.0: Track bird species per file: {'cn_name': '...', 'en_name': '...'}
+        self.burst_map = {}  # V4.0.4: Track burst group IDs: {filepath: group_id}, 0 = not a burst
     
     def _log(self, msg: str, level: str = "info"):
         """内部日志方法"""
@@ -249,6 +250,10 @@ class PhotoProcessor:
         # 阶段1: 文件扫描
         raw_dict, jpg_dict, files_tbr = self._scan_files()
         
+        # 阶段1.5: V4.0.4 早期连拍检测（只基于时间戳）
+        if self.settings.detect_burst:
+            self.burst_map = self._detect_bursts_early(raw_dict)
+        
         # 阶段2: RAW转换
         raw_files_to_convert = self._identify_raws_to_convert(raw_dict, jpg_dict, files_tbr)
         if raw_files_to_convert:
@@ -264,7 +269,13 @@ class PhotoProcessor:
         if organize_files:
             self._move_files_to_rating_folders(raw_dict)
         
-        # 阶段6: 清理临时文件
+        # 阶段6: V4.0.4 跨目录连拍合并（在文件整理完成后）
+        if self.settings.detect_burst and self.burst_map and organize_files:
+            burst_stats = self._consolidate_burst_groups(raw_dict)
+            self.stats['burst_groups'] = burst_stats.get('groups', 0)
+            self.stats['burst_moved'] = burst_stats.get('moved', 0)
+        
+        # 阶段7: 清理临时文件
         if cleanup_temp:
             self._cleanup_temp_files(files_tbr, raw_dict)
         
@@ -309,6 +320,202 @@ class PhotoProcessor:
         self._log(self.i18n.t("logs.scan_time", time=scan_time))
         
         return raw_dict, jpg_dict, files_tbr
+    
+    def _detect_bursts_early(self, raw_dict: Dict[str, str]) -> Dict[str, int]:
+        """
+        V4.0.4: 早期连拍检测（在评分之前）
+        只基于时间戳检测连拍组，与有没有鸟、是什么鸟无关
+        
+        Args:
+            raw_dict: RAW 文件字典 {prefix: extension}
+            
+        Returns:
+            burst_map: {filepath: group_id}，0 表示不属于连拍组
+        """
+        if not self.settings.detect_burst:
+            return {}
+        
+        from core.burst_detector import BurstDetector
+        
+        # 收集所有 RAW 文件路径
+        raw_filepaths = []
+        for prefix, ext in raw_dict.items():
+            filepath = os.path.join(self.dir_path, prefix + ext)
+            if os.path.exists(filepath):
+                raw_filepaths.append(filepath)
+        
+        if len(raw_filepaths) < 4:  # 少于 4 张不检测
+            return {}
+        
+        self._log(self.i18n.t("logs.burst_early_detecting", count=len(raw_filepaths)))
+        
+        detector = BurstDetector(use_phash=False)  # 早期检测不用 pHash，后期再验证
+        
+        # 读取时间戳
+        photos = detector.read_timestamps(raw_filepaths)
+        
+        # 纯时间戳检测（不过滤星级）
+        groups = detector.detect_groups_by_time_only(photos)
+        
+        # 构建映射
+        burst_map = {}
+        for group in groups:
+            for photo in group.photos:
+                burst_map[photo.filepath] = group.group_id
+        
+        if groups:
+            total_burst_photos = sum(len(g.photos) for g in groups)
+            self._log(self.i18n.t("logs.burst_early_detected", groups=len(groups), photos=total_burst_photos))
+        
+        return burst_map
+    
+    def _consolidate_burst_groups(self, raw_dict: Dict[str, str]) -> Dict[str, int]:
+        """
+        V4.0.4: 后期连拍合并（跨目录）
+        在文件整理完成后，将同一连拍组的照片移到最高星级目录的 burst 子目录
+        
+        Args:
+            raw_dict: RAW 文件字典 {prefix: extension}
+            
+        Returns:
+            stats: {'groups': n, 'moved': n}
+        """
+        import shutil
+        from collections import defaultdict
+        from core.burst_detector import BurstDetector
+        from tools.exiftool_manager import get_exiftool_manager
+        from constants import get_rating_folder_name
+        
+        stats = {'groups': 0, 'moved': 0}
+        
+        if not self.burst_map:
+            return stats
+        
+        # 按 group_id 分组收集文件
+        groups = defaultdict(list)
+        for filepath, group_id in self.burst_map.items():
+            if group_id > 0:
+                groups[group_id].append(filepath)
+        
+        if not groups:
+            return stats
+        
+        self._log(self.i18n.t("logs.burst_consolidating", groups=len(groups)))
+        
+        detector = BurstDetector(use_phash=True)  # 后期验证用 pHash
+        exiftool_mgr = get_exiftool_manager()
+        
+        for group_id, original_filepaths in groups.items():
+            # 找到每个文件当前的实际位置和星级
+            current_files = []
+            for orig_path in original_filepaths:
+                prefix = os.path.splitext(os.path.basename(orig_path))[0]
+                ext = raw_dict.get(prefix, os.path.splitext(orig_path)[1])
+                rating = self.file_ratings.get(prefix, 0)
+                
+                # 确定当前位置（可能在评分目录或鸟种子目录）
+                rating_folder = get_rating_folder_name(rating)
+                possible_paths = [
+                    os.path.join(self.dir_path, rating_folder, prefix + ext),  # 评分目录根
+                    orig_path,  # 原始位置
+                ]
+                
+                # 检查鸟种子目录
+                rating_dir = os.path.join(self.dir_path, rating_folder)
+                if os.path.isdir(rating_dir):
+                    for subdir in os.listdir(rating_dir):
+                        subdir_path = os.path.join(rating_dir, subdir)
+                        if os.path.isdir(subdir_path) and not subdir.startswith('burst_'):
+                            possible_paths.append(os.path.join(subdir_path, prefix + ext))
+                
+                current_path = None
+                for p in possible_paths:
+                    if os.path.exists(p):
+                        current_path = p
+                        break
+                
+                if current_path:
+                    current_files.append({
+                        'path': current_path,
+                        'prefix': prefix,
+                        'rating': rating,
+                        'sharpness': 0.0,
+                        'topiq': 0.0
+                    })
+            
+            if len(current_files) < 4:  # 少于 4 张跳过
+                continue
+            
+            # 找最高星级
+            highest_rating = max(f['rating'] for f in current_files)
+            
+            # V4.0.4: 优化逻辑 - 如果连拍组中所有照片都在 0-1 星，则不合并（不创建 burst 目录）
+            if highest_rating < 2:
+                continue
+                
+            highest_rating_dir = os.path.join(self.dir_path, get_rating_folder_name(highest_rating))
+            
+            # 读取评分数据选择最佳
+            for f in current_files:
+                csv_data = self._get_photo_scores_from_csv(f['prefix'])
+                if csv_data:
+                    f['sharpness'] = csv_data.get('sharpness', 0)
+                    f['topiq'] = csv_data.get('topiq', 0)
+            
+            # 按综合分数选最佳
+            best_file = max(current_files, key=lambda x: x['sharpness'] * 0.5 + x['topiq'] * 0.5)
+            
+            # 创建 burst 目录
+            burst_dir = os.path.join(highest_rating_dir, f"burst_{group_id:03d}")
+            os.makedirs(burst_dir, exist_ok=True)
+            
+            # V4.0.4: 移动所有连拍照片到 burst 目录（包括最佳照片）
+            for f in current_files:
+                try:
+                    filename = os.path.basename(f['path'])
+                    dest = os.path.join(burst_dir, filename)
+                    if os.path.exists(f['path']) and not os.path.exists(dest):
+                        shutil.move(f['path'], dest)
+                        stats['moved'] += 1
+                        
+                        # 移动 sidecar 文件
+                        file_base = os.path.splitext(f['path'])[0]
+                        for sidecar_ext in ['.xmp', '.jpg', '.JPG']:
+                            sidecar = file_base + sidecar_ext
+                            if os.path.exists(sidecar):
+                                try:
+                                    shutil.move(sidecar, os.path.join(burst_dir, os.path.basename(sidecar)))
+                                except:
+                                    pass
+                except Exception as e:
+                    self._log(f"    ⚠️ Move failed: {e}", "warning")
+            
+            stats['groups'] += 1
+        
+        if stats['groups'] > 0:
+            self._log(self.i18n.t("logs.burst_consolidate_complete", groups=stats['groups'], moved=stats['moved']))
+        
+        return stats
+    
+    def _get_photo_scores_from_csv(self, prefix: str) -> Optional[Dict]:
+        """从 report.csv 获取照片的评分数据"""
+        import csv
+        csv_path = os.path.join(self.dir_path, ".superpicky", "report.csv")
+        if not os.path.exists(csv_path):
+            return None
+        
+        try:
+            with open(csv_path, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    filename = row.get('filename', '')
+                    if os.path.splitext(filename)[0] == prefix:
+                        sharpness = float(row.get('head_sharp', 0) or 0)
+                        topiq = float(row.get('nima_score', 0) or 0)
+                        return {'sharpness': sharpness, 'topiq': topiq}
+        except:
+            pass
+        return None
     
     def _identify_raws_to_convert(self, raw_dict, jpg_dict, files_tbr):
         """识别需要转换的RAW文件"""

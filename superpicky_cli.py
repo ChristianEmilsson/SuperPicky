@@ -193,51 +193,10 @@ def cmd_process(args):
         cleanup_temp=args.cleanup
     )
     
-    # V4.0: 连拍检测（处理完成后执行）
-    if args.burst and args.organize:
-        from core.burst_detector import BurstDetector
-        from tools.exiftool_manager import get_exiftool_manager
-        
-        print("\n📷 Executing burst detection...")
-        detector = BurstDetector(use_phash=True)
-        
-        rating_dirs = ['3star_excellent', '2star_good', '3星_优选', '2星_良好']  # Support both languages
-        total_groups = 0
-        total_moved = 0
-        
-        exiftool_mgr = get_exiftool_manager()
-        
-        for rating_dir in rating_dirs:
-            subdir = os.path.join(args.directory, rating_dir)
-            if not os.path.exists(subdir):
-                continue
-            
-            # 获取文件列表
-            extensions = {'.nef', '.rw2', '.arw', '.cr2', '.cr3', '.orf', '.dng'}
-            filepaths = []
-            for entry in os.scandir(subdir):
-                if entry.is_file():
-                    ext = os.path.splitext(entry.name)[1].lower()
-                    if ext in extensions:
-                        filepaths.append(entry.path)
-            
-            if not filepaths:
-                continue
-            
-            photos = detector.read_timestamps(filepaths)
-            csv_path = os.path.join(args.directory, '.superpicky', 'report.csv')
-            photos = detector.enrich_from_csv(photos, csv_path)
-            groups = detector.detect_groups(photos)
-            groups = detector.select_best_in_groups(groups)
-            
-            burst_stats = detector.process_burst_groups(groups, subdir, exiftool_mgr)
-            total_groups += burst_stats['groups_processed']
-            total_moved += burst_stats['photos_moved']
-        
-        if total_groups > 0:
-            print(f"  ✅ 连拍检测完成: {total_groups} 组, 移动 {total_moved} 张照片")
-        else:
-            print("  ℹ️  No burst groups detected")
+    # V4.0.4: 连拍检测已移至 PhotoProcessor 内部
+    # - 早期检测: _detect_bursts_early() 在文件扫描后执行
+    # - 跨目录合并: _consolidate_burst_groups() 在文件整理后执行
+    # 这样可以实现跨星级目录的连拍合并，将所有连拍照片移至最高星级目录
     
     print("\n✅ 处理完成!")
     return 0

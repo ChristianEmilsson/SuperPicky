@@ -275,77 +275,16 @@ class WorkerThread(threading.Thread):
             cleanup_temp=True
         )
 
-        # V4.0: 连拍检测（处理完成后执行）
-        if settings.detect_burst:
-            from core.burst_detector import BurstDetector
-            from tools.exiftool_manager import get_exiftool_manager
+        # V4.0.4: 连拍检测已移至 PhotoProcessor 内部
+        # 直接读取统计信息并显示
+        burst_groups = result.stats.get('burst_groups', 0)
+        burst_moved = result.stats.get('burst_moved', 0)
+        
+        if burst_groups > 0:
+            log_callback(self.i18n.t("logs.burst_complete", groups=burst_groups, moved=burst_moved), "success")
+        elif settings.detect_burst:
+            log_callback(self.i18n.t("logs.burst_none_detected"), "info")
             
-            log_callback(self.i18n.t("logs.burst_detecting"), "info")
-            
-            detector = BurstDetector(use_phash=True)
-            rating_dirs = ['3星_优选', '2星_良好']
-            total_groups = 0
-            total_moved = 0
-            
-            exiftool_mgr = get_exiftool_manager()
-            
-            for rating_dir in rating_dirs:
-                import os
-                rating_subdir = os.path.join(self.dir_path, rating_dir)
-                if not os.path.exists(rating_subdir):
-                    continue
-                
-                extensions = {'.nef', '.rw2', '.arw', '.cr2', '.cr3', '.orf', '.dng'}
-                
-                # V4.0: 收集需要处理的目录列表（包括鸟种子目录）
-                dirs_to_process = []
-                
-                # 检查评分目录是否直接包含文件（旧版结构）
-                has_direct_files = False
-                for entry in os.scandir(rating_subdir):
-                    if entry.is_file():
-                        ext = os.path.splitext(entry.name)[1].lower()
-                        if ext in extensions:
-                            has_direct_files = True
-                            break
-                
-                if has_direct_files:
-                    dirs_to_process.append(rating_subdir)
-                
-                # V4.0: 扫描鸟种子目录
-                for entry in os.scandir(rating_subdir):
-                    if entry.is_dir() and not entry.name.startswith('burst_'):
-                        # 这是一个鸟种目录
-                        dirs_to_process.append(entry.path)
-                
-                # 对每个目录进行连拍检测
-                for target_dir in dirs_to_process:
-                    filepaths = []
-                    for entry in os.scandir(target_dir):
-                        if entry.is_file():
-                            ext = os.path.splitext(entry.name)[1].lower()
-                            if ext in extensions:
-                                filepaths.append(entry.path)
-                    
-                    if not filepaths:
-                        continue
-                    
-                    photos = detector.read_timestamps(filepaths)
-                    csv_path = os.path.join(self.dir_path, '.superpicky', 'report.csv')
-                    photos = detector.enrich_from_csv(photos, csv_path)
-                    groups = detector.detect_groups(photos)
-                    groups = detector.select_best_in_groups(groups)
-                    
-                    # V4.0: 在当前目录（可能是鸟种目录）下创建 burst 子目录
-                    burst_stats = detector.process_burst_groups(groups, target_dir, exiftool_mgr, log_callback=log_callback)
-                    total_groups += burst_stats['groups_processed']
-                    total_moved += burst_stats['photos_moved']
-            
-            if total_groups > 0:
-                log_callback(self.i18n.t("logs.burst_complete", groups=total_groups, moved=total_moved), "success")
-            else:
-                log_callback(self.i18n.t("logs.burst_none_detected"), "info")
-
         self.stats = result.stats
 
 

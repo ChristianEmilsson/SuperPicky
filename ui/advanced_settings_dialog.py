@@ -33,8 +33,8 @@ class AdvancedSettingsDialog(QDialog):
     def _setup_ui(self):
         """设置 UI"""
         self.setWindowTitle(self.i18n.t("advanced_settings.window_title"))
-        self.setMinimumSize(500, 520)
-        self.resize(520, 560)
+        self.setMinimumSize(500, 620)
+        self.resize(520, 680)
         self.setModal(True)
 
         # 应用样式
@@ -165,10 +165,29 @@ class AdvancedSettingsDialog(QDialog):
         )
 
         # 分隔线
-        divider = QFrame()
-        divider.setFixedHeight(1)
-        divider.setStyleSheet(f"background-color: {COLORS['border_subtle']};")
-        layout.addWidget(divider)
+        divider1 = QFrame()
+        divider1.setFixedHeight(1)
+        divider1.setStyleSheet(f"background-color: {COLORS['border_subtle']};")
+        layout.addWidget(divider1)
+
+        # === 连拍设置 V4.0.4 ===
+        self._create_section_title(layout, self.i18n.t("advanced_settings.section_burst"))
+        
+        # 连拍速度
+        self.vars["burst_fps"] = self._create_slider_setting(
+            layout,
+            self.i18n.t("advanced_settings.burst_fps"),
+            self.i18n.t("advanced_settings.burst_fps_hint"),
+            min_val=4, max_val=20, default=10,
+            step=1,
+            format_func=lambda v: f"{v} 张/秒"
+        )
+
+        # 分隔线
+        divider2 = QFrame()
+        divider2.setFixedHeight(1)
+        divider2.setStyleSheet(f"background-color: {COLORS['border_subtle']};")
+        layout.addWidget(divider2)
 
         # === 识鸟设置 ===
         self._create_section_title(layout, self.i18n.t("advanced_settings.section_birdid"))
@@ -281,6 +300,7 @@ class AdvancedSettingsDialog(QDialog):
         self.vars["min_confidence"].setValue(int(self.config.min_confidence * 100))
         self.vars["min_sharpness"].setValue(int(self.config.min_sharpness))
         self.vars["min_nima"].setValue(int(self.config.min_nima * 10))
+        self.vars["burst_fps"].setValue(int(self.config.burst_fps))
         self.vars["birdid_confidence"].setValue(int(self.config.birdid_confidence))
 
     @Slot()
@@ -310,11 +330,13 @@ class AdvancedSettingsDialog(QDialog):
         min_confidence = self.vars["min_confidence"].value() / 100.0
         min_sharpness = self.vars["min_sharpness"].value()
         min_nima = self.vars["min_nima"].value() / 10.0
+        burst_fps = self.vars["burst_fps"].value()
         birdid_confidence = self.vars["birdid_confidence"].value()
 
         self.config.set_min_confidence(min_confidence)
         self.config.set_min_sharpness(min_sharpness)
         self.config.set_min_nima(min_nima)
+        self.config.set_burst_fps(burst_fps)
         self.config.set_birdid_confidence(birdid_confidence)
         self.config.set_save_csv(True)
 

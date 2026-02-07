@@ -28,8 +28,8 @@ class AdvancedConfig:
         # 曝光检测设置 V3.8
         "exposure_threshold": 0.10,  # 曝光阈值 (0.05-0.20) - 过曝/欠曝像素占比超过此值将降级一星
         
-        # 连拍检测设置 V3.9
-        "burst_time_threshold": 250,  # 连拍时间阈值(ms) (150-500) - 相邻照片时间差小于此值视为连拍
+        # 连拍检测设置 V4.0.4
+        "burst_fps": 10,  # 连拍速度 (4-20张/秒) - 拍摄速度快于此值视为连拍
         "burst_min_count": 4,         # 连拍最少张数 (3-10) - 至少此数量连续照片才算连拍组
         
         # 鸟种识别设置 V4.2
@@ -123,8 +123,15 @@ class AdvancedConfig:
         return self.config.get("exposure_threshold", 0.10)
     
     @property
+    def burst_fps(self):
+        """连拍速度 (4-20张/秒)"""
+        return self.config.get("burst_fps", 10)
+    
+    @property
     def burst_time_threshold(self):
-        return self.config.get("burst_time_threshold", 250)
+        """连拍时间阈值 (ms) - 从 FPS 计算"""
+        fps = self.burst_fps
+        return int(1000 / fps)  # 10 FPS = 100ms
     
     @property
     def burst_min_count(self):
@@ -169,9 +176,9 @@ class AdvancedConfig:
         """设置曝光阈值 (0.05-0.20)"""
         self.config["exposure_threshold"] = max(0.05, min(0.20, float(value)))
     
-    def set_burst_time_threshold(self, value):
-        """设置连拍时间阈值 (150-500ms)"""
-        self.config["burst_time_threshold"] = max(150, min(500, int(value)))
+    def set_burst_fps(self, value):
+        """设置连拍速度 (4-20张/秒)"""
+        self.config["burst_fps"] = max(4, min(20, int(value)))
     
     def set_burst_min_count(self, value):
         """设置连拍最少张数 (3-10)"""

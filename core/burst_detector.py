@@ -272,7 +272,7 @@ class BurstDetector:
     
     def detect_groups(self, photos: List[PhotoTimestamp]) -> List[BurstGroup]:
         """
-        检测连拍组
+        检测连拍组（保留星级过滤，兼容旧逻辑）
         
         Args:
             photos: PhotoTimestamp 列表
@@ -282,14 +282,40 @@ class BurstDetector:
         """
         # 1. 只处理 >= 2 星的照片
         candidates = [p for p in photos if p.rating >= self.MIN_RATING and p.precise_time is not None]
+        return self._detect_groups_internal(candidates)
+    
+    def detect_groups_by_time_only(self, photos: List[PhotoTimestamp]) -> List[BurstGroup]:
+        """
+        V4.0.4: 纯时间戳连拍检测（不过滤星级）
+        用于早期扫描阶段，在评分之前检测连拍组
         
+        Args:
+            photos: PhotoTimestamp 列表
+            
+        Returns:
+            BurstGroup 列表
+        """
+        # 只过滤有效时间戳，不看星级
+        candidates = [p for p in photos if p.precise_time is not None]
+        return self._detect_groups_internal(candidates)
+    
+    def _detect_groups_internal(self, candidates: List[PhotoTimestamp]) -> List[BurstGroup]:
+        """
+        内部分组检测逻辑
+        
+        Args:
+            candidates: 已过滤的候选照片列表
+            
+        Returns:
+            BurstGroup 列表
+        """
         if len(candidates) < self.MIN_BURST_COUNT:
             return []
         
-        # 2. 按精确时间排序
+        # 按精确时间排序
         candidates.sort(key=lambda p: p.precise_time)
         
-        # 3. 分组检测（基于时间戳）
+        # 分组检测（基于时间戳）
         groups = []
         current_group = [candidates[0]]
         
@@ -323,7 +349,7 @@ class BurstDetector:
             )
             groups.append(group)
         
-        # 4. V4.0: pHash 验证（过滤误判）
+        # V4.0: pHash 验证（过滤误判）
         if self.USE_PHASH and groups:
             groups = self.verify_groups_with_phash(groups)
         
