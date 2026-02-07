@@ -469,9 +469,9 @@ cat > welcome.html << 'WELCOME_EOF'
 
     <h2>What's New in V4.0.4 <span class="new-badge">NEW</span></h2>
     <ul>
-        <li><span class="highlight">⚙️ Skill Level Presets</span> - Beginner/Intermediate/Master modes with adaptive culling thresholds</li>
-        <li><span class="highlight">🦜 Bird Species ID</span> - AI-powered bird identification with metadata embedding</li>
-        <li><span class="highlight">📷 Lightroom Plugin</span> - Identify bird species directly within Lightroom</li>
+        <li><span class="highlight">Skill Level Presets</span> - Beginner/Intermediate/Master modes with adaptive culling thresholds</li>
+        <li><span class="highlight">Bird Species ID</span> - AI-powered bird identification with metadata embedding</li>
+        <li><span class="highlight">Lightroom Plugin</span> - Identify bird species directly within Lightroom</li>
     </ul>
 
     <h3>System Requirements</h3>
@@ -529,7 +529,7 @@ cat > conclusion.html << 'CONCLUSION_EOF'
     </style>
 </head>
 <body>
-    <h1>✓ Installation Complete</h1>
+    <h1>Installation Complete</h1>
 
     <div class="success">
         <strong>SuperPicky V4.0.4</strong> has been successfully installed!
@@ -537,8 +537,8 @@ cat > conclusion.html << 'CONCLUSION_EOF'
 
     <h2>Installed Components</h2>
     <div class="info-box">
-        <p><strong>📍 Main Application:</strong> /Applications/SuperPicky.app</p>
-        <p><strong>📍 Lightroom Plugin:</strong> ~/Library/Application Support/Adobe/Lightroom/Modules/</p>
+        <p><strong>Main Application:</strong> /Applications/SuperPicky.app</p>
+        <p><strong>Lightroom Plugin:</strong> ~/Library/Application Support/Adobe/Lightroom/Modules/</p>
     </div>
 
     <h2>Getting Started</h2>
@@ -556,7 +556,7 @@ cat > conclusion.html << 'CONCLUSION_EOF'
     </div>
 
     <div class="warning">
-        <p><strong>⚠️ First-Time Usage Notes:</strong></p>
+        <p><strong>First-Time Usage Notes:</strong></p>
         <ul>
             <li>First launch may take 10-30 seconds to load AI models</li>
             <li>The main app must be running before using the Lightroom plugin</li>
@@ -565,7 +565,7 @@ cat > conclusion.html << 'CONCLUSION_EOF'
     </div>
 
     <p style="margin-top: 30px; font-size: 0.9em;">
-        Thank you for using SuperPicky! For support, visit <a href="https://github.com/jamesphotography/SuperPicky">GitHub</a>
+        Thank you for using SuperPicky! For support, visit <a href="https://superpicky.jamesphotography.com.au/">GitHub</a>
     </p>
 </body>
 </html>
@@ -642,10 +642,10 @@ cp -R "SuperBirdIDPlugin.lrplugin" "${TEMP_DMG_DIR}/"
 
 # 生成 PDF 安装指南
 log_info "生成 PDF 安装指南..."
-if [ -f "docs/安装指南_v4.0.0.html" ]; then
+if [ -f "docs/安装指南_v4.0.4.html" ]; then
     # 使用 cupsfilter 或 wkhtmltopdf 生成 PDF（如果可用）
     # 备选：直接复制 HTML，用户可用浏览器打印为 PDF
-    cp "docs/安装指南_v4.0.0.html" "${TEMP_DMG_DIR}/Installation Guide 安装指南.html"
+    cp "docs/安装指南_v4.0.4.html" "${TEMP_DMG_DIR}/Installation Guide 安装指南.html"
     log_info "  已复制 HTML 安装指南（可在浏览器中打印为 PDF）"
 fi
 
@@ -657,7 +657,7 @@ cat > "${TEMP_DMG_DIR}/Online Tutorial 在线教程.webloc" << 'WEBLOC_EOF'
 <plist version="1.0">
 <dict>
     <key>URL</key>
-    <string>https://github.com/jamesphotography/SuperPicky</string>
+    <string>https://superpicky.jamesphotography.com.au/</string>
 </dict>
 </plist>
 WEBLOC_EOF
@@ -757,7 +757,7 @@ Or copy the SuperBirdIDPlugin.lrplugin folder to:
 --------------------------------------------------------------------------------
 【问题反馈 / Feedback & Issues】
 --------------------------------------------------------------------------------
-https://github.com/jamesphotography/SuperPicky
+https://superpicky.jamesphotography.com.au/
 
 ================================================================================
 © 2026 James Zhen Yu

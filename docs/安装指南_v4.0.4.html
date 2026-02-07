@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
-    <title>慧眼选鸟 SuperPicky V4.0.0 安装与使用指南</title>
+    <title>慧眼选鸟 SuperPicky V4.0.4 安装与使用指南</title>
     <style>
         @media print { body { -webkit-print-color-adjust: exact; } }
         body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.8; color: #333; }
@@ -29,17 +29,15 @@
 </head>
 <body>
     <h1>🦅 慧眼选鸟 SuperPicky</h1>
-    <p class="version">版本 4.0.0 · 安装与使用指南</p>
+    <p class="version">版本 4.0.4 · 安装与使用指南</p>
 
-    <h2>✨ V4.0.0 新功能</h2>
+    <h2>✨ V4.0.4 新功能</h2>
     <ul>
-        <li><strong>🐦 AI 鸟种识别</strong> - 自动识别全球 11,000+ 鸟种，写入 IPTC 元数据</li>
-        <li><strong>📷 Lightroom 插件</strong> - 无需离开 Lightroom 即可识别鸟种</li>
-        <li><strong>🌍 eBird 集成</strong> - 根据 GPS 位置过滤当地不可能出现的鸟种</li>
-        <li><strong>📁 鸟种分类目录</strong> - 按识别的鸟种自动创建子目录整理照片</li>
-        <li><strong>🖥️ 系统托盘</strong> - 支持后台运行，隐藏 Dock 图标</li>
-        <li><strong>🔄 自动更新</strong> - 启动时自动检查新版本</li>
-        <li><strong>⌨️ CLI 工具</strong> - 完整功能的命令行版本</li>
+        <li><strong>⚙️ 摄影水平预设</strong> - 为初学者/进阶/大师提供不同的选片阈值</li>
+        <li><strong>📸 智能连拍管理</strong> - 自动识别连拍组，并将全组照片归档到单独目录</li>
+        <li><strong>🐦 AI 鸟种识别</strong> - 自动识别全球 11,000+ 鸟种，智能写入元数据</li>
+        <li><strong>📷 Lightroom 插件</strong> - 支持在 Lightroom 中直接识别鸟种</li>
+        <li><strong>📊 ISO 锐度归一化</strong> - 针对高感光度照片优化锐度评分算法</li>
     </ul>
 
     <h2>💻 系统要求</h2>
@@ -54,7 +52,7 @@
 
     <div class="step">
         <p><span class="step-num">1</span><strong>双击安装包</strong></p>
-        <p>双击 <code>SuperPicky_v4.0.0_Installer.pkg</code> 开始安装</p>
+        <p>双击 <code>SuperPicky_v4.0.4_Installer.pkg</code> 开始安装</p>
     </div>
 
     <div class="step">
@@ -66,7 +64,7 @@
         <p><span class="step-num">3</span><strong>安装完成</strong></p>
         <p>安装器会自动完成以下操作：</p>
         <ul>
-            <li>安装主程序到 <code>/Applications/慧眼选鸟.app</code></li>
+            <li>安装主程序到 <code>/Applications/SuperPicky.app</code></li>
             <li>安装 Lightroom 插件到 <code>~/Library/Application Support/Adobe/Lightroom/Modules/</code></li>
         </ul>
     </div>
@@ -79,16 +77,16 @@
 
     <h3>主程序使用</h3>
     <ol>
-        <li>从「启动台」或「应用程序」文件夹打开<span class="highlight">慧眼选鸟</span></li>
+        <li>从「启动台」或「应用程序」文件夹打开<span class="highlight">SuperPicky</span></li>
         <li>拖入包含鸟类照片的文件夹（支持 RAW 和 JPG）</li>
-        <li>调整锐度/美学阈值（可选）</li>
+        <li>选择摄影水平预设（可选）</li>
         <li>点击「开始处理」</li>
         <li>等待 AI 评分完成，照片会自动按星级分类</li>
     </ol>
 
     <h3>Lightroom 插件使用 <span class="new-badge">V4</span></h3>
     <ol>
-        <li>先启动「慧眼选鸟」主程序，确保<span class="highlight">识鸟 API</span>开关已开启</li>
+        <li>先启动「SuperPicky」主程序，确保<span class="highlight">识鸟 API</span>开关已开启</li>
         <li>打开 Lightroom Classic</li>
         <li>选中一张或多张鸟类照片</li>
         <li>菜单：<code>图库 → 增效工具 → 慧眼选鸟 - 识别当前照片</code></li>
@@ -97,10 +95,10 @@
     </ol>
 
     <div class="warning">
-        <strong>⚠️ 重要提示：</strong>使用 Lightroom 插件前，必须先启动「慧眼选鸟」主程序并确保「识鸟 API」已开启！
+        <strong>⚠️ 重要提示：</strong>使用 Lightroom 插件前，必须先启动「SuperPicky」主程序并确保「识鸟 API」已开启！
     </div>
 
-    <h3>命令行工具使用 <span class="new-badge">V4</span></h3>
+    <h3>命令行工具使用 <span class="new-badge">CLI</span></h3>
     <pre><code># 处理照片目录
 python superpicky_cli.py process ~/Photos/Birds
 
@@ -238,7 +236,7 @@ python superpicky_cli.py info ~/Photos/Birds</code></pre>
 
     <h3>Lightroom 插件无法连接</h3>
     <div class="info">
-        确保「慧眼选鸟」主程序正在运行，且「识鸟 API」开关已开启。如果仍无法连接，尝试重启主程序。
+        确保「SuperPicky」主程序正在运行，且「识鸟 API」开关已开启。如果仍无法连接，尝试重启主程序。
     </div>
 
     <h3>Lightroom 中看不到评分和旗标</h3>
@@ -266,8 +264,9 @@ python superpicky_cli.py info ~/Photos/Birds</code></pre>
     <p><strong>JPEG 格式：</strong>JPG, JPEG</p>
 
     <footer>
-        <p>慧眼选鸟 SuperPicky V4.0.0</p>
-        <p>© 2024-2026 James Zhen Yu · <a href="https://github.com/jamesphotography/SuperPicky">GitHub</a> · <a href="https://jamesphotography.com.au">jamesphotography.com.au</a></p>
+        <p>慧眼选鸟 SuperPicky V4.0.4</p>
+        <p>© 2024-2026 James Zhen Yu · <a href="https://github.com/jamesphotography/SuperPicky">GitHub</a> · <a href="https://superpicky.jamesphotography.com.au/">官网</a></p>
     </footer>
 </body>
 </html>
+
