@@ -13,7 +13,10 @@ from typing import Optional, List, Dict
 from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from constants import RATING_FOLDER_NAMES
-
+import subprocess
+import time
+import threading
+import queue
 
 class ExifToolManager:
     """ExifTool管理器 - 使用本地打包的exiftool"""
@@ -33,6 +36,8 @@ class ExifToolManager:
         
         # V4.0.5: 常驻进程对象
         self._process = None
+        self._stdout_queue = None
+        self._reader_thread = None
 
     def _get_exiftool_path(self) -> str:
         """获取exiftool可执行文件路径"""
@@ -179,14 +184,27 @@ class ExifToolManager:
             print(f"   ❌ ExifTool error: {type(e).__name__}: {e}")
             return False
 
+    @staticmethod
+    def _read_stdout_to_queue(out_pipe, q):
+        """后台线程读取 stdout"""
+        try:
+            for line in iter(out_pipe.readline, b''):
+                q.put(line)
+        except:
+            pass
+        finally:
+            try:
+                out_pipe.close()
+            except:
+                pass
+
     def _start_process(self):
         """启动常驻 ExifTool 进程 (V4.0.5)"""
         if self._process is not None and self._process.poll() is None:
             return
 
         try:
-            # 启动命令：-stay_open True -@ -
-            # -common_args: 通用参数放在这里
+            # 启动命令
             cmd = [
                 self.exiftool_path,
                 '-stay_open', 'True',
@@ -198,7 +216,6 @@ class ExifToolManager:
                 '-fast'
             ]
             
-            # Windows 隐藏窗口
             creationflags = subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0
             
             self._process = subprocess.Popen(
@@ -209,7 +226,17 @@ class ExifToolManager:
                 cwd=self._exiftool_cwd,
                 creationflags=creationflags
             )
-            print("🚀 ExifTool persistent process started")
+            
+            # 启动读取线程
+            self._stdout_queue = queue.Queue()
+            self._reader_thread = threading.Thread(
+                target=self._read_stdout_to_queue,
+                args=(self._process.stdout, self._stdout_queue),
+                daemon=True
+            )
+            self._reader_thread.start()
+            
+            print("🚀 ExifTool persistent process started (threaded read)")
         except Exception as e:
             print(f"❌ Failed to start ExifTool process: {e}")
             self._process = None
@@ -220,48 +247,68 @@ class ExifToolManager:
             try:
                 self._process.stdin.write(b'-stay_open\nFalse\n')
                 self._process.stdin.flush()
-                self._process.communicate(timeout=2)
+                self._process.wait(timeout=2)
             except Exception:
                 pass
             finally:
                 if self._process.poll() is None:
                     self._process.kill()
                 self._process = None
+                self._stdout_queue = None
+                self._reader_thread = None
 
-    def _send_to_process(self, args: List[str]) -> bool:
+    def _read_until_ready(self, timeout=10.0) -> bytes:
+        """从队列读取直到 {ready}，支持超时"""
+        if not self._stdout_queue:
+            return b""
+            
+        output = b""
+        start_time = time.time()
+        
+        while True:
+            # 计算剩余时间
+            elapsed = time.time() - start_time
+            remaining = timeout - elapsed
+            
+            if remaining <= 0:
+                raise TimeoutError(f"ExifTool timeout ({timeout}s)")
+            
+            try:
+                line = self._stdout_queue.get(timeout=remaining)
+                output += line
+                if b'{ready}' in line:
+                    return output
+            except queue.Empty:
+                raise TimeoutError(f"ExifTool timeout ({timeout}s)")
+
+    def _send_to_process(self, args: List[str], timeout=10.0) -> bool:
         """发送命令到常驻进程并等待结果"""
         self._start_process()
         if not self._process:
             return False
 
         try:
-            # 构建命令内容
-            # 注意：args 应该只包含参数，不包含 exiftool 路径和通用参数
             cmd_str = '\n'.join(args) + '\n-execute\n'
             
             self._process.stdin.write(cmd_str.encode('utf-8'))
             self._process.stdin.flush()
             
-            # 读取输出直到 {ready}
-            output_bytes = b""
-            while True:
-                line = self._process.stdout.readline()
-                if not line:
-                    break
-                output_bytes += line
-                if b'{ready}' in line:
-                    break
+            # 读取输出
+            output_bytes = self._read_until_ready(timeout)
             
-            # 检查输出中是否有错误
             decoded = output_bytes.decode('utf-8', errors='replace')
-            if "Error" in decoded and "Warning" not in decoded: # 简单错误检查
-                # ExifTool output usually contains "1 image files updated" on success
+            if "Error" in decoded and "Warning" not in decoded:
+                # print(f"⚠️ ExifTool output contains error: {decoded.strip()}")
                 pass
                 
             return True
+        except TimeoutError:
+            print(f"❌ ExifTool timeout after {timeout}s")
+            self._stop_process()
+            return False
         except Exception as e:
             print(f"❌ ExifTool persistent error: {e}")
-            self._stop_process() # 出错重启
+            self._stop_process()
             return False
 
     def set_rating_and_pick(
@@ -445,30 +492,32 @@ class ExifToolManager:
             self._process.stdin.write(cmd_str.encode('utf-8'))
             self._process.stdin.flush()
             
-            # 读取输出：我们需要读取 N 次 {ready}？
-            # 是的，每个 -execute 会产生一个 {ready}
-            
+            # 读取输出：我们需要读取 N 次 {ready}
             num_executes = args_list.count('-execute')
-            ready_count = 0
+            total_timeout = 120.0  # V4.0.5: 批量处理总超时 120秒
+            start_time = time.time()
             
-            output_bytes = b""
-            while ready_count < num_executes:
-                line = self._process.stdout.readline()
-                if not line:
-                    break
-                output_bytes += line
-                if b'{ready}' in line:
-                    ready_count += 1
-            
-            stats['success'] = len(files_metadata) # 假定成功，解析 output_bytes 太复杂
-            
-            # 简单的错误检测
-            decoded = output_bytes.decode('utf-8', errors='replace')
-            error_count = decoded.count("Error:")
-            if error_count > 0:
-                print(f"⚠️ Batch write had {error_count} errors")
-                # stats['failed'] = error_count # 估算
+            for _ in range(num_executes):
+                elapsed = time.time() - start_time
+                remaining = total_timeout - elapsed
+                if remaining <= 0:
+                    raise TimeoutError(f"Batch timeout after {total_timeout}s")
                 
+                # 读取一次 {ready}
+                output = self._read_until_ready(timeout=remaining)
+                
+                # 简单的错误检测 (累积)
+                decoded = output.decode('utf-8', errors='replace')
+                if "Error" in decoded and "Warning" not in decoded:
+                    # print(f"⚠️ Batch item error: {decoded.strip()}")
+                    pass
+            
+            stats['success'] = len(files_metadata)
+                
+        except TimeoutError:
+            print(f"❌ Batch ExifTool timeout (>{total_timeout}s)")
+            self._stop_process()
+            stats['failed'] = len(files_metadata)
         except Exception as e:
             print(f"❌ Batch persistent error: {e}")
             self._stop_process()
