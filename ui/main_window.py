@@ -1204,7 +1204,8 @@ class SuperPickyMainWindow(QMainWindow):
                 no_text=self.i18n.t("labels.no")
             )
             if reply == StyledMessageBox.Yes:
-                QTimer.singleShot(100, self._reset_directory)
+                # V4.0.4: 快速复原（不重置EXIF，因为马上要重新处理）
+                QTimer.singleShot(100, self._quick_restore_directory)
 
     def _check_report_csv(self):
         """检查是否有 report.csv"""
@@ -1395,8 +1396,25 @@ class SuperPickyMainWindow(QMainWindow):
         self.reset_btn.setEnabled(True)
 
     @Slot()
+    def _quick_restore_directory(self):
+        """V4.0.4: 快速复原目录（只移动文件，不重置EXIF）
+        
+        用于重新处理时的确认弹窗，因为EXIF会被新的处理结果覆盖
+        """
+        self._do_reset_directory(skip_exif_reset=True, skip_confirm=True)
+    
+    @Slot()
     def _reset_directory(self):
-        """重置目录"""
+        """完整重置目录（移动文件 + 重置EXIF）"""
+        self._do_reset_directory(skip_exif_reset=False, skip_confirm=False)
+    
+    def _do_reset_directory(self, skip_exif_reset=False, skip_confirm=False):
+        """执行目录重置
+        
+        Args:
+            skip_exif_reset: 是否跳过EXIF重置（快速复原模式）
+            skip_confirm: 是否跳过确认弹窗
+        """
         if not self.directory_path:
             StyledMessageBox.warning(
                 self,
@@ -1405,29 +1423,36 @@ class SuperPickyMainWindow(QMainWindow):
             )
             return
 
-        reply = StyledMessageBox.question(
-            self,
-            self.i18n.t("messages.reset_confirm_title"),
-            self.i18n.t("messages.reset_confirm"),
-            yes_text=self.i18n.t("labels.yes"),
-            no_text=self.i18n.t("labels.no")
-        )
+        if not skip_confirm:
+            reply = StyledMessageBox.question(
+                self,
+                self.i18n.t("messages.reset_confirm_title"),
+                self.i18n.t("messages.reset_confirm"),
+                yes_text=self.i18n.t("labels.yes"),
+                no_text=self.i18n.t("labels.no")
+            )
 
-        if reply != StyledMessageBox.Yes:
-            return
+            if reply != StyledMessageBox.Yes:
+                return
 
         self.log_text.clear()
         self.reset_btn.setEnabled(False)
         self.start_btn.setEnabled(False)
 
-        self._update_status(self.i18n.t("labels.resetting"), COLORS['warning'])
-        self._log(self.i18n.t("logs.reset_start"))
+        # V4.0.4: 根据模式显示不同状态
+        if skip_exif_reset:
+            self._update_status(self.i18n.t("labels.quick_restoring"), COLORS['warning'])
+            self._log(self.i18n.t("logs.quick_restore_start"))
+        else:
+            self._update_status(self.i18n.t("labels.resetting"), COLORS['warning'])
+            self._log(self.i18n.t("logs.reset_start"))
 
         directory_path = self.directory_path
         i18n = self.i18n
         log_signal = self.reset_log_signal
         complete_signal = self.reset_complete_signal
         error_signal = self.reset_error_signal
+        _skip_exif_reset = skip_exif_reset  # 传递给线程
 
         def run_reset():
             restore_stats = {'restored': 0, 'failed': 0}
@@ -1496,8 +1521,13 @@ class SuperPickyMainWindow(QMainWindow):
                 else:
                     emit_log(i18n.t("logs.no_files_to_restore"))
 
-                emit_log("\n" + i18n.t("logs.reset_step2"))
-                success = reset(directory_path, log_callback=emit_log, i18n=i18n)
+                # V4.0.4: 根据模式决定是否重置EXIF
+                if _skip_exif_reset:
+                    emit_log("\n" + i18n.t("logs.skip_exif_reset"))
+                    success = True
+                else:
+                    emit_log("\n" + i18n.t("logs.reset_step2"))
+                    success = reset(directory_path, log_callback=emit_log, i18n=i18n)
                 
                 # V3.9: 删除空的评分目录
                 emit_log(i18n.t("logs.reset_step3"))

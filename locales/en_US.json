@@ -75,6 +75,7 @@
     "no": "No",
     "error": "Error",
     "resetting": "Resetting",
+    "quick_restoring": "Quick Restoring",
     "exposure_detection": "Exposure Check",
     "burst": "Burst"
   },
@@ -124,6 +125,8 @@
   },
   "logs": {
     "reset_start": "🔄 Starting directory reset",
+    "quick_restore_start": "⚡ Quick restore started (preserving EXIF data)",
+    "skip_exif_reset": "⏭️  Skipping EXIF reset (will update during reprocessing)",
     "reset_step0": "Step 0: Cleaning burst subdirectories...",
     "reset_step1": "Step 1: Restoring files to main directory...",
     "manifest_restoring": "\n📂 Restoring {count} files from manifest...",
