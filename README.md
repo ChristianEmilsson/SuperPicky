@@ -1,6 +1,6 @@
 # SuperPicky - 慧眼选鸟 🦅
 
-[![Version](https://img.shields.io/badge/version-4.0.3-blue.svg)](https://github.com/jamesphotography/SuperPicky)
+[![Version](https://img.shields.io/badge/version-4.0.4-blue.svg)](https://github.com/jamesphotography/SuperPicky)
 [![Platform](https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg)](https://github.com/jamesphotography/SuperPicky/releases)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -57,7 +57,7 @@
 
 ### macOS
 **Apple Silicon (M1/M2/M3/M4)**
-- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.3/SuperPicky_v4.0.3.dmg) | [Google Drive](https://drive.google.com/file/d/1yUP6UdvD2-BEQzDBae98Fy7bgZmv0Pez/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1ZxaRTkjlN1GwOZKzAgHJFQ?pwd=pytn) 提取码: pytn
+- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.4/SuperPicky_v4.0.4.dmg) | [Google Drive](待更新) | [百度网盘](待更新)
 
 **Intel (2020年前 Mac)**
 - [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v3.9.4/SuperPicky_v3.9.4_x64.dmg) | [Google Drive](https://drive.google.com/file/d/1ljvJU5f8wV9DNtQ3HxoXqlv-UyQc7vta/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/15D6S8CtzoKWpJVhDBhVfzQ?pwd=rpij) 提取码: rpij
@@ -96,6 +96,11 @@ python main.py
 ---
 
 ## 📝 更新日志
+
+### v4.0.4 (2026-02-09)
+- 🔧 **连拍优化**: 启用识鸟但无结果时，放入"其他鸟类"子目录
+- 🔧 **版本管理**: 版本号统一从 constants.py 获取
+- 🔧 **UI 改进**: 确认对话框显示当前选择的国家/区域
 
 ### v4.0.3 (2026-01-30)
 - ⚙️ **新增摄影水平预设**: 新手/初级/大师三种模式，一键设定最佳筛选阈值
