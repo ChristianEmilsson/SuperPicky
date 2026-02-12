@@ -21,6 +21,7 @@ import subprocess
 import shutil
 import threading
 import queue
+from collections import deque
 import numpy as np
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -863,7 +864,7 @@ class PhotoProcessor:
         
         # BirdID 异步队列：将识别耗时与主处理流程重叠
         birdid_executor = ThreadPoolExecutor(max_workers=1) if self.settings.auto_identify else None
-        birdid_tasks = []
+        birdid_tasks = deque()
         identify_bird_fn = None
         if self.settings.auto_identify:
             try:
@@ -872,11 +873,17 @@ class PhotoProcessor:
                 identify_bird_fn = None
                 self._log(f"  ⚠️ BirdID import failed: {e}", "warning")
         
-        def submit_birdid_task(file_prefix: str, image_path: str, title_targets: List[str]):
+        def submit_birdid_task(
+            file_prefix: str,
+            image_path: str,
+            title_targets: List[str],
+            source_filename: Optional[str] = None
+        ):
             if birdid_executor is None or identify_bird_fn is None:
                 return
             if not title_targets:
                 return
+            source_display = source_filename or file_prefix or os.path.basename(image_path)
             try:
                 submit_start = time.time()
                 future = birdid_executor.submit(
@@ -890,13 +897,19 @@ class PhotoProcessor:
                     1       # top_k
                 )
                 self._perf_add_stage('birdid_submit', (time.time() - submit_start) * 1000)
-                birdid_tasks.append((future, file_prefix, list(title_targets)))
-            except Exception:
-                pass
+                birdid_tasks.append((future, file_prefix, list(title_targets), source_display))
+            except Exception as e:
+                self._log(f"  ⚠️ Bird ID failed [{source_display}]: {e}", "warning")
         
-        def apply_birdid_result(file_prefix: str, title_targets: List[str], birdid_result: Dict):
+        def apply_birdid_result(
+            file_prefix: str,
+            title_targets: List[str],
+            birdid_result: Dict,
+            source_filename: Optional[str] = None
+        ):
             if not birdid_result or not birdid_result.get('success') or not birdid_result.get('results'):
                 return
+            source_display = source_filename or file_prefix or "?"
             top_result = birdid_result['results'][0]
             birdid_confidence = top_result.get('confidence', 0)
             cn_name = top_result.get('cn_name', '')
@@ -910,7 +923,7 @@ class PhotoProcessor:
                     bird_log = cn_name or en_name
                     bird_title = cn_name or en_name
                 
-                self._log(f"  🐦 Bird ID: {bird_log} ({birdid_confidence:.0f}%)")
+                self._log(f"  🐦 Bird ID [{source_display}]: {bird_log} ({birdid_confidence:.0f}%)")
                 
                 species_entry = {'cn_name': cn_name, 'en_name': en_name}
                 if not any(s.get('cn_name') == cn_name for s in self.stats['bird_species']):
@@ -929,9 +942,32 @@ class PhotoProcessor:
                         })
             else:
                 self._log(
-                    f"  🐦 Low confidence: {top_result.get('cn_name', '?')} "
+                    f"  🐦 Low confidence [{source_display}]: {top_result.get('cn_name', '?')} "
                     f"({birdid_confidence:.0f}% < {self.settings.birdid_confidence_threshold}%)"
                 )
+
+        def collect_birdid_tasks(wait: bool = False):
+            """Collect completed BirdID tasks.
+            Non-blocking mode drains only finished tasks to keep logs near per-photo processing.
+            """
+            while birdid_tasks:
+                future, file_prefix, title_targets, source_filename = birdid_tasks[0]
+                if not wait and not future.done():
+                    break
+
+                birdid_tasks.popleft()
+                try:
+                    if wait:
+                        birdid_wait_start = time.time()
+                        birdid_result = future.result()
+                        self._perf_add_stage('birdid_wait', (time.time() - birdid_wait_start) * 1000)
+                    else:
+                        birdid_result = future.result()
+                    birdid_apply_start = time.time()
+                    apply_birdid_result(file_prefix, title_targets, birdid_result, source_filename)
+                    self._perf_add_stage('birdid_apply', (time.time() - birdid_apply_start) * 1000)
+                except Exception as e:
+                    self._log(f"  ⚠️ Bird ID failed [{source_filename or file_prefix}]: {e}", "warning")
         
         # 轻量 Job 调度：在 MPS 上默认关闭 YOLO 预取，避免与 TOPIQ 并发争用
         # 如需强制开启/关闭，可通过 SUPERPICKY_YOLO_PREFETCH 覆盖。
@@ -1099,6 +1135,9 @@ class PhotoProcessor:
             
             def add_photo_stage(stage: str, ms: float):
                 photo_stage_ms[stage] = photo_stage_ms.get(stage, 0.0) + max(0.0, float(ms))
+
+            # Non-blocking BirdID harvest so logs appear during per-photo processing.
+            collect_birdid_tasks(wait=False)
             
             # 从预取队列获取 YOLO 结果；未启用预取时回退为同步执行
             if yolo_result_queue is not None:
@@ -1729,7 +1768,12 @@ class PhotoProcessor:
                     
                     # BirdID 异步提交（2星及以上）
                     if self.settings.auto_identify and rating_value >= 2:
-                        submit_birdid_task(original_prefix, filepath, birdid_title_targets)
+                        submit_birdid_task(
+                            original_prefix,
+                            filepath,
+                            birdid_title_targets,
+                            os.path.basename(target_file_path)
+                        )
             else:
                 # V3.4: 纯 JPEG 文件（没有对应 RAW）
                 target_file_path = filepath
@@ -1748,7 +1792,12 @@ class PhotoProcessor:
                     })
                     # BirdID 异步提交（2星及以上）
                     if self.settings.auto_identify and rating_value >= 2:
-                        submit_birdid_task(original_prefix, filepath, [target_file_path])
+                        submit_birdid_task(
+                            original_prefix,
+                            filepath,
+                            [target_file_path],
+                            os.path.basename(target_file_path)
+                        )
 
             # V3.4: 以下操作对 RAW 和纯 JPEG 都执行
             if target_file_path and os.path.exists(target_file_path):
@@ -1823,16 +1872,8 @@ class PhotoProcessor:
         
         # 回收 BirdID 异步任务：补写标题并更新鸟种映射（用于后续分类目录）
         if birdid_tasks:
-            for future, file_prefix, title_targets in birdid_tasks:
-                try:
-                    birdid_wait_start = time.time()
-                    birdid_result = future.result()
-                    self._perf_add_stage('birdid_wait', (time.time() - birdid_wait_start) * 1000)
-                    birdid_apply_start = time.time()
-                    apply_birdid_result(file_prefix, title_targets, birdid_result)
-                    self._perf_add_stage('birdid_apply', (time.time() - birdid_apply_start) * 1000)
-                except Exception as e:
-                    self._log(f"  ⚠️ Bird ID failed: {e}", "warning")
+            self._log(f"⏳ 正在等待剩余 BirdID 识别结果 ({len(birdid_tasks)} 个任务)...")
+        collect_birdid_tasks(wait=True)
         
         if birdid_executor is not None:
             try:
@@ -1846,8 +1887,19 @@ class PhotoProcessor:
             pass
         
         # 批量落盘 EXIF 队列（避免每张图一次写入）
+        if metadata_batch:
+            pending_with_caption = sum(1 for it in metadata_batch if it.get('caption'))
+            self._log(
+                f"📝 正在提交 EXIF 批量写入: {len(metadata_batch)} 条, "
+                f"其中 {pending_with_caption} 条带 caption"
+            )
         flush_metadata_batch()
         if metadata_async_enabled and metadata_queue is not None:
+            pending_batches = metadata_queue.qsize()
+            if pending_batches > 0:
+                self._log(f"⏳ 正在等待 EXIF 写入队列完成 ({pending_batches} 个批次)...")
+            else:
+                self._log("⏳ 正在等待 EXIF 写入线程完成...")
             exif_wait_start = time.time()
             metadata_queue.put(None)  # writer 退出哨兵
             metadata_queue.join()
@@ -1864,6 +1916,8 @@ class PhotoProcessor:
                 self._log(f"  ⚠️ EXIF async writer errors: {len(metadata_writer_errors)}", "warning")
         
         # 批量落盘 CSV 缓存（避免每张图反复整表 IO）
+        if self._csv_cache_dirty:
+            self._log("💾 正在写入 CSV 报告缓存...")
         self._flush_csv_cache()
         
         self._perf_finalize()
