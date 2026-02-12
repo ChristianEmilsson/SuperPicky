@@ -370,50 +370,7 @@ class SuperPickyMainWindow(QMainWindow):
         # V4.2: 使用默认窗口大小，不最大化
         # self.showMaximized()  # 注释掉这行，使用默认大小
 
-    def keyPressEvent(self, event):
-        """全局键盘事件 - 粘贴图片自动识鸟"""
-        from PySide6.QtGui import QKeySequence
-        from PySide6.QtWidgets import QApplication
-        
-        # 检查是否是粘贴快捷键
-        if event.matches(QKeySequence.StandardKey.Paste):
-            clipboard = QApplication.clipboard()
-            mime = clipboard.mimeData()
-            
-            # 如果剪贴板有图片，自动发送到识鸟面板
-            if mime.hasImage():
-                image = clipboard.image()
-                if not image.isNull() and hasattr(self, 'birdid_dock'):
-                    # 确保识鸟面板可见
-                    if not self.birdid_dock.isVisible():
-                        self.birdid_dock.show()
-                    # 发送图片到识鸟面板
-                    self.birdid_dock.on_image_pasted(image)
-                    event.accept()
-                    return
-        
-        super().keyPressEvent(event)
 
-    def _paste_image_for_birdid(self):
-        """菜单触发：从剪贴板粘贴图片进行识鸟"""
-        from PySide6.QtWidgets import QApplication
-        
-        clipboard = QApplication.clipboard()
-        mime = clipboard.mimeData()
-        
-        if mime.hasImage():
-            image = clipboard.image()
-            if not image.isNull() and hasattr(self, 'birdid_dock'):
-                # 确保识鸟面板可见
-                if not self.birdid_dock.isVisible():
-                    self.birdid_dock.show()
-                    self.birdid_dock_action.setChecked(True)
-                # 发送图片到识鸟面板
-                self.birdid_dock.on_image_pasted(image)
-            else:
-                self._log("剪贴板中没有有效的图片")
-        else:
-            self._log("剪贴板中没有图片，请先截图或复制图片")
 
     def _get_app_icon(self):
         """获取应用图标"""
@@ -456,13 +413,7 @@ class SuperPickyMainWindow(QMainWindow):
         # 识鸟菜单
         birdid_menu = menubar.addMenu(self.i18n.t("menu.birdid"))
         
-        # 粘贴图片识鸟
-        paste_image_action = QAction(self.i18n.t("menu.paste_image"), self)
-        paste_image_action.setShortcut("Ctrl+V")  # Mac 会自动转为 Cmd+V
-        paste_image_action.triggered.connect(self._paste_image_for_birdid)
-        birdid_menu.addAction(paste_image_action)
-        
-        birdid_menu.addSeparator()
+
 
         # 识鸟面板（可勾选显示/隐藏）
         self.birdid_dock_action = QAction(self.i18n.t("menu.toggle_dock"), self)

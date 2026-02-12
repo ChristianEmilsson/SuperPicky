@@ -661,6 +661,17 @@ class PhotoProcessor:
     
     def _get_photo_scores_from_csv(self, prefix: str) -> Optional[Dict]:
         """从 report.csv 获取照片的评分数据"""
+        # V4.0.5: 优先使用内存缓存（O(1) 查找）
+        if self._csv_cache_rows is not None and self._csv_row_index:
+            for fn_key, idx in self._csv_row_index.items():
+                if os.path.splitext(fn_key)[0] == prefix:
+                    row = self._csv_cache_rows[idx]
+                    sharpness = float(row.get('head_sharp', 0) or 0)
+                    topiq = float(row.get('nima_score', 0) or 0)
+                    return {'sharpness': sharpness, 'topiq': topiq}
+            return None
+        
+        # 后备：从磁盘读取
         import csv
         csv_path = os.path.join(self.dir_path, ".superpicky", "report.csv")
         if not os.path.exists(csv_path):
@@ -1402,13 +1413,12 @@ class PhotoProcessor:
                         scorer = get_iqa_scorer(device='mps')
                         topiq_scorer = scorer
                     
-                    # V3.7: 使用全图而非裁剪图进行TOPIQ美学评分
-                    # 全图评分 + 头部锐度阈值 是更好的组合：
-                    # - 全图评分评估整体画面构图和美感
-                    # - 头部锐度阈值确保鸟本身足够清晰
-                    topiq = scorer.calculate_nima(filepath)
-                    
-                    topiq_time = (time_module.time() - step_start) * 1000
+                    # V4.0.5: 复用已加载的原图，避免二次 JPEG 解码
+                    # orig_img 是 cv2.imread 已读取的 BGR numpy array
+                    if orig_img is not None:
+                        topiq = scorer.calculate_from_array(orig_img)
+                    else:
+                        topiq = scorer.calculate_nima(filepath)
                 except Exception as e:
                     pass  # V3.3: 简化日志，静默 TOPIQ 计算失败
                 add_photo_stage('topiq', (time.time() - topiq_start) * 1000)

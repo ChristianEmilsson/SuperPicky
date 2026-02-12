@@ -16,7 +16,6 @@
     "help": "帮助",
     "about": "关于慧眼选鸟...",
     "birdid": "识鸟",
-    "paste_image": "粘贴图片识鸟",
     "exposure_label": "曝光",
     "birdid_label": "识鸟",
     "toggle_dock": "打开/关闭识鸟面板",
@@ -690,7 +689,7 @@
   },
   "birdid": {
     "title": "鸟类识别",
-    "drag_hint": "拖放/粘贴图片\n或点击选择",
+    "drag_hint": "拖放图片\n或点击选择",
     "select_image": "选择鸟类图片",
     "country": "国家:",
     "region": "区域:",

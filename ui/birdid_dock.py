@@ -75,7 +75,7 @@ class IdentifyWorker(QThread):
 class DropArea(QFrame):
     """拖放区域 - 深色主题"""
     fileDropped = Signal(str)
-    imageDropped = Signal(object)  # 直接传递 QImage 对象
+
 
     def __init__(self):
         super().__init__()
@@ -121,7 +121,7 @@ class DropArea(QFrame):
         layout.addWidget(hint_label)
 
     def dragEnterEvent(self, event: QDragEnterEvent):
-        if event.mimeData().hasUrls() or event.mimeData().hasImage():
+        if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
     def dropEvent(self, event: QDropEvent):
@@ -131,10 +131,7 @@ class DropArea(QFrame):
             if urls:
                 file_path = urls[0].toLocalFile()
                 self.fileDropped.emit(file_path)
-        elif mime.hasImage():
-            image = mime.imageData()
-            if image:
-                self.imageDropped.emit(image)
+
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -723,7 +720,7 @@ class BirdIDDockWidget(QDockWidget):
         # 拖放区域
         self.drop_area = DropArea()
         self.drop_area.fileDropped.connect(self.on_file_dropped)
-        self.drop_area.imageDropped.connect(self.on_image_pasted)
+
         layout.addWidget(self.drop_area)
         
         # ===== 国家/区域过滤 =====
@@ -933,79 +930,6 @@ class BirdIDDockWidget(QDockWidget):
         layout.addStretch()
         self.setWidget(container)
 
-    def on_image_pasted(self, image):
-        """处理剪贴板粘贴的图片"""
-        from PySide6.QtGui import QImage
-        from PIL import Image
-        import tempfile
-        import time
-        
-        print(f"[调试] on_image_pasted 被调用, image类型: {type(image)}")
-        
-        if isinstance(image, QImage) and not image.isNull():
-            print(f"[调试] 图片尺寸: {image.width()}x{image.height()}, 格式: {image.format()}")
-            
-            try:
-                # 使用 PIL 保存（避免 Qt 6.10 在 macOS 上的崩溃 bug）
-                # 先将 QImage 转换为 bytes
-                width = image.width()
-                height = image.height()
-                
-                # 转换为 RGBA 格式
-                if image.format() != QImage.Format.Format_RGBA8888:
-                    image = image.convertToFormat(QImage.Format.Format_RGBA8888)
-                
-                # 获取原始数据
-                ptr = image.bits()
-                if ptr is None:
-                    print("[调试] 无法获取图片数据")
-                    self.status_label.setText("无法读取图片数据")
-                    self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['error']};")
-                    return
-                
-                # 创建 PIL Image
-                pil_image = Image.frombytes('RGBA', (width, height), bytes(ptr))
-                
-                # 保存为临时文件
-                temp_dir = tempfile.gettempdir()
-                temp_path = os.path.join(temp_dir, f"superpicky_paste_{int(time.time())}.png")
-                
-                print(f"[调试] 尝试用 PIL 保存到: {temp_path}")
-                pil_image.save(temp_path, "PNG")
-                print(f"[调试] PIL 保存成功")
-                
-                self.current_image_path = temp_path
-                self.status_label.setText("正在识别...")
-                self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['accent']};")
-                
-                # 显示文件名
-                self.filename_label.setText("剪贴板图片")
-                self.filename_label.show()
-                
-                # 显示预览（从保存的文件加载，避免 QImage 问题）
-                self.show_preview(temp_path)
-                
-                # 清空之前的结果
-                self.clear_results()
-                
-                # 显示进度
-                self.progress.show()
-                self.results_frame.hide()
-
-                
-                # 获取过滤设置并启动识别
-                self._start_identify(temp_path)
-                
-            except Exception as e:
-                print(f"[调试] 保存失败: {e}")
-                import traceback
-                traceback.print_exc()
-                self.status_label.setText(f"保存图片失败: {e}")
-                self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['error']};")
-        else:
-            print(f"[调试] 无效图片或为空")
-            self.status_label.setText("无效的图片")
-            self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['error']};")
 
     def _show_qimage_preview(self, qimage):
         """显示 QImage 预览"""

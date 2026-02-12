@@ -16,7 +16,6 @@
     "help": "Help",
     "about": "About SuperPicky...",
     "birdid": "Bird ID",
-    "paste_image": "Paste Image",
     "exposure_label": "Exposure Check",
     "birdid_label": "Bird ID",
     "toggle_dock": "Open/Close Panel",
@@ -716,7 +715,7 @@
   },
   "birdid": {
     "title": "Bird ID",
-    "drag_hint": "Drop/Paste image\nor click to select",
+    "drag_hint": "Drop image here\nor click to select",
     "select_image": "Select Bird Image",
     "country": "Country:",
     "region": "Region:",

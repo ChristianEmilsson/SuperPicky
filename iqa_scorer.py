@@ -38,6 +38,9 @@ class IQAScorer:
         # 延迟加载模型（第一次使用时才加载）
         self._topiq_model = None
 
+        # V4.0.5: 复用 transform 实例，避免每次调用新建
+        self._transform = T.ToTensor()
+
         print("✅ IQA 评分器已就绪 (TOPIQ模型将在首次使用时加载)")
 
     def _get_device(self, preferred_device='mps'):
@@ -150,9 +153,8 @@ class IQAScorer:
             # 调整尺寸到 384x384 (TOPIQ 推荐尺寸，避免 MPS 兼容性问题)
             img = img.resize((384, 384), Image.LANCZOS)
             
-            # 转为张量
-            transform = T.ToTensor()
-            img_tensor = transform(img).unsqueeze(0).to(self.device)
+            # 转为张量（复用实例变量）
+            img_tensor = self._transform(img).unsqueeze(0).to(self.device)
             
             # V4.0.5: 使用 FP16 和 inference_mode 优化推理
             if hasattr(self, '_use_fp16') and self._use_fp16:
@@ -174,6 +176,53 @@ class IQAScorer:
 
         except Exception as e:
             print(f"❌ TOPIQ 计算失败: {e}")
+            return None
+
+    def calculate_from_array(self, img_bgr: np.ndarray) -> Optional[float]:
+        """
+        V4.0.5: 从已加载的 BGR numpy array 计算 TOPIQ 美学评分
+        
+        避免二次磁盘读取：主流程 cv2.imread 已读过图片，
+        直接传入 numpy array 复用，省去 Image.open 的 JPEG 解码。
+        
+        Args:
+            img_bgr: OpenCV BGR 格式的 numpy array
+            
+        Returns:
+            美学分数 (1-10, 越高越好) 或 None (失败时)
+        """
+        if img_bgr is None or img_bgr.size == 0:
+            return None
+
+        try:
+            import cv2
+            topiq_model = self._load_topiq()
+
+            # BGR → RGB → PIL Image → resize
+            img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+            img = Image.fromarray(img_rgb)
+            img = img.resize((384, 384), Image.LANCZOS)
+
+            # 转为张量（复用实例变量）
+            img_tensor = self._transform(img).unsqueeze(0).to(self.device)
+
+            # FP16 推理
+            if hasattr(self, '_use_fp16') and self._use_fp16:
+                img_tensor = img_tensor.half()
+
+            # 计算评分
+            with torch.inference_mode():
+                score = topiq_model(img_tensor, return_mos=True)
+
+            if isinstance(score, torch.Tensor):
+                score = score.item()
+
+            score = float(score)
+            score = max(1.0, min(10.0, score))
+            return score
+
+        except Exception as e:
+            print(f"❌ TOPIQ (from array) 计算失败: {e}")
             return None
 
     def calculate_brisque(self, image_input) -> Optional[float]:
