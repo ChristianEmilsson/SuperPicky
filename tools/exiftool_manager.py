@@ -673,6 +673,13 @@ class ExifToolManager:
         """
         stats = {'success': 0, 'failed': 0}
         caption_temp_files: List[str] = []  # 用于写入 caption 的临时 UTF-8 文件，执行后删除
+        num_with_caption = sum(1 for it in files_metadata if it.get('caption'))
+
+        # 前置日志：批量写入前先给出反馈，避免大批量时看起来像卡住
+        print(
+            f"[ExifTool] preparing batch_set_metadata: {len(files_metadata)} 条, "
+            f"其中 {num_with_caption} 条带 caption"
+        )
 
         # V4.0.3: 预先清理可能存在的残留 _exiftool_tmp 文件，防止 ExifTool 报错
         # "Error: Temporary file already exists"
@@ -680,7 +687,6 @@ class ExifToolManager:
         self.cleanup_temp_files(files_to_process)
 
         # 诊断：本次调用有多少条带 caption（若无则不会出现 [ExifTool Caption] 详细日志）
-        num_with_caption = sum(1 for it in files_metadata if it.get('caption'))
         print(f"[ExifTool] batch_set_metadata: {len(files_metadata)} 条, 其中 {num_with_caption} 条带 caption")
 
         # ARW 使用一次性 subprocess 方式写入（更稳妥）
