@@ -5,7 +5,8 @@ __pycache__/
 *.so
 .Python
 *.egg-info/
-dist/
+dist/*
+!dist/*.dmg
 build/
 
 # IDE
@@ -53,7 +54,6 @@ venv/
 temp_models/
 
 # 构建和发布文件
-*.dmg
 *.log
 test_*.sh
 quick_test.sh
