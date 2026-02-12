@@ -94,19 +94,18 @@ def get_gui_language():
     """
     获取 GUI 界面的语言设置
     
-    Returns:
-        'zh_CN' 或 'en' 或 None (默认自动)
-    """
-    config_path = os.path.expanduser('~/Documents/SuperPicky_Data/advanced_config.json')
+    V4.0.5: 修复 - 复用 AdvancedConfig 的平台感知路径
+    之前硬编码 ~/Documents/SuperPicky_Data/ 路径不存在，导致永远返回 None
     
-    if os.path.exists(config_path):
-        try:
-            import json
-            with open(config_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            return data.get('language')
-        except Exception:
-            pass
+    Returns:
+        'zh_CN' 或 'en_US' 或 None (默认自动)
+    """
+    try:
+        from advanced_config import get_advanced_config
+        config = get_advanced_config()
+        return config.language
+    except Exception:
+        pass
     
     return None
 
