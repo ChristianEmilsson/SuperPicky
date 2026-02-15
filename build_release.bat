@@ -70,11 +70,11 @@ if errorlevel 1 (
 echo [SUCCESS] PyInstaller 已就绪
 
 :: 检查 spec 文件
-if not exist "SuperPicky.spec" (
-    echo [ERROR] 未找到 SuperPicky.spec 文件
+if not exist "SuperPicky_win64.spec" (
+    echo [ERROR] 未找到 SuperPicky_win64.spec 文件
     exit /b 1
 )
-echo [SUCCESS] SuperPicky.spec 已就绪
+echo [SUCCESS] SuperPicky_win64.spec 已就绪
 
 :: ============================================
 :: 步骤1: 提取版本号
@@ -84,7 +84,7 @@ echo [========================================]
 echo 步骤1: 提取版本号
 echo [========================================]
 
-set "VERSION=0.0.0"
+set "VERSION=4.0.5_sp3"
 findstr /R "version = QLabel" ui\about_dialog.py > temp_ver.txt 2>nul
 if exist temp_ver.txt (
     for /f "usebackq tokens=2 delims=^" %%a in ("temp_ver.txt") do set "VER_RAW=%%a" & set "VERSION=!VER_RAW:v=!"
@@ -158,7 +158,7 @@ echo 步骤3: PyInstaller 打包
 echo [========================================]
 
 echo [INFO] 正在打包应用（可能需要数分钟）...
-python -m PyInstaller SuperPicky.spec --clean --noconfirm
+python -m PyInstaller SuperPicky_win64.spec --clean --noconfirm
 if errorlevel 1 (
     echo [ERROR] PyInstaller 打包失败
     goto :restore_build_info
@@ -187,7 +187,7 @@ echo [========================================]
 echo 步骤4: 创建发布包
 echo [========================================]
 
-set "ZIP_NAME=%APP_NAME%_v%VERSION%_%ARCH_SUFFIX%.zip"
+set "ZIP_NAME=%APP_NAME%_v%VERSION%_%Win64_CUDA%.zip"
 set "DIST_DIR=dist\%APP_NAME%"
 
 :: 如已安装 7z 或 PowerShell 可用，则打 zip

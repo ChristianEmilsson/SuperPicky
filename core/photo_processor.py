@@ -847,7 +847,7 @@ class PhotoProcessor:
                     if converted_count % 5 == 0 or converted_count == len(raw_files_to_convert):
                         self._log(self.i18n.t("logs.raw_converted", current=converted_count, total=len(raw_files_to_convert)))
                 else:
-                    self._log(f"  ❌ {self.i18n.t('logs.batch_failed', start=key, end=key, error=error)}", "error")
+                    self._log(f"  ❌ {self.i18n.t('logs.batch_failed', start=key, end=key, error=result)}", "error")
         
         raw_time = time.time() - raw_start
         avg_time = raw_time / len(raw_files_to_convert) if len(raw_files_to_convert) > 0 else 0
@@ -1116,17 +1116,22 @@ class PhotoProcessor:
         yolo_prefetch_thread = None
         yolo_infer_lock = threading.Lock()
         focus_exif_lock = threading.Lock()
+
+        def normalize_path_for_match(path_value: str) -> str:
+            """Normalize separators so cache-path checks work on both Windows and POSIX."""
+            return str(path_value).replace("\\", "/")
         
         def resolve_file_context(in_filename: str) -> Dict[str, any]:
             in_filepath = os.path.join(self.dir_path, in_filename)
             in_file_prefix, _ = os.path.splitext(in_filename)
+            in_filename_norm = normalize_path_for_match(in_filename)
             
             # V4.0.4: 从 tmp_*.jpg 提取原始文件前缀用于匹配 raw_dict
             # V4.1.0: 兼容 .superpicky/cache/ 下的临时文件
             in_original_prefix = in_file_prefix
             if in_file_prefix.startswith('tmp_'):
                 in_original_prefix = in_file_prefix[4:]  # 去掉 "tmp_" 前缀
-            elif '.superpicky/cache' in in_filename:
+            elif '.superpicky/cache' in in_filename_norm:
                 # 处理缓存文件路径: .superpicky/cache/_Z9W0291.jpg -> _Z9W0291
                 in_original_prefix = os.path.splitext(os.path.basename(in_filename))[0]
             
@@ -1314,15 +1319,17 @@ class PhotoProcessor:
             
             # V4.1: 更新路径信息到数据库
             path_update_data = {}
+            yolo_filename_norm = normalize_path_for_match(yolo_item.get('filename', ''))
+            yolo_filepath_norm = normalize_path_for_match(yolo_item.get('filepath', ''))
             
             # 1. original_path
             if yolo_item.get('raw_path'):
                  path_update_data['original_path'] = os.path.relpath(yolo_item['raw_path'], self.dir_path)
-            elif not str(yolo_item.get('file_prefix', '')).startswith('tmp_') and '.superpicky/cache' not in str(yolo_item.get('filename', '')):
+            elif not str(yolo_item.get('file_prefix', '')).startswith('tmp_') and '.superpicky/cache' not in yolo_filename_norm:
                  path_update_data['original_path'] = os.path.relpath(yolo_item['filepath'], self.dir_path)
             
             # 2. temp_jpeg_path
-            if '.superpicky/cache' in str(yolo_item.get('filepath', '')):
+            if '.superpicky/cache' in yolo_filepath_norm:
                  path_update_data['temp_jpeg_path'] = os.path.relpath(yolo_item['filepath'], self.dir_path)
             elif str(yolo_item.get('file_prefix', '')).startswith('tmp_'):
                  path_update_data['temp_jpeg_path'] = yolo_item['filename']
@@ -2461,7 +2468,7 @@ class PhotoProcessor:
                 shutil.move(src_path, dst_path)
                 moved_count += 1
             except Exception as e:
-                self._log(self.i18n.t("logs.delete_failed", filename=file_info['filename'], error=str(e)), "warning")
+                self._log(self.i18n.t("logs.move_failed", filename=file_info['filename'], error=str(e)), "warning")
         
         # V4.0.5: 更正 current_path - 更新数据库中所有移动文件的位置
         # 这确保 current_path 指向最新的原始文件位置 (如 3star_excellent/Bird/DSC_1234.NEF)
