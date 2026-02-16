@@ -7,6 +7,7 @@
 __version__ = "1.0.0"
 
 import torch
+import torchvision.transforms as transforms
 import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 from PIL.ExifTags import TAGS, GPSTAGS
@@ -91,8 +92,13 @@ def get_user_data_dir() -> str:
 
 # ==================== 模型路径 ====================
 # 鸟类识别专用模型和数据（在 birdid/ 目录下）
-MODEL_PATH = get_birdid_path('models/birdid2024.pt')
+# OSEA ResNet34 模型（替代旧 birdid2024）
+MODEL_PATH = get_project_path('models/model20240824.pth')
+# 旧模型路径（保留作为回退）
+MODEL_PATH_LEGACY = get_birdid_path('models/birdid2024.pt')
 MODEL_PATH_ENC = get_birdid_path('models/birdid2024.pt.enc')
+# OSEA 模型类别数
+OSEA_NUM_CLASSES = 11000
 BIRD_INFO_PATH = get_birdid_path('data/birdinfo.json')
 DATABASE_PATH = get_birdid_path('data/bird_reference.sqlite')
 OFFLINE_EBIRD_DIR = get_birdid_path('data/offline_ebird_data')
@@ -158,29 +164,39 @@ def _load_torchscript_from_bytes(model_data: bytes):
 # ==================== 懒加载函数 ====================
 
 def get_classifier():
-    """懒加载分类模型"""
+    """懒加载分类模型（OSEA ResNet34）"""
     global _classifier
     if _classifier is None:
-        SECRET_PASSWORD = "SuperBirdID_2024_AI_Model_Encryption_Key_v1"
+        import torchvision.models as models
 
-        if os.path.exists(MODEL_PATH_ENC):
-            # 加载加密模型
-            model_data = decrypt_model(MODEL_PATH_ENC, SECRET_PASSWORD)
-            _classifier = _load_torchscript_from_bytes(model_data)
-        elif os.path.exists(MODEL_PATH):
-            try:
-                _classifier = torch.jit.load(MODEL_PATH, map_location='cpu')
-            except RuntimeError as e:
-                # Some Windows builds fail fopen on non-ASCII paths.
-                if 'open file failed' not in str(e) or 'fopen' not in str(e):
-                    raise
-                with open(MODEL_PATH, 'rb') as f:
-                    model_data = f.read()
-                _classifier = _load_torchscript_from_bytes(model_data)
+        if os.path.exists(MODEL_PATH):
+            # 加载 OSEA ResNet34 模型
+            model = models.resnet34(num_classes=OSEA_NUM_CLASSES)
+            state_dict = torch.load(MODEL_PATH, map_location='cpu', weights_only=True)
+            model.load_state_dict(state_dict)
+            model = model.to(CLASSIFIER_DEVICE)
+            model.eval()
+            _classifier = model
+            print(f"[BirdID] OSEA ResNet34 模型已加载，设备: {CLASSIFIER_DEVICE}")
         else:
-            raise RuntimeError(f"未找到分类模型: {MODEL_PATH}")
-
-        _classifier.eval()
+            # 回退到旧的 birdid2024 模型
+            SECRET_PASSWORD = "SuperBirdID_2024_AI_Model_Encryption_Key_v1"
+            if os.path.exists(MODEL_PATH_ENC):
+                model_data = decrypt_model(MODEL_PATH_ENC, SECRET_PASSWORD)
+                _classifier = _load_torchscript_from_bytes(model_data)
+            elif os.path.exists(MODEL_PATH_LEGACY):
+                try:
+                    _classifier = torch.jit.load(MODEL_PATH_LEGACY, map_location='cpu')
+                except RuntimeError as e:
+                    if 'open file failed' not in str(e) or 'fopen' not in str(e):
+                        raise
+                    with open(MODEL_PATH_LEGACY, 'rb') as f:
+                        model_data = f.read()
+                    _classifier = _load_torchscript_from_bytes(model_data)
+            else:
+                raise RuntimeError(f"未找到分类模型: {MODEL_PATH} 或 {MODEL_PATH_LEGACY}")
+            _classifier.eval()
+            print(f"[BirdID] 回退使用 birdid2024 模型")
     return _classifier
 
 
@@ -589,6 +605,17 @@ def apply_enhancement(image: Image.Image, method: str = "unsharp_mask") -> Image
     return image
 
 
+# ==================== OSEA 预处理 ====================
+
+# CenterCrop 预处理: Resize(256) + CenterCrop(224) + ImageNet Normalize
+OSEA_TRANSFORM = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
+
 # ==================== 核心识别函数 ====================
 
 def predict_bird(
@@ -597,7 +624,7 @@ def predict_bird(
     ebird_species_set: Optional[Set[str]] = None
 ) -> List[Dict]:
     """
-    识别鸟类
+    识别鸟类（OSEA ResNet34）
 
     Args:
         image: PIL Image 对象
@@ -611,51 +638,22 @@ def predict_bird(
     bird_data = get_bird_info()
     db_manager = get_database_manager()
 
-    # 多种增强方法测试
-    enhancement_methods = [
-        ("none", None),
-        ("edge_enhance_more", "edge_enhance_more"),
-        ("unsharp_mask", "unsharp_mask"),
-        ("contrast_edge", "contrast_edge"),
-        ("desaturate", "desaturate")
-    ]
+    # OSEA 预处理：CenterCrop(256→224) + RGB + ImageNet 标准化
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+    input_tensor = OSEA_TRANSFORM(image).unsqueeze(0).to(CLASSIFIER_DEVICE)
 
-    all_logits = []  # 收集所有增强方法的logits用于融合
+    # 推理
+    with torch.no_grad():
+        output = model(input_tensor)[0]
 
-    for name, method in enhancement_methods:
-        if method:
-            enhanced = apply_enhancement(image, method)
-        else:
-            enhanced = image
+    # 截取有效类别数（模型输出可能多于实际物种数）
+    num_classes = min(len(bird_data), output.shape[0])
+    output = output[:num_classes]
 
-        processed = smart_resize(enhanced, 224)
-
-        # 转换为 tensor
-        img_array = np.array(processed)
-        bgr_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-
-        mean = np.array([0.406, 0.456, 0.485])
-        std = np.array([0.225, 0.224, 0.229])
-
-        normalized = (bgr_array / 255.0 - mean) / std
-        input_tensor = torch.from_numpy(normalized).permute(2, 0, 1).unsqueeze(0).float()
-
-        with torch.no_grad():
-            output = model(input_tensor)
-
-        # 收集原始logits用于融合
-        all_logits.append(output[0])
-
-    # 多增强融合：对所有增强方法的logits取平均
-    if len(all_logits) == 0:
-        return []
-    
-    stacked_logits = torch.stack(all_logits)
-    fused_logits = stacked_logits.mean(dim=0)
-    
-    # 对融合后的logits应用温度缩放和softmax
+    # Softmax（温度=0.5 使置信度分布更尖锐）
     TEMPERATURE = 0.5
-    best_probs = torch.nn.functional.softmax(fused_logits / TEMPERATURE, dim=0)
+    best_probs = torch.nn.functional.softmax(output / TEMPERATURE, dim=0)
 
     # 获取 top-k 结果
     k = min(100 if ebird_species_set else top_k, len(best_probs))
