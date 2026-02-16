@@ -101,7 +101,6 @@ MODEL_PATH_ENC = get_birdid_path('models/birdid2024.pt.enc')
 OSEA_NUM_CLASSES = 11000
 BIRD_INFO_PATH = get_birdid_path('data/birdinfo.json')
 DATABASE_PATH = get_birdid_path('data/bird_reference.sqlite')
-OFFLINE_EBIRD_DIR = get_birdid_path('data/offline_ebird_data')
 
 # YOLO 模型（共用项目根目录的模型）
 YOLO_MODEL_PATH = get_project_path('models/yolo11l-seg.pt')
