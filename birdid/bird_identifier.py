@@ -277,18 +277,26 @@ class YOLOBirdDetector:
         self,
         image_input,
         confidence_threshold: float = 0.25,
-        padding: int = 150
+        padding_ratio: float = 0.15,
+        fill_color: Tuple[int, int, int] = (0, 0, 0)
     ) -> Tuple[Optional[Image.Image], str]:
         """
-        检测并裁剪鸟类区域
+        检测并裁剪鸟类区域（智能正方形裁剪 + Letterboxing）
+
+        处理流程:
+        1. YOLO 检测获取 bounding box
+        2. 智能正方形扩展: max_side * (1 + padding_ratio)
+        3. 边界限制: 裁剪区域不超出图片范围
+        4. Letterboxing: 如果裁剪后非正方形，用 fill_color 填充成正方形
 
         Args:
             image_input: 文件路径或 PIL Image
             confidence_threshold: 置信度阈值
-            padding: 裁剪边距
+            padding_ratio: padding 比例（基于 bbox 最大边长），默认 0.15 (15%)
+            fill_color: Letterboxing 填充颜色，默认黑色 (0, 0, 0)
 
         Returns:
-            (裁剪后的图像, 检测信息) 或 (None, 错误信息)
+            (裁剪后的正方形图像, 检测信息) 或 (None, 错误信息)
         """
         if self.model is None:
             return None, "YOLO模型未可用"
@@ -326,13 +334,43 @@ class YOLOBirdDetector:
             best = max(detections, key=lambda x: x['confidence'])
             img_width, img_height = image.size
 
+            # Phase 1: 获取 bbox
             x1, y1, x2, y2 = best['bbox']
-            x1_padded = max(0, x1 - padding)
-            y1_padded = max(0, y1 - padding)
-            x2_padded = min(img_width, x2 + padding)
-            y2_padded = min(img_height, y2 + padding)
+            bbox_width = x2 - x1
+            bbox_height = y2 - y1
 
-            cropped = image.crop((x1_padded, y1_padded, x2_padded, y2_padded))
+            # Phase 2: 智能正方形扩展 (基于最大边长 + padding_ratio)
+            max_side = max(bbox_width, bbox_height)
+            target_side = int(max_side * (1 + padding_ratio))
+
+            # 以 bbox 中心为基准扩展
+            cx = (x1 + x2) // 2
+            cy = (y1 + y2) // 2
+            half = target_side // 2
+
+            sq_x1 = cx - half
+            sq_y1 = cy - half
+            sq_x2 = cx + half
+            sq_y2 = cy + half
+
+            # Phase 3: 边界限制
+            crop_x1 = max(0, sq_x1)
+            crop_y1 = max(0, sq_y1)
+            crop_x2 = min(img_width, sq_x2)
+            crop_y2 = min(img_height, sq_y2)
+
+            cropped = image.crop((crop_x1, crop_y1, crop_x2, crop_y2))
+            crop_w, crop_h = cropped.size
+
+            # Phase 4: Letterboxing (如果裁剪后非正方形)
+            if crop_w != crop_h:
+                sq_size = max(crop_w, crop_h)
+                square = Image.new('RGB', (sq_size, sq_size), fill_color)
+                paste_x = (sq_size - crop_w) // 2
+                paste_y = (sq_size - crop_h) // 2
+                square.paste(cropped, (paste_x, paste_y))
+                cropped = square
+
             info = f"置信度{best['confidence']:.3f}, 尺寸{cropped.size}"
 
             return cropped, info
@@ -589,9 +627,19 @@ def apply_enhancement(image: Image.Image, method: str = "unsharp_mask") -> Image
 # ==================== OSEA 预处理 ====================
 
 # CenterCrop 预处理: Resize(256) + CenterCrop(224) + ImageNet Normalize
+# 用于原始大图（未经 YOLO 裁剪）
 OSEA_TRANSFORM = transforms.Compose([
     transforms.Resize(256),
     transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
+# 直接缩放预处理: Resize(224, 224) with Lanczos + ImageNet Normalize
+# 用于 YOLO 裁剪后的正方形图片（已经过 Letterboxing 处理）
+# 使用 Lanczos 插值保证高质量缩放
+OSEA_TRANSFORM_DIRECT = transforms.Compose([
+    transforms.Resize((224, 224), interpolation=transforms.InterpolationMode.LANCZOS),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
@@ -602,7 +650,8 @@ OSEA_TRANSFORM = transforms.Compose([
 def predict_bird(
     image: Image.Image,
     top_k: int = 5,
-    species_class_ids: Optional[Set[int]] = None
+    species_class_ids: Optional[Set[int]] = None,
+    is_yolo_cropped: bool = False
 ) -> List[Dict]:
     """
     识别鸟类（OSEA ResNet34）
@@ -611,6 +660,7 @@ def predict_bird(
         image: PIL Image 对象
         top_k: 返回前 K 个结果
         species_class_ids: 区域物种的 class_id 集合（用于过滤）
+        is_yolo_cropped: 图片是否经过 YOLO 裁剪（用于选择预处理方式）
 
     Returns:
         识别结果列表 [{cn_name, en_name, confidence, ebird_code, ...}, ...]
@@ -619,10 +669,13 @@ def predict_bird(
     bird_data = get_bird_info()
     db_manager = get_database_manager()
 
-    # OSEA 预处理：CenterCrop(256→224) + RGB + ImageNet 标准化
+    # 根据是否经过 YOLO 裁剪选择预处理方式
+    # - YOLO 裁剪后: 直接 Resize(224,224)，避免 CenterCrop 丢失特征
+    # - 原始大图: Resize(256) + CenterCrop(224)，鸟在中心时效果更好
     if image.mode != 'RGB':
         image = image.convert('RGB')
-    input_tensor = OSEA_TRANSFORM(image).unsqueeze(0).to(CLASSIFIER_DEVICE)
+    transform = OSEA_TRANSFORM_DIRECT if is_yolo_cropped else OSEA_TRANSFORM
+    input_tensor = transform(image).unsqueeze(0).to(CLASSIFIER_DEVICE)
 
     # 推理
     with torch.no_grad():
@@ -632,8 +685,8 @@ def predict_bird(
     num_classes = min(len(bird_data), output.shape[0])
     output = output[:num_classes]
 
-    # Softmax（温度=0.5 使置信度分布更尖锐）
-    TEMPERATURE = 0.5
+    # Softmax（温度=0.7 折中选择：置信度适中，用户体验好）
+    TEMPERATURE = 0.7
     best_probs = torch.nn.functional.softmax(output / TEMPERATURE, dim=0)
 
     # 获取 top-k 结果
@@ -738,6 +791,7 @@ def identify_bird(
         image = load_image(image_path)
 
         # YOLO 裁剪
+        is_yolo_cropped = False
         print(f"[YOLO调试] use_yolo={use_yolo}, YOLO_AVAILABLE={YOLO_AVAILABLE}")
         if use_yolo and YOLO_AVAILABLE:
             width, height = image.size
@@ -751,6 +805,7 @@ def identify_bird(
                     if cropped:
                         image = cropped
                         result['yolo_info'] = info
+                        is_yolo_cropped = True
                         print(f"[YOLO调试] ✅ 已裁剪鸟类区域")
                     else:
                         print(f"[YOLO调试] ⚠️ 未检测到鸟类")
@@ -800,7 +855,12 @@ def identify_bird(
                 print(f"[Avonet] 过滤初始化失败: {e}")
 
         # 执行识别
-        results = predict_bird(image, top_k=top_k, species_class_ids=species_class_ids)
+        results = predict_bird(
+            image,
+            top_k=top_k,
+            species_class_ids=species_class_ids,
+            is_yolo_cropped=is_yolo_cropped
+        )
 
         result['success'] = True
         result['results'] = results
