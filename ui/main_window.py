@@ -78,7 +78,7 @@ class WorkerSignals(QObject):
     log = Signal(str, str)  # message, tag
     finished = Signal(dict)
     error = Signal(str)
-    crop_preview = Signal(object)  # V4.2: 发送裁剪预览图像 (numpy array BGR)
+    crop_preview = Signal(object, object)  # V4.2: 发送裁剪预览图像 (numpy array BGR) + focus_status str
     update_check_done = Signal(bool, object)  # V4.2: 更新检测完成 (has_update, update_info)
 
 
@@ -267,8 +267,8 @@ class WorkerThread(threading.Thread):
             self.signals.progress.emit(int(value))
 
         # V4.2: 裁剪预览回调
-        def crop_preview_callback(debug_img):
-            self.signals.crop_preview.emit(debug_img)
+        def crop_preview_callback(debug_img, focus_status=None):
+            self.signals.crop_preview.emit(debug_img, focus_status)
 
         callbacks = ProcessingCallbacks(
             log=log_callback,

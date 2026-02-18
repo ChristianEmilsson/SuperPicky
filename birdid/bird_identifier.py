@@ -805,6 +805,7 @@ def identify_bird(
                     if cropped:
                         image = cropped
                         result['yolo_info'] = info
+                        result['cropped_image'] = cropped  # 正方形裁剪图（PIL Image）
                         is_yolo_cropped = True
                         print(f"[YOLO调试] ✅ 已裁剪鸟类区域")
                     else:

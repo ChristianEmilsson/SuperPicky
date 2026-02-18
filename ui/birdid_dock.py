@@ -229,6 +229,8 @@ class ResultCard(QFrame):
             font-family: {FONTS['mono']};
             background: transparent;
         """)
+        self.conf_label.setFixedWidth(50)
+        self.conf_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         layout.addWidget(self.conf_label)
     
     def _update_style(self):
@@ -833,8 +835,6 @@ class BirdIDDockWidget(QDockWidget):
         self.drop_area = DropArea()
         self.drop_area.fileDropped.connect(self.on_file_dropped)
 
-        layout.addWidget(self.drop_area)
-        
         # ===== 国家/区域过滤 =====
         filter_frame = QFrame()
         filter_frame.setStyleSheet(f"""
@@ -906,6 +906,7 @@ class BirdIDDockWidget(QDockWidget):
         self.auto_identify_checkbox.hide()
         
         layout.addWidget(filter_frame)
+        layout.addWidget(self.drop_area)
 
         # 图片预览（初始隐藏，支持拖放替换）
         self.preview_label = DropPreviewLabel()
@@ -920,6 +921,7 @@ class BirdIDDockWidget(QDockWidget):
         self.preview_label.fileDropped.connect(self.on_file_dropped)
         self.preview_label.hide()
         self._current_pixmap = None  # 保存原始 pixmap 用于自适应缩放
+        self._result_crop_pixmap = None  # 保存识别完成的裁剪图，用于结果卡片点击恢复
         layout.addWidget(self.preview_label)
 
         # 文件名显示
@@ -976,7 +978,7 @@ class BirdIDDockWidget(QDockWidget):
 
         self.results_scroll = QScrollArea()
         self.results_scroll.setWidgetResizable(True)
-        self.results_scroll.setMaximumHeight(350)  # 足够显示3-4个候选
+        self.results_scroll.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.results_scroll.setStyleSheet(f"""
             QScrollArea {{
                 border: none;
@@ -993,7 +995,27 @@ class BirdIDDockWidget(QDockWidget):
 
         results_layout.addWidget(self.results_scroll)
         self.results_frame.hide()
-        layout.addWidget(self.results_frame)
+
+        # 占位区：初始可见，有结果时隐藏
+        self.placeholder_frame = QFrame()
+        self.placeholder_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {COLORS['bg_elevated']};
+                border-radius: 10px;
+            }}
+        """)
+        ph_layout = QVBoxLayout(self.placeholder_frame)
+        ph_layout.setAlignment(Qt.AlignCenter)
+        ph_label = QLabel("拖入鸟类照片\n识别结果将显示在这里")
+        ph_label.setAlignment(Qt.AlignCenter)
+        ph_label.setStyleSheet(f"""
+            color: {COLORS['text_muted']};
+            font-size: 12px;
+        """)
+        ph_layout.addWidget(ph_label)
+        layout.addWidget(self.placeholder_frame, 1)  # stretch=1，与 results_frame 同级
+
+        layout.addWidget(self.results_frame, 1)  # stretch=1，填满剩余空间
 
         # 操作按钮
         btn_layout = QHBoxLayout()
@@ -1026,7 +1048,6 @@ class BirdIDDockWidget(QDockWidget):
         self.status_label = QLabel("")
         self.status_label.hide()
 
-        layout.addStretch()
         self.setWidget(container)
 
 
@@ -1190,32 +1211,73 @@ class BirdIDDockWidget(QDockWidget):
         if self._current_pixmap is not None and self.preview_label.isVisible():
             self._scale_preview()
 
-    def update_crop_preview(self, debug_img):
+    # 对焦状态键映射（photo_processor 内部值 → i18n key）
+    _FOCUS_STATUS_I18N = {
+        'BEST':  'rating_engine.focus_best',
+        'GOOD':  'rating_engine.focus_good',
+        'BAD':   'rating_engine.focus_bad',
+        'WORST': 'rating_engine.focus_worst',
+    }
+    # 对焦状态颜色
+    _FOCUS_STATUS_COLOR = {
+        'BEST':  '#00e5a0',  # 绿
+        'GOOD':  '#7ec8e3',  # 蓝绿
+        'BAD':   '#f0a500',  # 橙
+        'WORST': '#e05c5c',  # 红
+    }
+
+    def update_crop_preview(self, debug_img, focus_status=None):
         """
-        V4.2: 接收选片过程中的裁剪预览图像并显示
+        V4.2: 接收选片过程中的裁剪预览图像并显示，同时在结果区更新对焦状态文字
         Args:
             debug_img: BGR numpy 数组 (带标注的鸟类裁剪图)
+            focus_status: 对焦状态键 "BEST"/"GOOD"/"BAD"/"WORST" 或 None
         """
         try:
             import cv2
             from PySide6.QtGui import QImage
-            
+
             # BGR -> RGB
             rgb_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
             h, w, ch = rgb_img.shape
             bytes_per_line = ch * w
-            
+
             # numpy -> QImage -> QPixmap
             q_img = QImage(rgb_img.data, w, h, bytes_per_line, QImage.Format_RGB888)
             pixmap = QPixmap.fromImage(q_img)
-            
-            # 保存并显示
+
+            # 保存并显示预览
             self._current_pixmap = pixmap
             self.preview_label.show()
             self._scale_preview()
-            
+
         except Exception as e:
             print(f"[BirdIDDock] 预览更新失败: {e}")
+
+        # 更新结果区：清空旧内容，显示当前对焦状态
+        self.clear_results()
+        self.placeholder_frame.hide()
+        self.results_frame.show()
+
+        if focus_status and focus_status in self._FOCUS_STATUS_I18N:
+            i18n_key = self._FOCUS_STATUS_I18N[focus_status]
+            raw_text = self.i18n.t(i18n_key)
+            # i18n 值带前缀标点（"，精焦" / ", Critical Focus"），去掉它
+            display_text = raw_text.lstrip("，, ").strip()
+            color = self._FOCUS_STATUS_COLOR.get(focus_status, COLORS['text_secondary'])
+
+            focus_label = QLabel(display_text)
+            focus_label.setAlignment(Qt.AlignCenter)
+            focus_label.setStyleSheet(f"""
+                color: {color};
+                font-size: 15px;
+                font-weight: 600;
+                padding: 12px;
+                background-color: {COLORS['bg_elevated']};
+                border-radius: 8px;
+            """)
+            self.results_layout.addWidget(focus_label)
+            self.results_layout.addStretch()
 
     def show_completion_message(self, debug_dir: str):
         """
@@ -1226,10 +1288,12 @@ class BirdIDDockWidget(QDockWidget):
         # 隐藏预览图
         self.preview_label.hide()
         self._current_pixmap = None
-        
-        # 清空结果并显示完成信息
+
+        # 清空结果，切换到结果区显示完成信息
         self.clear_results()
-        
+        self.placeholder_frame.hide()
+        self.results_frame.show()
+
         # 创建完成信息标签
         from PySide6.QtWidgets import QLabel
         
@@ -1312,6 +1376,7 @@ class BirdIDDockWidget(QDockWidget):
 
         # === 显示信息面板 + 结果卡片 ===
         self.results_frame.show()
+        self.placeholder_frame.hide()
         self.result_cards = []
         self.selected_index = 0
 
@@ -1344,6 +1409,23 @@ class BirdIDDockWidget(QDockWidget):
 
         self.results_layout.addStretch()
 
+        # 用 YOLO 裁剪图替换预览（正方形）
+        cropped_pil = result.get('cropped_image')
+        if cropped_pil:
+            try:
+                from PySide6.QtGui import QImage
+                rgb = cropped_pil.convert('RGB')
+                data = rgb.tobytes('raw', 'RGB')
+                q_img = QImage(data, rgb.width, rgb.height,
+                               rgb.width * 3, QImage.Format_RGB888)
+                pixmap = QPixmap.fromImage(q_img)
+                if not pixmap.isNull():
+                    self._current_pixmap = pixmap
+                    self._result_crop_pixmap = pixmap
+                    self._scale_preview()
+            except Exception as _e:
+                print(f"[BirdIDDock] 裁剪图预览更新失败: {_e}")
+
         # 保存结果
         self.identify_results = results
 
@@ -1353,6 +1435,7 @@ class BirdIDDockWidget(QDockWidget):
     def _show_info_panel(self, info_lines: list):
         """显示纯信息面板（无结果卡片时使用）"""
         self.results_frame.show()
+        self.placeholder_frame.hide()
         info_label = QLabel('\n'.join(info_lines))
         info_label.setWordWrap(True)
         info_label.setStyleSheet(f"""
@@ -1389,7 +1472,12 @@ class BirdIDDockWidget(QDockWidget):
         
         # 更新状态标签
         self._update_status_label()
-    
+
+        # 点击结果卡片时恢复 YOLO 裁剪预览
+        if getattr(self, '_result_crop_pixmap', None):
+            self._current_pixmap = self._result_crop_pixmap
+            self._scale_preview()
+
     def _update_status_label(self):
         """更新状态标签，显示当前选中的候选"""
         if hasattr(self, 'selected_index') and hasattr(self, 'identify_results'):
@@ -1406,6 +1494,8 @@ class BirdIDDockWidget(QDockWidget):
         self.preview_label.hide()
         self.filename_label.hide()
         self.results_frame.hide()
+        self.placeholder_frame.show()
+        self._result_crop_pixmap = None
 
         self.status_label.setText("准备就绪")
         self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['text_muted']};")
