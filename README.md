@@ -50,12 +50,12 @@ Automatically set thresholds based on your experience:
 ## 📥 Downloads
 
 ### macOS
-**Apple Silicon (M1/M2/M3/M4)**
-- [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.5/SuperPicky_arm64_V4.0.5.dmg)
-- [Google Drive (Mirror)](https://drive.google.com/file/d/1ykFNcV9rOpp_w04lOer0dyel7chGkS_Q/view?usp=sharing)
-- [Baidu Netdisk](https://pan.baidu.com/s/1QcBZvhwYn0W2n_vkA4gNaA?pwd=mx69) Code: mx69
+**Apple Silicon (M1/M2/M3/M4) (v4.0.6)**
+- [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_v4.0.6.dmg)
+- [Google Drive (Mirror)](https://drive.google.com/file/d/1vwKMcXcZQHYSalOyXg3grOV2wYFu2W8_/view?usp=sharing)
+- [Baidu Netdisk](https://pan.baidu.com/s/1CR1OsRRorAwC0vI5xqw7Rw?pwd=mix5) Code: mix5
 
-**Intel (Pre-2020 Mac)**
+**Intel (Pre-2020 Mac) (v4.0.5)**
 - [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.5/SuperPicky_v4.0.5_Intel.dmg)
 - [Google Drive (Mirror)](https://drive.google.com/file/d/1mYN8FS3xfgSWm7l1dMIA9UfPBCmWbNG7/view?usp=sharing)
 - [Baidu Netdisk](https://pan.baidu.com/s/1fQ8Wjq0oq1K9GmQTQS7rZA?pwd=cc2f) Code: cc2f
