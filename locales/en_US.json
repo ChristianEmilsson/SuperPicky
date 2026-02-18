@@ -332,7 +332,9 @@
     "arg_host": "Bind address (Default: {default})",
     "arg_port": "Bind port (Default: {default})",
     "arg_debug": "Enable debug mode",
-    "arg_no_preload": "Skip model preloading"
+    "arg_no_preload": "Skip model preloading",
+    "gps_fallback_warning": "GPS filter found no match at this location ({count} species checked). Switched to global mode automatically.",
+    "country_fallback_warning": "No local Avonet match. Fell back to eBird {country} species list."
   },
   "ai": {
     "using_mps": "✅ Using MPS (Apple GPU) acceleration",
@@ -800,6 +802,8 @@
     "info_yolo_ok": "Detection: Bird found",
     "info_yolo_fail": "Detection: No bird found",
     "info_gps": "GPS: {lat}, {lon} | {count}",
+    "info_gps_fallback": "⚠️ No local match, switched to global mode (Tip: select 'Global Mode' above to make it permanent)",
+    "info_country_fallback": "⚠️ No Avonet match, using eBird {country} country list",
     "info_region": "Region: {region} | {count}",
     "info_global": "Global mode (no geo filter)",
     "info_no_bird_hint": "Try lowering detection sensitivity or retake",

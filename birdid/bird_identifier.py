@@ -821,6 +821,8 @@ def identify_bird(
 
         # Avonet 地理过滤
         species_class_ids = None
+        lat = lon = None      # GPS 坐标（供后续回退使用）
+        species_filter = None  # 物种过滤器（供后续回退使用）
 
         if use_ebird:  # 参数名保持兼容，实际使用 Avonet
             try:
@@ -867,6 +869,45 @@ def identify_bird(
             species_class_ids=species_class_ids,
             is_yolo_cropped=is_yolo_cropped
         )
+
+        # GPS 过滤无匹配时，先尝试 eBird 国家级回退，再全局
+        if not results and species_class_ids:
+            print(f"[Avonet] ⚠️ GPS过滤后无匹配（{len(species_class_ids)}种），尝试 eBird 国家级回退")
+
+            # 第一步：eBird 国家级回退
+            country_cls_ids = None
+            country_cc = None
+            if lat is not None and lon is not None and species_filter is not None:
+                try:
+                    country_cls_ids, country_cc = species_filter.get_species_by_country_ebird(lat, lon)
+                except Exception as _e:
+                    print(f"[eBird] 国家级回退失败: {_e}")
+
+            if country_cls_ids:
+                print(f"[eBird] 尝试国家级回退: {country_cc} ({len(country_cls_ids)} 种)")
+                results = predict_bird(
+                    image,
+                    top_k=top_k,
+                    species_class_ids=country_cls_ids,
+                    is_yolo_cropped=is_yolo_cropped
+                )
+                if results:
+                    if not result.get('ebird_info'):
+                        result['ebird_info'] = {}
+                    result['ebird_info']['country_fallback'] = True
+                    result['ebird_info']['country_code'] = country_cc
+
+            # 第二步：仍无结果 → 全局模式
+            if not results:
+                print(f"[Avonet] ⚠️ 国家级回退仍无匹配，切换全局模式")
+                results = predict_bird(
+                    image,
+                    top_k=top_k,
+                    species_class_ids=None,
+                    is_yolo_cropped=is_yolo_cropped
+                )
+                if results and result.get('ebird_info'):
+                    result['ebird_info']['gps_fallback'] = True
 
         result['success'] = True
         result['results'] = results

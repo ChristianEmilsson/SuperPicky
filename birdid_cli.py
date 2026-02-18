@@ -133,7 +133,12 @@ def display_result(result: dict, verbose: bool = True):
         if result.get('ebird_info'):
             ebird = result['ebird_info']
             if ebird.get('enabled'):
-                print(t("cli.ebird_info", region=ebird.get('region', 'N/A'), count=ebird.get('species_count', 0)))
+                print(t("cli.ebird_info", region=ebird.get('region_code', 'N/A'), count=ebird.get('species_count', 0)))
+            # 回退提示（优先国家级，其次全局）
+            if ebird.get('country_fallback'):
+                print(f"⚠️  {t('server.country_fallback_warning', country=ebird.get('country_code', '?'))}")
+            elif ebird.get('gps_fallback'):
+                print(f"⚠️  {t('server.gps_fallback_warning', count=ebird.get('species_count', 0))}")
     
     results = result.get('results', [])
     if not results:

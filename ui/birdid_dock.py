@@ -1277,6 +1277,12 @@ class BirdIDDockWidget(QDockWidget):
             lat = f"{gps_info['latitude']:.2f}"
             lon = f"{gps_info['longitude']:.2f}"
             info_lines.append(t("birdid.info_gps", lat=lat, lon=lon, count=count))
+            # GPS 回退提示（优先显示国家级回退，其次全局）
+            if ebird_info and ebird_info.get('country_fallback'):
+                country = ebird_info.get('country_code', '?')
+                info_lines.append(t("birdid.info_country_fallback", country=country))
+            elif ebird_info and ebird_info.get('gps_fallback'):
+                info_lines.append(t("birdid.info_gps_fallback", count=count))
         elif ebird_info and ebird_info.get('enabled'):
             # 区域过滤生效
             region = ebird_info.get('region_code', '')

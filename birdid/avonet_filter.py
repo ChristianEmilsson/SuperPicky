@@ -110,6 +110,7 @@ class AvonetFilter:
 
         self.db_path = db_path
         self._conn: Optional[sqlite3.Connection] = None
+        self._ebird_cls_map: Optional[dict] = None  # eBird code -> class_id（懒加载）
 
         # 尝试连接数据库
         if self.db_path and os.path.exists(self.db_path):
@@ -292,6 +293,101 @@ class AvonetFilter:
     def __del__(self):
         """析构时关闭连接"""
         self.close()
+
+    # ==================== eBird 国家级回退 ====================
+
+    def _load_ebird_cls_map(self) -> dict:
+        """懒加载 ebird_classid_mapping.json，返回 ebird_code -> class_id 的反向映射"""
+        if self._ebird_cls_map is not None:
+            return self._ebird_cls_map
+
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        map_path = os.path.join(module_dir, "data", "ebird_classid_mapping.json")
+        if not os.path.exists(map_path):
+            self._ebird_cls_map = {}
+            return self._ebird_cls_map
+
+        try:
+            import json
+            with open(map_path, "r", encoding="utf-8") as f:
+                raw = json.load(f)  # {str(class_id): ebird_code}
+            self._ebird_cls_map = {v: int(k) for k, v in raw.items()}
+        except Exception as e:
+            print(f"[AvonetFilter] 加载 ebird_classid_mapping 失败: {e}")
+            self._ebird_cls_map = {}
+
+        return self._ebird_cls_map
+
+    def _detect_country_from_gps(self, lat: float, lon: float) -> Optional[str]:
+        """
+        根据 GPS 坐标离线判定国家代码（仅返回国家级，不含州级）。
+        优先匹配面积最小的边界框，避免大国遮蔽小国。
+        """
+        # 大陆级/全球代码，跳过
+        _SKIP = {"GLOBAL", "AF", "AS", "EU", "NA", "SA", "OC"}
+
+        # 收集匹配的国家及其面积
+        candidates = []
+        for code, bounds in REGION_BOUNDS.items():
+            if code in _SKIP:
+                continue
+            south, north, west, east = bounds
+            if south <= lat <= north and west <= lon <= east:
+                area = (north - south) * (east - west)
+                candidates.append((area, code))
+
+        if not candidates:
+            return None
+
+        # 返回面积最小的匹配（最具体的）
+        candidates.sort()
+        return candidates[0][1]
+
+    def get_species_by_country_ebird(
+        self, lat: float, lon: float
+    ) -> Tuple[Set[int], Optional[str]]:
+        """
+        根据 GPS 坐标判定国家，加载 eBird 离线物种列表，返回 class_id 集合。
+
+        Args:
+            lat: 纬度
+            lon: 经度
+
+        Returns:
+            (class_id_set, country_code) 或 (set(), None)
+        """
+        country_code = self._detect_country_from_gps(lat, lon)
+        if not country_code:
+            return set(), None
+
+        # 加载对应国家的 eBird 物种列表
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        species_file = os.path.join(
+            module_dir, "data", "offline_ebird_data",
+            f"species_list_{country_code}.json"
+        )
+        if not os.path.exists(species_file):
+            print(f"[AvonetFilter] 无 eBird 离线数据: {country_code}")
+            return set(), None
+
+        try:
+            import json
+            with open(species_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            ebird_codes: List[str] = data.get("species", [])
+        except Exception as e:
+            print(f"[AvonetFilter] 读取 {country_code} eBird 数据失败: {e}")
+            return set(), None
+
+        # 转换 eBird 代码 -> class_id
+        cls_map = self._load_ebird_cls_map()
+        class_ids: Set[int] = set()
+        for code in ebird_codes:
+            cls_id = cls_map.get(code)
+            if cls_id is not None:
+                class_ids.add(cls_id)
+
+        return class_ids, country_code
 
 
 if __name__ == "__main__":
