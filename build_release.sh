@@ -151,9 +151,9 @@ fi
 # ============================================
 log_step "1" "提取版本号"
 
-VERSION=$(grep -oE "v[0-9]+\.[0-9]+\.[0-9]+" ui/about_dialog.py | head -1 | sed 's/v//')
+VERSION=$(grep 'APP_VERSION' constants.py | grep -oE '"[0-9]+\.[0-9]+\.[0-9]+"' | tr -d '"' | head -1)
 if [ -z "$VERSION" ]; then
-    log_error "无法从 ui/about_dialog.py 提取版本号"
+    log_error "无法从 constants.py 提取版本号"
     exit 1
 fi
 log_success "检测到版本: v${VERSION}"
