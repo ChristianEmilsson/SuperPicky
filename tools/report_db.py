@@ -14,6 +14,7 @@ Usage:
 import os
 import sqlite3
 import time
+import threading
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from .file_utils import ensure_hidden_directory
@@ -111,6 +112,8 @@ class ReportDB:
         self.directory = directory
         self._superpicky_dir = os.path.join(directory, ".superpicky")
         self.db_path = os.path.join(self._superpicky_dir, self.DB_FILENAME)
+        # 同一连接会被主线程和后台线程复用，需要串行化访问避免事务冲突
+        self._lock = threading.RLock()
 
         # 确保 .superpicky 目录存在并隐藏（Windows 下设置 Hidden 属性）
         ensure_hidden_directory(self._superpicky_dir)
@@ -144,157 +147,160 @@ class ReportDB:
             + "\n)"
         )
 
-        with self._conn:
-            self._conn.execute(create_sql)
+        with self._lock:
+            with self._conn:
+                self._conn.execute(create_sql)
 
-            # 索引
-            self._conn.execute(
-                "CREATE UNIQUE INDEX IF NOT EXISTS idx_photos_filename "
-                "ON photos(filename)"
-            )
-            self._conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_photos_rating "
-                "ON photos(rating)"
-            )
-            self._conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_photos_has_bird "
-                "ON photos(has_bird)"
-            )
-
-            # 元数据表
-            self._conn.execute("""
-                CREATE TABLE IF NOT EXISTS meta (
-                    key TEXT PRIMARY KEY,
-                    value TEXT
+                # 索引
+                self._conn.execute(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS idx_photos_filename "
+                    "ON photos(filename)"
                 )
-            """)
+                self._conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_photos_rating "
+                    "ON photos(rating)"
+                )
+                self._conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_photos_has_bird "
+                    "ON photos(has_bird)"
+                )
 
-            # 检查并执行 Schema 升级
-            self._upgrade_schema_if_needed()
-            
-            # 初始化元数据
-            self._conn.execute(
-                "INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)",
-                ("schema_version", SCHEMA_VERSION)
-            )
-            self._conn.execute(
-                "INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)",
-                ("directory_path", self.directory)
-            )
+                # 元数据表
+                self._conn.execute("""
+                    CREATE TABLE IF NOT EXISTS meta (
+                        key TEXT PRIMARY KEY,
+                        value TEXT
+                    )
+                """)
+
+                # 检查并执行 Schema 升级
+                self._upgrade_schema_if_needed()
+                
+                # 初始化元数据
+                self._conn.execute(
+                    "INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)",
+                    ("schema_version", SCHEMA_VERSION)
+                )
+                self._conn.execute(
+                    "INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)",
+                    ("directory_path", self.directory)
+                )
     
     def _upgrade_schema_if_needed(self):
         """检查并升级数据库 Schema（支持连续升级 v1 -> v2 -> v3）"""
-        # 获取当前 schema 版本
-        cursor = self._conn.execute(
-            "SELECT value FROM meta WHERE key = 'schema_version'"
-        )
-        row = cursor.fetchone()
-        current_version = row[0] if row else "1"
-        
-        # ----------------------------------------------------------------------
-        #  Upgrade: v1 -> v2 (EXIF metadata)
-        # ----------------------------------------------------------------------
-        if current_version == "1":
-            print("🔄 Upgrading database schema from v1 to v2...")
+        with self._lock:
+            # 获取当前 schema 版本
+            cursor = self._conn.execute(
+                "SELECT value FROM meta WHERE key = 'schema_version'"
+            )
+            row = cursor.fetchone()
+            current_version = row[0] if row else "1"
             
-            # V2 新增字段
-            new_columns = [
-                # 相机设置
-                ("iso", "INTEGER"),
-                ("shutter_speed", "TEXT"),
-                ("aperture", "TEXT"),
-                ("focal_length", "REAL"),
-                ("focal_length_35mm", "INTEGER"),
-                ("camera_model", "TEXT"),
-                ("lens_model", "TEXT"),
-                # GPS
-                ("gps_latitude", "REAL"),
-                ("gps_longitude", "REAL"),
-                ("gps_altitude", "REAL"),
-                # IPTC
-                ("title", "TEXT"),
-                ("caption", "TEXT"),
-                ("city", "TEXT"),
-                ("state_province", "TEXT"),
-                ("country", "TEXT"),
-                # 时间
-                ("date_time_original", "TEXT"),
-                # 鸟种
-                ("bird_species_cn", "TEXT"),
-                ("bird_species_en", "TEXT"),
-                ("birdid_confidence", "REAL"),
-                # 曝光
-                ("exposure_status", "TEXT"),
-            ]
-            
-            for col_name, col_type in new_columns:
-                try:
-                    self._conn.execute(
-                        f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
-                    )
-                except sqlite3.OperationalError:
-                    pass # 列已存在，跳过
-            
-            current_version = "2"
-            self._update_schema_version(current_version)
-            print("✅ Database schema upgraded to v2")
+            # ----------------------------------------------------------------------
+            #  Upgrade: v1 -> v2 (EXIF metadata)
+            # ----------------------------------------------------------------------
+            if current_version == "1":
+                print("🔄 Upgrading database schema from v1 to v2...")
+                
+                # V2 新增字段
+                new_columns = [
+                    # 相机设置
+                    ("iso", "INTEGER"),
+                    ("shutter_speed", "TEXT"),
+                    ("aperture", "TEXT"),
+                    ("focal_length", "REAL"),
+                    ("focal_length_35mm", "INTEGER"),
+                    ("camera_model", "TEXT"),
+                    ("lens_model", "TEXT"),
+                    # GPS
+                    ("gps_latitude", "REAL"),
+                    ("gps_longitude", "REAL"),
+                    ("gps_altitude", "REAL"),
+                    # IPTC
+                    ("title", "TEXT"),
+                    ("caption", "TEXT"),
+                    ("city", "TEXT"),
+                    ("state_province", "TEXT"),
+                    ("country", "TEXT"),
+                    # 时间
+                    ("date_time_original", "TEXT"),
+                    # 鸟种
+                    ("bird_species_cn", "TEXT"),
+                    ("bird_species_en", "TEXT"),
+                    ("birdid_confidence", "REAL"),
+                    # 曝光
+                    ("exposure_status", "TEXT"),
+                ]
+                
+                for col_name, col_type in new_columns:
+                    try:
+                        self._conn.execute(
+                            f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
+                        )
+                    except sqlite3.OperationalError:
+                        pass # 列已存在，跳过
+                
+                current_version = "2"
+                self._update_schema_version(current_version)
+                print("✅ Database schema upgraded to v2")
 
-        # ----------------------------------------------------------------------
-        #  Upgrade: v2 -> v3 (File paths)
-        # ----------------------------------------------------------------------
-        if current_version == "2":
-            print("🔄 Upgrading database schema from v2 to v3...")
-            
-            # V3 新增字段
-            new_columns_v3 = [
-                ("original_path", "TEXT"),
-                ("current_path", "TEXT"),
-                ("temp_jpeg_path", "TEXT"),
-                ("debug_crop_path", "TEXT"),
-            ]
-            
-            for col_name, col_type in new_columns_v3:
-                try:
-                    self._conn.execute(
-                        f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
-                    )
-                except sqlite3.OperationalError:
-                    pass # 列已存在，跳过
-            
-            current_version = "3"
-            self._update_schema_version(current_version)
-            print("✅ Database schema upgraded to v3")
+            # ----------------------------------------------------------------------
+            #  Upgrade: v2 -> v3 (File paths)
+            # ----------------------------------------------------------------------
+            if current_version == "2":
+                print("🔄 Upgrading database schema from v2 to v3...")
+                
+                # V3 新增字段
+                new_columns_v3 = [
+                    ("original_path", "TEXT"),
+                    ("current_path", "TEXT"),
+                    ("temp_jpeg_path", "TEXT"),
+                    ("debug_crop_path", "TEXT"),
+                ]
+                
+                for col_name, col_type in new_columns_v3:
+                    try:
+                        self._conn.execute(
+                            f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
+                        )
+                    except sqlite3.OperationalError:
+                        pass # 列已存在，跳过
+                
+                current_version = "3"
+                self._update_schema_version(current_version)
+                print("✅ Database schema upgraded to v3")
 
-        # ----------------------------------------------------------------------
-        #  Upgrade: v3 -> v4 (Check debug images)
-        # ----------------------------------------------------------------------
-        if current_version == "3":
-            print("🔄 Upgrading database schema from v3 to v4...")
-            
-            # V4 新增字段
-            new_columns_v4 = [
-                ("yolo_debug_path", "TEXT"),
-            ]
-            
-            for col_name, col_type in new_columns_v4:
-                try:
-                    self._conn.execute(
-                        f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
-                    )
-                except sqlite3.OperationalError:
-                    pass # 列已存在，跳过
-            
-            current_version = "4"
-            self._update_schema_version(current_version)
-            print("✅ Database schema upgraded to v4")
+            # ----------------------------------------------------------------------
+            #  Upgrade: v3 -> v4 (Check debug images)
+            # ----------------------------------------------------------------------
+            if current_version == "3":
+                print("🔄 Upgrading database schema from v3 to v4...")
+                
+                # V4 新增字段
+                new_columns_v4 = [
+                    ("yolo_debug_path", "TEXT"),
+                ]
+                
+                for col_name, col_type in new_columns_v4:
+                    try:
+                        self._conn.execute(
+                            f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
+                        )
+                    except sqlite3.OperationalError:
+                        pass # 列已存在，跳过
+                
+                current_version = "4"
+                self._update_schema_version(current_version)
+                print("✅ Database schema upgraded to v4")
 
     def _update_schema_version(self, version):
         """更新数据库中的版本号"""
-        self._conn.execute(
-            "UPDATE meta SET value = ? WHERE key = 'schema_version'",
-            (version,)
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                "UPDATE meta SET value = ? WHERE key = 'schema_version'",
+                (version,)
+            )
+            self._safe_commit()
 
     # ==========================================================================
     #  写入操作
@@ -332,8 +338,9 @@ class ReportDB:
             f"ON CONFLICT(filename) DO UPDATE SET {update_clause}"
         )
 
-        self._conn.execute(sql, values)
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(sql, values)
+            self._safe_commit()
 
     def insert_photos_batch(self, photos: List[dict]) -> int:
         """
@@ -353,29 +360,30 @@ class ReportDB:
         now = _now_iso()
         count = 0
 
-        with self._conn:
-            for data in photos:
-                cleaned = self._clean_data(data)
-                cleaned.setdefault("created_at", now)
-                cleaned["updated_at"] = now
+        with self._lock:
+            with self._conn:
+                for data in photos:
+                    cleaned = self._clean_data(data)
+                    cleaned.setdefault("created_at", now)
+                    cleaned["updated_at"] = now
 
-                columns = [k for k in cleaned if k in COLUMN_NAMES]
-                values = [cleaned[k] for k in columns]
+                    columns = [k for k in cleaned if k in COLUMN_NAMES]
+                    values = [cleaned[k] for k in columns]
 
-                placeholders = ", ".join(["?"] * len(columns))
-                col_str = ", ".join(columns)
+                    placeholders = ", ".join(["?"] * len(columns))
+                    col_str = ", ".join(columns)
 
-                update_clause = ", ".join(
-                    f"{c} = excluded.{c}" for c in columns if c != "filename"
-                )
+                    update_clause = ", ".join(
+                        f"{c} = excluded.{c}" for c in columns if c != "filename"
+                    )
 
-                sql = (
-                    f"INSERT INTO photos ({col_str}) VALUES ({placeholders}) "
-                    f"ON CONFLICT(filename) DO UPDATE SET {update_clause}"
-                )
+                    sql = (
+                        f"INSERT INTO photos ({col_str}) VALUES ({placeholders}) "
+                        f"ON CONFLICT(filename) DO UPDATE SET {update_clause}"
+                    )
 
-                self._conn.execute(sql, values)
-                count += 1
+                    self._conn.execute(sql, values)
+                    count += 1
 
         return count
 
@@ -393,11 +401,12 @@ class ReportDB:
         Returns:
             照片数据字典，未找到返回 None
         """
-        cursor = self._conn.execute(
-            "SELECT * FROM photos WHERE filename = ?", (filename,)
-        )
-        row = cursor.fetchone()
-        return dict(row) if row else None
+        with self._lock:
+            cursor = self._conn.execute(
+                "SELECT * FROM photos WHERE filename = ?", (filename,)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
 
     def get_all_photos(self) -> List[dict]:
         """
@@ -406,8 +415,9 @@ class ReportDB:
         Returns:
             照片数据字典列表
         """
-        cursor = self._conn.execute("SELECT * FROM photos ORDER BY filename")
-        return [dict(row) for row in cursor.fetchall()]
+        with self._lock:
+            cursor = self._conn.execute("SELECT * FROM photos ORDER BY filename")
+            return [dict(row) for row in cursor.fetchall()]
 
     def get_bird_photos(self) -> List[dict]:
         """
@@ -416,10 +426,11 @@ class ReportDB:
         Returns:
             有鸟照片数据字典列表
         """
-        cursor = self._conn.execute(
-            "SELECT * FROM photos WHERE has_bird = 1 ORDER BY filename"
-        )
-        return [dict(row) for row in cursor.fetchall()]
+        with self._lock:
+            cursor = self._conn.execute(
+                "SELECT * FROM photos WHERE has_bird = 1 ORDER BY filename"
+            )
+            return [dict(row) for row in cursor.fetchall()]
 
     def get_photos_by_rating(self, rating: int) -> List[dict]:
         """
@@ -431,11 +442,12 @@ class ReportDB:
         Returns:
             照片数据字典列表
         """
-        cursor = self._conn.execute(
-            "SELECT * FROM photos WHERE rating = ? ORDER BY filename",
-            (rating,)
-        )
-        return [dict(row) for row in cursor.fetchall()]
+        with self._lock:
+            cursor = self._conn.execute(
+                "SELECT * FROM photos WHERE rating = ? ORDER BY filename",
+                (rating,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
 
     def get_statistics(self) -> dict:
         """
@@ -452,34 +464,36 @@ class ReportDB:
         """
         stats = {}
 
-        # 总数
-        row = self._conn.execute("SELECT COUNT(*) FROM photos").fetchone()
-        stats["total"] = row[0]
+        with self._lock:
+            # 总数
+            row = self._conn.execute("SELECT COUNT(*) FROM photos").fetchone()
+            stats["total"] = row[0]
 
-        # 有鸟数
-        row = self._conn.execute(
-            "SELECT COUNT(*) FROM photos WHERE has_bird = 1"
-        ).fetchone()
-        stats["has_bird"] = row[0]
+            # 有鸟数
+            row = self._conn.execute(
+                "SELECT COUNT(*) FROM photos WHERE has_bird = 1"
+            ).fetchone()
+            stats["has_bird"] = row[0]
 
-        # 飞行数
-        row = self._conn.execute(
-            "SELECT COUNT(*) FROM photos WHERE is_flying = 1"
-        ).fetchone()
-        stats["flying"] = row[0]
+            # 飞行数
+            row = self._conn.execute(
+                "SELECT COUNT(*) FROM photos WHERE is_flying = 1"
+            ).fetchone()
+            stats["flying"] = row[0]
 
-        # 按评分统计
-        cursor = self._conn.execute(
-            "SELECT rating, COUNT(*) as cnt FROM photos GROUP BY rating ORDER BY rating"
-        )
-        stats["by_rating"] = {row[0]: row[1] for row in cursor.fetchall()}
+            # 按评分统计
+            cursor = self._conn.execute(
+                "SELECT rating, COUNT(*) as cnt FROM photos GROUP BY rating ORDER BY rating"
+            )
+            stats["by_rating"] = {row[0]: row[1] for row in cursor.fetchall()}
 
         return stats
 
     def count(self) -> int:
         """返回总记录数。"""
-        row = self._conn.execute("SELECT COUNT(*) FROM photos").fetchone()
-        return row[0]
+        with self._lock:
+            row = self._conn.execute("SELECT COUNT(*) FROM photos").fetchone()
+            return row[0]
 
     def exists(self) -> bool:
         """数据库文件是否存在。"""
@@ -514,9 +528,10 @@ class ReportDB:
         sql = f"UPDATE photos SET {set_clause} WHERE filename = ?"
         values.append(filename)
 
-        cursor = self._conn.execute(sql, values)
-        self._conn.commit()
-        return cursor.rowcount > 0
+        with self._lock:
+            cursor = self._conn.execute(sql, values)
+            self._safe_commit()
+            return cursor.rowcount > 0
 
     def update_ratings_batch(self, updates: List[dict]) -> int:
         """
@@ -537,30 +552,40 @@ class ReportDB:
         now = _now_iso()
         count = 0
 
-        with self._conn:
-            for upd in updates:
-                filename = upd.get("filename")
-                if not filename:
-                    continue
+        with self._lock:
+            with self._conn:
+                for upd in updates:
+                    filename = upd.get("filename")
+                    if not filename:
+                        continue
 
-                cleaned = self._clean_data(upd)
-                cleaned["updated_at"] = now
+                    cleaned = self._clean_data(upd)
+                    cleaned["updated_at"] = now
 
-                columns = [k for k in cleaned if k in COLUMN_NAMES and k not in ("filename", "id")]
-                if not columns:
-                    continue
+                    columns = [k for k in cleaned if k in COLUMN_NAMES and k not in ("filename", "id")]
+                    if not columns:
+                        continue
 
-                values = [cleaned[k] for k in columns]
-                set_clause = ", ".join(f"{c} = ?" for c in columns)
+                    values = [cleaned[k] for k in columns]
+                    set_clause = ", ".join(f"{c} = ?" for c in columns)
 
-                sql = f"UPDATE photos SET {set_clause} WHERE filename = ?"
-                values.append(filename)
+                    sql = f"UPDATE photos SET {set_clause} WHERE filename = ?"
+                    values.append(filename)
 
-                cursor = self._conn.execute(sql, values)
-                if cursor.rowcount > 0:
-                    count += 1
+                    cursor = self._conn.execute(sql, values)
+                    if cursor.rowcount > 0:
+                        count += 1
 
         return count
+
+    def clear_cache_paths(self) -> int:
+        """清空缓存相关路径字段（临时 JPG、调试裁切、YOLO 调试图）。"""
+        with self._lock:
+            cursor = self._conn.execute(
+                "UPDATE photos SET debug_crop_path = NULL, temp_jpeg_path = NULL, yolo_debug_path = NULL"
+            )
+            self._safe_commit()
+            return cursor.rowcount
 
     # ==========================================================================
     #  元数据操作
@@ -568,19 +593,21 @@ class ReportDB:
 
     def get_meta(self, key: str) -> Optional[str]:
         """获取元数据值。"""
-        cursor = self._conn.execute(
-            "SELECT value FROM meta WHERE key = ?", (key,)
-        )
-        row = cursor.fetchone()
-        return row[0] if row else None
+        with self._lock:
+            cursor = self._conn.execute(
+                "SELECT value FROM meta WHERE key = ?", (key,)
+            )
+            row = cursor.fetchone()
+            return row[0] if row else None
 
     def set_meta(self, key: str, value: str) -> None:
         """设置元数据值。"""
-        self._conn.execute(
-            "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
-            (key, value)
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
+                (key, value)
+            )
+            self._safe_commit()
 
     # ==========================================================================
     #  同步预留
@@ -596,11 +623,12 @@ class ReportDB:
         Returns:
             更新记录列表
         """
-        cursor = self._conn.execute(
-            "SELECT * FROM photos WHERE updated_at > ? ORDER BY updated_at",
-            (since,)
-        )
-        return [dict(row) for row in cursor.fetchall()]
+        with self._lock:
+            cursor = self._conn.execute(
+                "SELECT * FROM photos WHERE updated_at > ? ORDER BY updated_at",
+                (since,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
 
     # ==========================================================================
     #  连接管理
@@ -608,9 +636,10 @@ class ReportDB:
 
     def close(self) -> None:
         """关闭数据库连接。"""
-        if self._conn:
-            self._conn.close()
-            self._conn = None
+        with self._lock:
+            if self._conn:
+                self._conn.close()
+                self._conn = None
 
     def __enter__(self):
         return self
@@ -622,6 +651,19 @@ class ReportDB:
     # ==========================================================================
     #  内部方法
     # ==========================================================================
+
+    def _safe_commit(self) -> None:
+        """仅在存在活动事务时提交，兼容 autocommit 场景。"""
+        if not self._conn:
+            return
+        try:
+            if self._conn.in_transaction:
+                self._conn.commit()
+        except sqlite3.OperationalError as e:
+            # 某些运行时在 autocommit 下会抛 "no transaction is active"
+            if "no transaction is active" in str(e).lower():
+                return
+            raise
 
     @staticmethod
     def _clean_data(data: dict) -> dict:
