@@ -161,37 +161,40 @@ class WorkerThread(threading.Thread):
 
     def process_files(self):
         """处理文件"""
+        from tools.utils import log_message as _log_to_file  # 日志文件写入（全程可用）
         from core.photo_processor import (
             PhotoProcessor,
             ProcessingSettings,
             ProcessingCallbacks
         )
-        
+
         # 读取 BirdID 设置
         # V4.2: 从 ui_settings 读取识鸟开关状态（索引 8），而不是从文件
         birdid_auto_identify = self.ui_settings[8] if len(self.ui_settings) > 8 else False
         birdid_use_ebird = True
         birdid_country_code = None
         birdid_region_code = None
-        
+
         # V4.2: 从高级配置读取识别置信度阈值
         from advanced_config import get_advanced_config
         birdid_confidence_threshold = get_advanced_config().birdid_confidence
-        
+
         # 从设置文件读取国家/区域配置
         try:
             import json
             import re
             import sys as sys_module
             import os
-            
+
             if sys_module.platform == 'darwin':
                 birdid_settings_dir = os.path.expanduser('~/Documents/SuperPicky_Data')
             else:
                 birdid_settings_dir = os.path.join(os.path.expanduser('~'), 'Documents', 'SuperPicky_Data')
             birdid_settings_path = os.path.join(birdid_settings_dir, 'birdid_dock_settings.json')
-            
-            print(f"[DEBUG] 检查设置文件: {birdid_settings_path}, 存在: {os.path.exists(birdid_settings_path)}")
+
+            _dbg_msg = f"[DEBUG] 检查设置文件: {birdid_settings_path}, 存在: {os.path.exists(birdid_settings_path)}"
+            print(_dbg_msg)
+            _log_to_file(_dbg_msg, self.dir_path, file_only=True)
             
             if os.path.exists(birdid_settings_path):
                 with open(birdid_settings_path, 'r', encoding='utf-8') as f:
@@ -234,9 +237,17 @@ class WorkerThread(threading.Thread):
                             match = re.search(r'\(([A-Z]{2}-[A-Z0-9]+)\)', selected_region)
                             if match:
                                 birdid_region_code = match.group(1)
-            print(f"[DEBUG] BirdID 设置读取: auto_identify={birdid_auto_identify}, country={birdid_country_code}, region={birdid_region_code}, confidence={birdid_confidence_threshold}%")
+            _dbg_msg2 = (
+                f"[DEBUG] BirdID 设置读取: auto_identify={birdid_auto_identify}, "
+                f"country={birdid_country_code}, region={birdid_region_code}, "
+                f"confidence={birdid_confidence_threshold}%"
+            )
+            print(_dbg_msg2)
+            _log_to_file(_dbg_msg2, self.dir_path, file_only=True)
         except Exception as e:
-            print(f"[DEBUG] BirdID 设置读取失败: {e}")
+            _dbg_err = f"[DEBUG] BirdID 设置读取失败: {e}"
+            print(_dbg_err)
+            _log_to_file(_dbg_err, self.dir_path, file_only=True)
             # BirdID 设置读取失败不影响主流程
             # 使用默认值
             birdid_use_ebird = True
@@ -260,8 +271,61 @@ class WorkerThread(threading.Thread):
             birdid_confidence_threshold=float(birdid_confidence_threshold),  # V4.2
         )
 
+        # ── 写完整会话头（含所有设置）到日志文件 ────────────────
+        from datetime import datetime as _dt
+        try:
+            _adv = get_advanced_config()
+            _on_off = lambda b: "On" if b else "Off"
+            _session_header = "\n".join([
+                "",
+                "=" * 60,
+                f"  [Session Start]  {_dt.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                f"  Directory : {self.dir_path}",
+                "=" * 60,
+                "[UI Settings]",
+                f"  AI Confidence      : {settings.ai_confidence}%",
+                f"  Sharpness          : {settings.sharpness_threshold}",
+                f"  Aesthetics (TOPIQ) : {settings.nima_threshold}",
+                f"  Normalization      : {settings.normalization_mode}",
+                f"  Flight Detection   : {_on_off(settings.detect_flight)}",
+                f"  Exposure Detection : {_on_off(settings.detect_exposure)}",
+                f"  Burst Detection    : {_on_off(settings.detect_burst)}",
+                f"  BirdID Auto ID     : {_on_off(settings.auto_identify)}",
+                f"  BirdID Country     : {settings.birdid_country_code or 'Auto(GPS)'}",
+                f"  BirdID Region      : {settings.birdid_region_code or 'All'}",
+                f"  BirdID Confidence  : {settings.birdid_confidence_threshold}%",
+                "[Advanced Config]",
+                f"  Min Confidence     : {_adv.min_confidence}",
+                f"  Min Sharpness      : {_adv.min_sharpness}",
+                f"  Min Aesthetics     : {_adv.min_nima}",
+                f"  Picked Top %       : {_adv.picked_top_percentage}%",
+                f"  Exposure Threshold : {_adv.exposure_threshold}",
+                f"  Burst FPS          : {_adv.burst_fps}",
+                f"  Burst Min Count    : {_adv.burst_min_count}",
+                f"  BirdID Confidence  : {_adv.birdid_confidence}%",
+                f"  ARW Write Mode     : {_adv.arw_write_mode}",
+                f"  Metadata Mode      : {_adv.get_metadata_write_mode()}",
+                f"  Skill Level        : {_adv.skill_level}",
+                f"  Language           : {_adv.language or 'Auto'}",
+                "=" * 60,
+            ])
+        except Exception as _hdr_err:
+            # 会话头生成失败时写一个最简版本，不阻断处理流程
+            _session_header = "\n".join([
+                "",
+                "=" * 60,
+                f"  [Session Start]  {_dt.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                f"  Directory : {self.dir_path}",
+                f"  [Header error: {_hdr_err}]",
+                "=" * 60,
+            ])
+        _log_to_file(_session_header, self.dir_path, file_only=True)
+        # ────────────────────────────────────────────────────────
+
         def log_callback(msg, level="info"):
             self.signals.log.emit(msg, level)
+            # 同步写入日志文件（与 CLI 模式保持一致）
+            _log_to_file(msg, self.dir_path, file_only=True)
 
         def progress_callback(value):
             self.signals.progress.emit(int(value))
@@ -300,8 +364,76 @@ class WorkerThread(threading.Thread):
             log_callback(self.i18n.t("logs.burst_complete", groups=burst_groups, moved=burst_moved), "success")
         elif settings.detect_burst:
             log_callback(self.i18n.t("logs.burst_none_detected"), "info")
-            
+
         self.stats = result.stats
+
+        # ── 写会话结束摘要到日志文件 ──────────────────────────
+        _s = result.stats
+        _total    = _s.get('total', 0)
+        _star_3   = _s.get('star_3', 0)
+        _star_2   = _s.get('star_2', 0)
+        _star_1   = _s.get('star_1', 0)
+        _star_0   = _s.get('star_0', 0)
+        _no_bird  = _s.get('no_bird', 0)
+        _picked   = _s.get('picked', 0)
+        _flying   = _s.get('flying', 0)
+        _focus_p  = _s.get('focus_precise', 0)
+        _exp_issue = _s.get('exposure_issue', 0)
+        _burst_g  = _s.get('burst_groups', 0)
+        _burst_m  = _s.get('burst_moved', 0)
+        _t_time   = _s.get('total_time', 0)
+        _avg_time = _s.get('avg_time', 0)
+
+        # 格式化识别鸟种列表（双语）
+        _species_raw = _s.get('bird_species', [])
+        if _species_raw:
+            _sp_parts = []
+            for _sp in _species_raw:
+                if isinstance(_sp, dict):
+                    _cn = _sp.get('cn_name', '')
+                    _en = _sp.get('en_name', '')
+                    _sp_parts.append(f"{_cn}/{_en}" if _cn and _en else _cn or _en)
+                else:
+                    _sp_parts.append(str(_sp))
+            _species_str = ', '.join(_sp_parts)
+        else:
+            _species_str = 'None'
+
+        def _pct(n):
+            return f" ({n / _total * 100:.1f}%)" if _total > 0 else ""
+
+        _end_lines = [
+            "",
+            "=" * 60,
+            f"  [Session End]  {_dt.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            "=" * 60,
+            "[Selection Results]",
+            f"  Total Photos       : {_total}",
+            f"  ⭐⭐⭐ 3-Star       : {_star_3}{_pct(_star_3)}",
+            f"    └─ 🏆 Picked     : {_picked}" + (
+                f" ({_picked / _star_3 * 100:.0f}% of 3★)" if _star_3 > 0 else ""
+            ),
+            f"  ⭐⭐   2-Star       : {_star_2}{_pct(_star_2)}",
+            f"  ⭐     1-Star       : {_star_1}{_pct(_star_1)}",
+            f"  0⭐    0-Star       : {_star_0}{_pct(_star_0)}",
+            f"  ❌    No Bird       : {_no_bird}{_pct(_no_bird)}",
+            "",
+            "[Flags]",
+            f"  🦅 Flying          : {_flying}",
+            f"  🎯 Precise Focus   : {_focus_p}",
+            f"  💡 Exposure Issue  : {_exp_issue}",
+            f"  📦 Burst Groups    : {_burst_g}  (moved {_burst_m})",
+            "",
+            "[BirdID Identified]",
+            f"  {_species_str}",
+            "",
+            "[Performance]",
+            f"  Total Time         : {_t_time:.1f}s  ({_t_time / 60:.1f} min)",
+            f"  Avg per Photo      : {_avg_time:.1f}s",
+            "=" * 60,
+        ]
+        _log_to_file("\n".join(_end_lines), self.dir_path, file_only=True)
+        # ────────────────────────────────────────────────────────
 
 
 class SuperPickyMainWindow(QMainWindow):
@@ -317,6 +449,13 @@ class SuperPickyMainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+
+        # 记录启动时系统信息（后台线程，不阻塞 UI）
+        import threading
+        threading.Thread(
+            target=self._write_startup_log,
+            daemon=True
+        ).start()
 
         # 初始化配置和国际化
         self.config = get_advanced_config()
@@ -376,6 +515,17 @@ class SuperPickyMainWindow(QMainWindow):
 
 
 
+    @staticmethod
+    def _write_startup_log():
+        """后台记录一次系统信息到 SuperPicky 配置目录的 startup.log"""
+        try:
+            from tools.system_logger import write_startup_log
+            log_path = write_startup_log()
+            if log_path:
+                print(f"[startup] System info written to: {log_path}")
+        except Exception as e:
+            print(f"[startup] Failed to write system info: {e}")
+
     def _get_app_icon(self):
         """获取应用图标"""
         icon_path = os.path.join(os.path.dirname(__file__), "..", "img", "icon.png")
@@ -399,8 +549,8 @@ class SuperPickyMainWindow(QMainWindow):
     def _setup_window(self):
         """设置窗口属性"""
         self.setWindowTitle(self.i18n.t("app.window_title"))
-        self.setMinimumSize(680, 600)
-        self.resize(850, 750)
+        self.setMinimumSize(800, 720)
+        self.resize(960, 820)
 
         # 应用全局样式表
         self.setStyleSheet(GLOBAL_STYLE)

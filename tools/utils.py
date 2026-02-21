@@ -14,20 +14,16 @@ def log_message(message: str, directory: str = None, file_only: bool = False):
 
     Args:
         message: 日志消息
-        directory: 工作目录（可选，如果提供则写入该目录/.superpicky/process_log.txt）
+        directory: 工作目录（可选，如果提供则写入该目录/superpicky_log.txt）
         file_only: 仅写入文件，不打印到控制台（避免重复输出）
     """
     # 打印到控制台（除非指定只写文件）
     if not file_only:
         print(message)
 
-    # 如果提供了目录，写入日志文件到_tmp子目录
+    # 如果提供了目录，写入日志文件到根目录（可见文件，方便排查问题）
     if directory:
-        # 确保_tmp目录存在并隐藏（Windows 下设置 Hidden 属性）
-        tmp_dir = os.path.join(directory, ".superpicky")
-        ensure_hidden_directory(tmp_dir)
-
-        log_file = os.path.join(tmp_dir, "process_log.txt")
+        log_file = os.path.join(directory, "superpicky.log")
         try:
             with open(log_file, 'a', encoding='utf-8') as f:
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
