@@ -5,6 +5,7 @@ __pycache__/
 *.so
 .Python
 *.egg-info/
+build_dist*/*
 dist*/*
 !dist/*.dmg
 build/
@@ -96,3 +97,6 @@ pkg_root/
 
 # OSEA 大模型文件（本地使用）
 models/model20240824.pth
+
+# 针对各平台的临时宣发与推广素材（不上云）
+docs/wechat/promo/
