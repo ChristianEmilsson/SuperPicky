@@ -145,11 +145,13 @@ class DetailPanel(QWidget):
     右侧详情面板。
 
     信号:
-        prev_requested()   用户点击"上一张"
-        next_requested()   用户点击"下一张"
+        prev_requested()              用户点击"上一张"
+        next_requested()              用户点击"下一张"
+        rating_change_requested(str, int)  用户点击 ▼/▲ 修改评分 (filename, new_rating)
     """
     prev_requested = Signal()
     next_requested = Signal()
+    rating_change_requested = Signal(str, int)
 
     def __init__(self, i18n, parent=None):
         super().__init__(parent)
@@ -226,7 +228,7 @@ class DetailPanel(QWidget):
         meta_layout.setContentsMargins(16, 12, 16, 16)
         meta_layout.setSpacing(12)
 
-        # 评分行（大号显示）
+        # 评分行（大号显示 + ▼/▲ 调整按钮）
         rating_row = QHBoxLayout()
         rating_row.setSpacing(8)
         self._rating_label = QLabel("—")
@@ -239,6 +241,39 @@ class DetailPanel(QWidget):
         """)
         rating_row.addWidget(self._rating_label)
         rating_row.addStretch()
+
+        dec_btn = QPushButton("▼")
+        dec_btn.setFixedSize(24, 24)
+        dec_btn.setToolTip("降低评分 (-1★)")
+        dec_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {COLORS['bg_card']};
+                border: 1px solid {COLORS['border']};
+                border-radius: 4px;
+                color: {COLORS['text_secondary']};
+                font-size: 10px;
+            }}
+            QPushButton:hover {{ background: {COLORS['bg_input']}; }}
+        """)
+        dec_btn.clicked.connect(self._on_rating_dec)
+        rating_row.addWidget(dec_btn)
+
+        inc_btn = QPushButton("▲")
+        inc_btn.setFixedSize(24, 24)
+        inc_btn.setToolTip("提升评分 (+1★)")
+        inc_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {COLORS['bg_card']};
+                border: 1px solid {COLORS['border']};
+                border-radius: 4px;
+                color: {COLORS['accent']};
+                font-size: 10px;
+            }}
+            QPushButton:hover {{ background: {COLORS['bg_input']}; }}
+        """)
+        inc_btn.clicked.connect(self._on_rating_inc)
+        rating_row.addWidget(inc_btn)
+
         meta_layout.addLayout(rating_row)
 
         meta_layout.addWidget(self._divider())
@@ -330,6 +365,32 @@ class DetailPanel(QWidget):
     # ------------------------------------------------------------------
     #  内部
     # ------------------------------------------------------------------
+
+    def _on_rating_dec(self):
+        """▼ 按钮：评分 -1（最低 -1）。"""
+        if not self._current_photo:
+            return
+        current = self._current_photo.get("rating", 0)
+        new_val = max(-1, current - 1)
+        if new_val == current:
+            return
+        self._current_photo["rating"] = new_val
+        self._refresh_metadata()
+        fn = self._current_photo.get("filename", "")
+        self.rating_change_requested.emit(fn, new_val)
+
+    def _on_rating_inc(self):
+        """▲ 按钮：评分 +1（最高 5）。"""
+        if not self._current_photo:
+            return
+        current = self._current_photo.get("rating", 0)
+        new_val = min(5, current + 1)
+        if new_val == current:
+            return
+        self._current_photo["rating"] = new_val
+        self._refresh_metadata()
+        fn = self._current_photo.get("filename", "")
+        self.rating_change_requested.emit(fn, new_val)
 
     def _switch_view(self, use_crop: bool):
         self._use_crop_view = use_crop
@@ -425,18 +486,18 @@ class DetailPanel(QWidget):
         is_zh = not lang.startswith('en')
         _unknown = "—"
 
-        # 评分
+        # 评分（支持 -1 ~ 5）
         rating = p.get("rating", 0)
-        if rating == 3:
-            self._rating_label.setText("★★★")
-        elif rating == 2:
-            self._rating_label.setText("★★")
-        elif rating == 1:
-            self._rating_label.setText("★")
-        elif rating == 0:
-            self._rating_label.setText("0")
-        else:
-            self._rating_label.setText(_unknown)
+        _rating_text = {
+            5: "★★★★★",
+            4: "★★★★",
+            3: "★★★",
+            2: "★★",
+            1: "★",
+            0: "0",
+            -1: "—",
+        }
+        self._rating_label.setText(_rating_text.get(rating, _unknown))
 
         # 对焦
         focus = p.get("focus_status") or _unknown

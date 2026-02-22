@@ -17,11 +17,13 @@ from ui.styles import COLORS, FONTS
 
 # 评分按钮的配置 (rating_value, 显示文字, 颜色)
 _RATING_CONFIGS = [
-    (3,  "★★★",  COLORS['star_gold']),
-    (2,  "★★",   COLORS['star_gold']),
-    (1,  "★",    COLORS['star_gold']),
-    (0,  "0",    COLORS['text_tertiary']),
-    (-1, "—",    COLORS['text_muted']),
+    (5,  "★★★★★", "#FFD700"),
+    (4,  "★★★★",  "#E8C000"),
+    (3,  "★★★",   COLORS['star_gold']),
+    (2,  "★★",    COLORS['star_gold']),
+    (1,  "★",     COLORS['star_gold']),
+    (0,  "0",     COLORS['text_tertiary']),
+    (-1, "—",     COLORS['text_muted']),
 ]
 
 # 对焦状态颜色
@@ -266,6 +268,8 @@ class FilterPanel(QWidget):
         """更新各评分数量徽章。counts: {rating: count}"""
         self._rating_counts = counts
         label_map = {
+            5: "★★★★★",
+            4: "★★★★",
             3: "★★★",
             2: "★★",
             1: "★",

@@ -41,11 +41,58 @@ from tools.report_db import ReportDB
 # ============================================================
 
 
+def _resolve_app_path(ap: str) -> str:
+    """将配置中的 app 路径规范化为可传给 open -a 的形式。
+
+    处理以下情况：
+    - /Applications/Photoshop.app          → 原样返回（已有 .app）
+    - /Applications/Adobe Photoshop 2026   → 可能是 Adobe 风格文件夹
+      → 尝试同名 .app（Adobe Photoshop 2026.app）
+      → 尝试文件夹内唯一 .app
+      → 回退到只用名称（open -a 按名字搜索）
+    """
+    if ap.endswith(".app"):
+        return ap
+    # 尝试同名加 .app 后缀
+    candidate = ap + ".app"
+    if os.path.isdir(candidate):
+        return candidate
+    # 如果本身是目录（Adobe 风格：文件夹内含同名 .app）
+    if os.path.isdir(ap):
+        folder_name = os.path.basename(ap)
+        inner = os.path.join(ap, folder_name + ".app")
+        if os.path.isdir(inner):
+            return inner
+        # 找目录内任意 .app
+        try:
+            apps_inside = [x for x in os.listdir(ap) if x.endswith(".app")]
+            if apps_inside:
+                return os.path.join(ap, apps_inside[0])
+        except OSError:
+            pass
+    # 无法确定完整路径：只返回显示名称，让 open -a 按名称搜索
+    return os.path.splitext(os.path.basename(ap))[0]
+
+
+def _best_reveal_target(filepath: str) -> str:
+    """返回"在 Finder 中显示"时最合适的目标路径：
+    - 文件存在 → 直接用它（open -R 精确定位）
+    - 文件不存在 → 回退到父目录（至少打开对应文件夹）
+    """
+    if os.path.exists(filepath):
+        return filepath
+    parent = os.path.dirname(filepath)
+    if parent and os.path.isdir(parent):
+        return parent
+    return ""
+
+
 def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
     """构建并显示右键菜单（C4）。外部应用列表从 advanced_config 读取。"""
     from advanced_config import get_advanced_config
 
-    filepath = photo.get("original_path") or photo.get("current_path") or ""
+    # current_path 是整理后的实际位置（优先），original_path 是处理时的原始位置（兜底）
+    filepath = photo.get("current_path") or photo.get("original_path") or ""
     if not filepath:
         fn = photo.get("filename", "")
         if fn and directory:
@@ -68,13 +115,18 @@ def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
     # 在 Finder/Explorer 中显示
     def _reveal():
         if sys.platform == "darwin" and filepath:
-            # QProcess.startDetached 不受 Python subprocess 沙盒限制
-            QProcess.startDetached("open", ["--reveal", filepath])
+            target = _best_reveal_target(filepath)
+            if not target:
+                return
+            # 文件存在 → open -R 精确定位；目录 → open 直接打开
+            if os.path.isfile(target):
+                QProcess.startDetached("open", ["-R", target])
+            else:
+                QProcess.startDetached("open", [target])
         elif sys.platform == "win32" and filepath:
             QProcess.startDetached("explorer", ["/select,", filepath.replace("/", "\\")])
 
     finder_action = QAction("🔍  在 Finder 中显示", parent_widget)
-    # 有路径即启用（open --reveal 在文件不存在时会打开父目录，不会崩溃）
     finder_action.setEnabled(bool(filepath))
     finder_action.triggered.connect(_reveal)
     menu.addAction(finder_action)
@@ -93,7 +145,8 @@ def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
 
             def _open_in_app(_checked=False, _fp=filepath, _ap=app_path):
                 if sys.platform == "darwin" and _fp:
-                    QProcess.startDetached("open", ["-a", _ap, _fp])
+                    ap = _resolve_app_path(_ap)
+                    QProcess.startDetached("open", ["-a", ap, _fp])
                 elif sys.platform == "win32" and _fp:
                     QProcess.startDetached(_ap, [_fp])
 
