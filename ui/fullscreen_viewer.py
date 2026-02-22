@@ -578,10 +578,12 @@ class FullscreenViewer(QWidget):
         self.toggle_focus()
 
     def _update_focus_btn_style(self, visible: bool):
-        """visible=True → accent 主按钮色；False → secondary 灰色。"""
+        """visible=True → accent 主按钮色；False → secondary 灰色；两种状态均用浅灰文字。"""
         self._focus_btn.setObjectName("" if visible else "secondary")
         self._focus_btn.style().unpolish(self._focus_btn)
         self._focus_btn.style().polish(self._focus_btn)
+        # 两种状态都强制浅灰文字，避免深色背景下出现黑字
+        self._focus_btn.setStyleSheet(f"color: {COLORS['text_secondary']};")
 
     # ------------------------------------------------------------------
     #  公共接口

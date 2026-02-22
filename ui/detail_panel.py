@@ -376,11 +376,15 @@ class DetailPanel(QWidget):
         """根据当前视图模式解析目标图片路径。"""
         p = self._current_photo
         if self._use_crop_view:
+            # Crop View：YOLO 裁切图
             path = p.get("debug_crop_path")
             if not path or not os.path.exists(path):
                 path = p.get("temp_jpeg_path")
         else:
-            path = p.get("temp_jpeg_path")
+            # Yolo View：带检测框的全图（yolo_debug_path），退而用 temp_jpeg_path
+            path = p.get("yolo_debug_path")
+            if not path or not os.path.exists(path):
+                path = p.get("temp_jpeg_path")
             if not path or not os.path.exists(path):
                 path = p.get("debug_crop_path")
 
@@ -395,6 +399,22 @@ class DetailPanel(QWidget):
     def _on_image_ready(self, pixmap: QPixmap):
         """后台加载完成，更新图片显示。"""
         self._img_label.set_pixmap(pixmap)
+
+    @staticmethod
+    def _format_shutter(val) -> str:
+        """将小数快门速度（如 '0.0008'）转为摄影惯用格式（如 '1/1250s'）。"""
+        if not val:
+            return "—"
+        try:
+            v = float(val)
+        except (ValueError, TypeError):
+            return str(val)
+        if v <= 0:
+            return "—"
+        if v >= 1:
+            return f"{int(v)}s" if v == int(v) else f"{v:.1f}s"
+        denom = round(1.0 / v)
+        return f"1/{denom}s"
 
     def _refresh_metadata(self):
         if not self._current_photo:
@@ -457,7 +477,7 @@ class DetailPanel(QWidget):
         self._val_lens.setText(p.get("lens_model") or _unknown)
 
         # 快门
-        self._val_shutter.setText(p.get("shutter_speed") or _unknown)
+        self._val_shutter.setText(self._format_shutter(p.get("shutter_speed")))
 
         # ISO
         iso = p.get("iso")

@@ -267,10 +267,10 @@ class ThumbnailCard(QFrame):
             painter.drawEllipse(overlay.width() - 12, overlay.height() - 12, 8, 8)
 
         # 左下角：burst 编号角标
-        burst_id = self.photo.get("burst_id")
+        burst_total = self.photo.get("burst_total")
         burst_pos = self.photo.get("burst_position")
-        if burst_id is not None and burst_pos is not None:
-            burst_text = f"B{burst_id + 1}/{burst_pos}"
+        if burst_total is not None and burst_pos is not None:
+            burst_text = f"B{burst_total}/{burst_pos}"
             bg = QColor(0, 0, 0, 160)
             painter.setPen(Qt.NoPen)
             painter.setBrush(bg)

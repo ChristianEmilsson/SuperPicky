@@ -290,6 +290,10 @@ class ResultsBrowserWindow(QMainWindow):
             val = photo.get(key)
             if val and not os.path.isabs(val):
                 resolved[key] = os.path.join(self._directory, val)
+        # 注入 burst_total 供缩略图角标显示
+        bid = resolved.get("burst_id")
+        if bid is not None and hasattr(self, '_burst_totals'):
+            resolved["burst_total"] = self._burst_totals.get(bid, 1)
         return resolved
 
     @Slot(dict)
@@ -471,8 +475,8 @@ class ResultsBrowserWidget(QWidget):
         main_v.setContentsMargins(0, 0, 0, 0)
         main_v.setSpacing(0)
 
-        toolbar = self._build_toolbar()
-        main_v.addWidget(toolbar)
+        self._toolbar = self._build_toolbar()
+        main_v.addWidget(self._toolbar)
 
         outer_h = QHBoxLayout()
         outer_h.setContentsMargins(0, 0, 0, 0)
@@ -672,6 +676,12 @@ class ResultsBrowserWidget(QWidget):
             # 重新加载（含 burst 字段）
             self._all_photos = self._db.get_all_photos()
 
+        # 构建 {burst_id: total_count} 供角标显示用
+        from collections import Counter
+        self._burst_totals: dict = Counter(
+            p["burst_id"] for p in self._all_photos if p.get("burst_id") is not None
+        )
+
     def cleanup(self):
         """释放 DB 连接（切换回处理页前调用）。"""
         if self._db:
@@ -693,6 +703,10 @@ class ResultsBrowserWidget(QWidget):
             val = photo.get(key)
             if val and not os.path.isabs(val):
                 resolved[key] = os.path.join(self._directory, val)
+        # 注入 burst_total 供缩略图角标显示
+        bid = resolved.get("burst_id")
+        if bid is not None and hasattr(self, '_burst_totals'):
+            resolved["burst_total"] = self._burst_totals.get(bid, 1)
         return resolved
 
     @Slot(dict)
@@ -736,11 +750,13 @@ class ResultsBrowserWidget(QWidget):
         self._fullscreen.show_photo(photo)
         self._detail_panel.show_photo(photo)
         self._detail_panel._switch_view(True)
+        self._toolbar.hide()
         self._stack.setCurrentIndex(1)
         self._fullscreen.setFocus()
 
     @Slot()
     def _exit_fullscreen(self):
+        self._toolbar.show()
         self._stack.setCurrentIndex(0)
         self._detail_panel._switch_view(False)
         self.setFocus()
