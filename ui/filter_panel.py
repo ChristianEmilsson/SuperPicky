@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 SuperPicky - 结果浏览器左侧过滤面板
-FilterPanel: 评分 / 对焦状态 / 曝光状态 / 飞行状态 / 鸟种 筛选
+FilterPanel: 鸟种 / 评分 / 对焦状态 / 飞行状态 筛选
+（曝光筛选已移除）
 """
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QCheckBox, QButtonGroup, QAbstractButton,
-    QComboBox, QScrollArea, QFrame, QSizePolicy, QRadioButton
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
+    QPushButton, QCheckBox, QComboBox, QScrollArea, QFrame, QSizePolicy
 )
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
@@ -32,16 +32,11 @@ _FOCUS_COLORS = {
     "WORST": COLORS['error'],
 }
 
-_EXPOSURE_LABELS_ZH = {
-    "GOOD":        "正常",
-    "OVEREXPOSED": "过曝",
-    "UNDEREXPOSED": "欠曝",
-}
-_EXPOSURE_LABELS_EN = {
-    "GOOD":        "Normal",
-    "OVEREXPOSED": "Overexposed",
-    "UNDEREXPOSED": "Underexposed",
-}
+# 默认勾选的评分（★★★ 和 ★★）
+_DEFAULT_CHECKED_RATINGS = {3, 2}
+
+# 默认勾选的对焦状态（BEST 和 GOOD）
+_DEFAULT_CHECKED_FOCUS = {"BEST", "GOOD"}
 
 
 def _section_label(text: str) -> QLabel:
@@ -98,41 +93,33 @@ class FilterPanel(QWidget):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(20)
 
+        # --- 鸟种（置顶）---
+        layout.addWidget(_section_label("SPECIES"))
+        self.species_combo = QComboBox()
+        self.species_combo.addItem("— All —", "")
+        self.species_combo.currentIndexChanged.connect(self._emit_filters)
+        layout.addWidget(self.species_combo)
+
+        layout.addWidget(self._divider())
+
         # --- 评分筛选 ---
         layout.addWidget(_section_label(self.i18n.t("browser.filter_rating")))
         rating_widget = self._build_rating_buttons()
         layout.addWidget(rating_widget)
 
-        # --- 分隔线 ---
         layout.addWidget(self._divider())
 
-        # --- 对焦状态 ---
+        # --- 对焦状态（2×2 网格）---
         layout.addWidget(_section_label("FOCUS"))
         focus_widget = self._build_focus_checkboxes()
         layout.addWidget(focus_widget)
 
         layout.addWidget(self._divider())
 
-        # --- 曝光状态 ---
-        layout.addWidget(_section_label("EXPOSURE"))
-        exposure_widget = self._build_exposure_checkboxes()
-        layout.addWidget(exposure_widget)
-
-        layout.addWidget(self._divider())
-
-        # --- 飞行状态 ---
+        # --- 飞行状态（checkbox 模式，2 列）---
         layout.addWidget(_section_label("FLIGHT"))
-        flight_widget = self._build_flight_radios()
+        flight_widget = self._build_flight_checkboxes()
         layout.addWidget(flight_widget)
-
-        layout.addWidget(self._divider())
-
-        # --- 鸟种 ---
-        layout.addWidget(_section_label("SPECIES"))
-        self.species_combo = QComboBox()
-        self.species_combo.addItem("— All —", "")
-        self.species_combo.currentIndexChanged.connect(self._emit_filters)
-        layout.addWidget(self.species_combo)
 
         layout.addStretch()
 
@@ -146,7 +133,7 @@ class FilterPanel(QWidget):
         outer.addWidget(scroll)
 
     def _build_rating_buttons(self) -> QWidget:
-        """构建评分多选按钮组"""
+        """构建评分多选按钮组（默认只选 3★ 和 2★）"""
         w = QWidget()
         w.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(w)
@@ -158,9 +145,10 @@ class FilterPanel(QWidget):
         for rating, label_text, color in _RATING_CONFIGS:
             btn = QPushButton(label_text)
             btn.setCheckable(True)
-            btn.setChecked(True)
+            checked = rating in _DEFAULT_CHECKED_RATINGS
+            btn.setChecked(checked)
             btn.setProperty("rating", rating)
-            btn.setStyleSheet(self._rating_btn_style(color, checked=True))
+            btn.setStyleSheet(self._rating_btn_style(color, checked=checked))
             btn.toggled.connect(lambda checked, r=rating, c=color, b=btn:
                                 self._on_rating_toggled(r, c, b, checked))
             self._rating_btns[rating] = btn
@@ -197,18 +185,26 @@ class FilterPanel(QWidget):
             """
 
     def _build_focus_checkboxes(self) -> QWidget:
+        """对焦状态：2×2 网格，默认 BEST 和 GOOD 选中"""
         w = QWidget()
         w.setStyleSheet("background: transparent;")
-        layout = QVBoxLayout(w)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
+        grid = QGridLayout(w)
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setSpacing(6)
 
         self._focus_cbs: dict = {}  # status -> QCheckBox
-        labels = {"BEST": "BEST", "GOOD": "GOOD", "BAD": "BAD", "WORST": "WORST"}
+        # 顺序：BEST(0,0) GOOD(0,1) BAD(1,0) WORST(1,1)
+        items = [
+            ("BEST",  0, 0),
+            ("GOOD",  0, 1),
+            ("BAD",   1, 0),
+            ("WORST", 1, 1),
+        ]
 
-        for status, label_text in labels.items():
-            cb = QCheckBox(label_text)
-            cb.setChecked(True)
+        for status, row, col in items:
+            cb = QCheckBox(status)
+            checked = status in _DEFAULT_CHECKED_FOCUS
+            cb.setChecked(checked)
             color = _FOCUS_COLORS.get(status, COLORS['text_secondary'])
             cb.setStyleSheet(f"""
                 QCheckBox {{ color: {color}; font-size: 12px; }}
@@ -216,54 +212,35 @@ class FilterPanel(QWidget):
             """)
             cb.stateChanged.connect(self._emit_filters)
             self._focus_cbs[status] = cb
-            layout.addWidget(cb)
+            grid.addWidget(cb, row, col)
 
         return w
 
-    def _build_exposure_checkboxes(self) -> QWidget:
+    def _build_flight_checkboxes(self) -> QWidget:
+        """飞行状态：checkbox 模式（2 列），默认全选"""
         w = QWidget()
         w.setStyleSheet("background: transparent;")
-        layout = QVBoxLayout(w)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
+        grid = QGridLayout(w)
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setSpacing(6)
 
-        self._exposure_cbs: dict = {}
-        lang = getattr(self.i18n, 'current_lang', 'zh_CN')
-        labels = _EXPOSURE_LABELS_EN if lang.startswith('en') else _EXPOSURE_LABELS_ZH
-
-        for status, label_text in labels.items():
-            cb = QCheckBox(label_text)
-            cb.setChecked(True)
-            cb.stateChanged.connect(self._emit_filters)
-            self._exposure_cbs[status] = cb
-            layout.addWidget(cb)
-
-        return w
-
-    def _build_flight_radios(self) -> QWidget:
-        w = QWidget()
-        w.setStyleSheet("background: transparent;")
-        layout = QVBoxLayout(w)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
-
-        self._flight_group = QButtonGroup(self)
         lang = getattr(self.i18n, 'current_lang', 'zh_CN')
         is_zh = not lang.startswith('en')
 
+        # (value, label, row, col)
         options = [
-            (None, "全部" if is_zh else "All"),
-            (1,    "飞行中" if is_zh else "Flying"),
-            (0,    "非飞行" if is_zh else "Non-flying"),
+            (1, "飞行中" if is_zh else "Flying",      0, 0),
+            (0, "非飞行" if is_zh else "Non-flying",  0, 1),
         ]
-        for value, label_text in options:
-            rb = QRadioButton(label_text)
-            rb.setProperty("flight_value", value)
-            rb.toggled.connect(self._emit_filters)
-            self._flight_group.addButton(rb)
-            layout.addWidget(rb)
-            if value is None:
-                rb.setChecked(True)
+
+        self._flight_cbs: dict = {}  # value -> QCheckBox
+        for value, label_text, row, col in options:
+            cb = QCheckBox(label_text)
+            cb.setChecked(True)  # 默认全选
+            cb.setStyleSheet(f"QCheckBox {{ color: {COLORS['text_secondary']}; font-size: 12px; }}")
+            cb.stateChanged.connect(self._emit_filters)
+            self._flight_cbs[value] = cb
+            grid.addWidget(cb, row, col)
 
         return w
 
@@ -327,27 +304,19 @@ class FilterPanel(QWidget):
             s for s, cb in self._focus_cbs.items() if cb.isChecked()
         ]
 
-        # 曝光
-        selected_exposure = [
-            s for s, cb in self._exposure_cbs.items() if cb.isChecked()
+        # 飞行（list of selected values: [0], [1], [0,1]）
+        is_flying = [
+            v for v, cb in self._flight_cbs.items() if cb.isChecked()
         ]
-
-        # 飞行
-        is_flying = None
-        for btn in self._flight_group.buttons():
-            if btn.isChecked():
-                is_flying = btn.property("flight_value")
-                break
 
         # 鸟种
         bird_species = self.species_combo.currentData() or ""
 
         return {
-            "ratings":          selected_ratings,
-            "focus_statuses":   selected_focus,
-            "exposure_statuses": selected_exposure,
-            "is_flying":        is_flying,
-            "bird_species_cn":  bird_species,
+            "ratings":         selected_ratings,
+            "focus_statuses":  selected_focus,
+            "is_flying":       is_flying,
+            "bird_species_cn": bird_species,
         }
 
     # ------------------------------------------------------------------
@@ -355,31 +324,24 @@ class FilterPanel(QWidget):
     # ------------------------------------------------------------------
 
     def reset_all(self):
-        """重置所有筛选条件。"""
-        # 评分全选
-        for btn in self._rating_btns.values():
+        """重置筛选条件到默认值。"""
+        # 评分：默认只选 3★ 和 2★
+        for rating, btn in self._rating_btns.items():
             btn.blockSignals(True)
-            btn.setChecked(True)
+            btn.setChecked(rating in _DEFAULT_CHECKED_RATINGS)
             btn.blockSignals(False)
 
-        # 对焦全选
-        for cb in self._focus_cbs.values():
+        # 对焦：默认只选 BEST 和 GOOD
+        for status, cb in self._focus_cbs.items():
+            cb.blockSignals(True)
+            cb.setChecked(status in _DEFAULT_CHECKED_FOCUS)
+            cb.blockSignals(False)
+
+        # 飞行：默认全选
+        for cb in self._flight_cbs.values():
             cb.blockSignals(True)
             cb.setChecked(True)
             cb.blockSignals(False)
-
-        # 曝光全选
-        for cb in self._exposure_cbs.values():
-            cb.blockSignals(True)
-            cb.setChecked(True)
-            cb.blockSignals(False)
-
-        # 飞行 -> 全部
-        for btn in self._flight_group.buttons():
-            if btn.property("flight_value") is None:
-                btn.blockSignals(True)
-                btn.setChecked(True)
-                btn.blockSignals(False)
 
         # 鸟种 -> 全部
         self.species_combo.blockSignals(True)

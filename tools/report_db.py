@@ -437,6 +437,62 @@ class ReportDB:
         )
         return [dict(row) for row in cursor.fetchall()]
 
+    def get_photos_by_filters(self, filters: dict) -> List[dict]:
+        """
+        按过滤条件查询照片。
+
+        Args:
+            filters: FilterPanel.get_filters() 返回的字典，包含：
+                - ratings: List[int]        选中的评分列表
+                - focus_statuses: List[str] 选中的对焦状态列表
+                - is_flying: List[int]      选中的飞行状态 [0]/[1]/[0,1]
+                - bird_species_cn: str      鸟种名称，空字符串表示全部
+        """
+        conditions: List[str] = []
+        params: list = []
+
+        # 评分
+        ratings = filters.get("ratings")
+        if ratings is not None and len(ratings) > 0:
+            placeholders = ",".join("?" * len(ratings))
+            conditions.append(f"rating IN ({placeholders})")
+            params.extend(ratings)
+
+        # 对焦状态
+        focus = filters.get("focus_statuses")
+        if focus is not None and len(focus) > 0:
+            placeholders = ",".join("?" * len(focus))
+            conditions.append(f"(focus_status IN ({placeholders}) OR focus_status IS NULL)")
+            params.extend(focus)
+
+        # 飞行状态 (list: [0], [1], 或 [0, 1])
+        is_flying = filters.get("is_flying")
+        if is_flying is not None:
+            if isinstance(is_flying, list):
+                if len(is_flying) == 1:
+                    conditions.append("is_flying = ?")
+                    params.append(is_flying[0])
+                # 若 len==2 (两种都选)，则不加条件（全部显示）
+            else:
+                # 向后兼容：单值 None/0/1
+                if is_flying is not None:
+                    conditions.append("is_flying = ?")
+                    params.append(int(is_flying))
+
+        # 鸟种
+        species = filters.get("bird_species_cn", "")
+        if species:
+            conditions.append("bird_species_cn = ?")
+            params.append(species)
+
+        sql = "SELECT * FROM photos"
+        if conditions:
+            sql += " WHERE " + " AND ".join(conditions)
+        sql += " ORDER BY filename"
+
+        cursor = self._conn.execute(sql, params)
+        return [dict(row) for row in cursor.fetchall()]
+
     def get_statistics(self) -> dict:
         """
         获取评分统计信息。

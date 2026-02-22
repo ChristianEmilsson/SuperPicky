@@ -661,6 +661,10 @@ class SuperPickyMainWindow(QMainWindow):
         self._create_progress_section(main_layout)
         main_layout.addSpacing(8)
 
+        # 状态条（进度条下方、按钮上方）
+        self._create_status_banner(main_layout)
+        main_layout.addSpacing(8)
+
         # 控制按钮
         self._create_button_section(main_layout)
 
@@ -1195,13 +1199,30 @@ class SuperPickyMainWindow(QMainWindow):
 
         parent_layout.addLayout(progress_info_layout)
 
+    def _create_status_banner(self, parent_layout):
+        """创建状态条（进度条下方，按钮上方）"""
+        self._status_banner = QLabel("👆 请选择一个包含照片的目录")
+        self._status_banner.setFixedHeight(40)
+        self._status_banner.setAlignment(Qt.AlignCenter)
+        self._status_banner.setStyleSheet(f"""
+            QLabel {{
+                background-color: {COLORS['bg_card']};
+                color: {COLORS['text_tertiary']};
+                border: 1px solid {COLORS['border_subtle']};
+                border-radius: 6px;
+                font-size: 12px;
+                padding: 0 12px;
+            }}
+        """)
+        parent_layout.addWidget(self._status_banner)
+
     def _create_button_section(self, parent_layout):
         """创建按钮区域"""
         btn_layout = QHBoxLayout()
-        btn_layout.addStretch()
         btn_layout.setSpacing(8)
 
-        # 重置按钮 (幽灵按钮)
+        # 次要按钮区域（左侧）
+        # 重置/重新处理按钮 (幽灵按钮)
         self.reset_btn = QPushButton(self.i18n.t("labels.reset_short"))
         self.reset_btn.setObjectName("tertiary")
         self.reset_btn.setMinimumWidth(100)
@@ -1210,15 +1231,15 @@ class SuperPickyMainWindow(QMainWindow):
         self.reset_btn.clicked.connect(self._reset_directory)
         btn_layout.addWidget(self.reset_btn)
 
-        # V4.1: 重新评星按钮暂时禁用（计算逻辑复杂度高，预览结果不一致）
-        # TODO: 未来版本重构后恢复此功能
-        # self.post_da_btn = QPushButton(self.i18n.t("labels.re_rate"))
-        # self.post_da_btn.setObjectName("secondary")
-        # self.post_da_btn.setMinimumWidth(100)
-        # self.post_da_btn.setMinimumHeight(40)
-        # self.post_da_btn.setEnabled(False)
-        # self.post_da_btn.clicked.connect(self._open_post_adjustment)
-        # btn_layout.addWidget(self.post_da_btn)
+        btn_layout.addStretch()
+
+        # 查看选鸟结果按钮（主按钮，默认隐藏）
+        self.view_results_btn = QPushButton("查看选鸟结果 →")
+        self.view_results_btn.setMinimumWidth(160)
+        self.view_results_btn.setMinimumHeight(40)
+        self.view_results_btn.clicked.connect(self._auto_open_results)
+        self.view_results_btn.setVisible(False)
+        btn_layout.addWidget(self.view_results_btn)
 
         # 开始按钮 (主按钮)
         self.start_btn = QPushButton(self.i18n.t("labels.start_processing"))
@@ -1293,45 +1314,190 @@ class SuperPickyMainWindow(QMainWindow):
         directory = os.path.normpath(directory)
         if directory == os.path.normpath(self.directory_path or ""):
             return  # 同一个目录，跳过
-        
+
         self.directory_path = directory
         self.dir_input.setText(directory)
 
         self._log(self.i18n.t("messages.dir_selected", directory=directory))
 
-        self.start_btn.setEnabled(True)
-        self.reset_btn.setEnabled(True)
-
+        # 状态条 + 按钮由 _check_report_csv 根据是否有历史数据决定
+        # 重置弹窗移到「重新处理」按钮点击时再询问（_reset_directory 保留确认逻辑）
         self._check_report_csv()
 
-        # V4.1: 检测历史记录 - 只问是否重置（重新评星功能已禁用）
-        history_db = os.path.join(directory, ".superpicky", "report.db")
-        history_manifest = os.path.join(directory, ".superpicky_manifest.json")
+    # ========== 状态条 + 结果浏览器辅助 ==========
 
-        if os.path.exists(history_db) or os.path.exists(history_manifest):
-            reply = StyledMessageBox.question(
-                self,
-                self.i18n.t("messages.history_detected_title"),
-                self.i18n.t("messages.history_reset_msg"),
-                yes_text=self.i18n.t("labels.yes"),
-                no_text=self.i18n.t("labels.no")
+    def _load_result_counts(self) -> dict:
+        """从 report.db 读取评分统计，供状态条显示。"""
+        from tools.report_db import ReportDB
+        try:
+            db = ReportDB(self.directory_path)
+            stats = db.get_statistics()
+            db.close()
+            return stats
+        except Exception:
+            return {}
+
+    def _auto_open_results(self):
+        """打开/切换结果浏览器窗口。"""
+        if not self.directory_path:
+            return
+        from ui.results_browser_window import ResultsBrowserWindow
+        if not hasattr(self, '_results_browser') or self._results_browser is None:
+            self._results_browser = ResultsBrowserWindow(parent=None)
+        self._results_browser.open_directory(self.directory_path)
+        self._results_browser.show()
+        self._results_browser.raise_()
+        self._results_browser.activateWindow()
+
+    def _update_status_banner(self, state: str, data=None):
+        """更新状态条显示。
+
+        state: "idle" | "ready" | "has_results" | "processing" | "done"
+        data: 对 has_results/done 传入 stats dict；对 processing 传入 filename str
+        """
+        if not hasattr(self, '_status_banner'):
+            return
+        if state == "idle":
+            self._status_banner.setText("👆 请选择一个包含照片的目录")
+            self._status_banner.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {COLORS['bg_card']};
+                    color: {COLORS['text_tertiary']};
+                    border: 1px solid {COLORS['border_subtle']};
+                    border-radius: 6px;
+                    font-size: 12px;
+                    padding: 0 12px;
+                }}
+            """)
+        elif state == "ready":
+            dirname = os.path.basename(self.directory_path) if self.directory_path else ""
+            self._status_banner.setText(f"📂 {dirname}    准备就绪")
+            self._status_banner.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {COLORS['bg_card']};
+                    color: {COLORS['text_secondary']};
+                    border: 1px solid {COLORS['accent']};
+                    border-radius: 6px;
+                    font-size: 12px;
+                    padding: 0 12px;
+                }}
+            """)
+        elif state == "has_results":
+            counts = data or {}
+            by_rating = counts.get("by_rating", {})
+            total = counts.get("total", 0)
+            n3 = by_rating.get(3, 0)
+            n2 = by_rating.get(2, 0)
+            n1 = by_rating.get(1, 0)
+            self._status_banner.setText(
+                f"✅ 已处理：{total}张   ⭐⭐⭐×{n3}  ⭐⭐×{n2}  ⭐×{n1}"
             )
-            if reply == StyledMessageBox.Yes:
-                # V4.0.4: 快速复原（不重置EXIF，因为马上要重新处理）
-                QTimer.singleShot(100, self._quick_restore_directory)
+            self._status_banner.setStyleSheet(f"""
+                QLabel {{
+                    background-color: rgba(34, 197, 94, 0.08);
+                    color: {COLORS['success']};
+                    border: 1px solid {COLORS['success']};
+                    border-radius: 6px;
+                    font-size: 12px;
+                    padding: 0 12px;
+                }}
+            """)
+        elif state == "processing":
+            filename = data or ""
+            text = f"⏳ 正在处理... {filename}" if filename else "⏳ 正在处理..."
+            self._status_banner.setText(text)
+            self._status_banner.setStyleSheet(f"""
+                QLabel {{
+                    background-color: rgba(234, 179, 8, 0.08);
+                    color: {COLORS['warning']};
+                    border: 1px solid {COLORS['warning']};
+                    border-radius: 6px;
+                    font-size: 12px;
+                    padding: 0 12px;
+                }}
+            """)
+        elif state == "done":
+            counts = data or {}
+            by_rating = counts.get("by_rating", {})
+            total = counts.get("total", 0)
+            n3 = by_rating.get(3, 0)
+            n2 = by_rating.get(2, 0)
+            n1 = by_rating.get(1, 0)
+            self._status_banner.setText(
+                f"🎉 完成！{total}张   ⭐⭐⭐×{n3}  ⭐⭐×{n2}  ⭐×{n1}"
+            )
+            self._status_banner.setStyleSheet(f"""
+                QLabel {{
+                    background-color: rgba(34, 197, 94, 0.15);
+                    color: {COLORS['success']};
+                    border: 1px solid {COLORS['success']};
+                    border-radius: 6px;
+                    font-size: 13px;
+                    font-weight: bold;
+                    padding: 0 12px;
+                }}
+            """)
+
+    def _update_action_buttons(self, state: str):
+        """根据状态更新按钮区域。
+
+        state: "idle" | "ready" | "has_results" | "processing"
+        """
+        if state == "idle":
+            self.reset_btn.setEnabled(False)
+            self.reset_btn.setText(self.i18n.t("labels.reset_short"))
+            self.reset_btn.setObjectName("tertiary")
+            self.start_btn.setEnabled(False)
+            self.start_btn.setText(self.i18n.t("labels.start_processing"))
+            self.start_btn.setObjectName("")
+            if hasattr(self, 'view_results_btn'):
+                self.view_results_btn.setVisible(False)
+        elif state == "ready":
+            self.reset_btn.setEnabled(True)
+            self.reset_btn.setText(self.i18n.t("labels.reset_short"))
+            self.reset_btn.setObjectName("tertiary")
+            self.start_btn.setEnabled(True)
+            self.start_btn.setText(self.i18n.t("labels.start_processing"))
+            self.start_btn.setObjectName("")
+            if hasattr(self, 'view_results_btn'):
+                self.view_results_btn.setVisible(False)
+        elif state == "has_results":
+            self.reset_btn.setEnabled(True)
+            self.reset_btn.setText("重新处理")
+            self.reset_btn.setObjectName("tertiary")
+            self.start_btn.setEnabled(True)
+            self.start_btn.setText(self.i18n.t("labels.start_processing"))
+            self.start_btn.setObjectName("tertiary")
+            if hasattr(self, 'view_results_btn'):
+                self.view_results_btn.setVisible(True)
+                self.view_results_btn.setObjectName("")
+        elif state == "processing":
+            self.reset_btn.setEnabled(False)
+            self.start_btn.setEnabled(False)
+            if hasattr(self, 'view_results_btn'):
+                self.view_results_btn.setVisible(False)
+        # 刷新样式（objectName 变化后需要 unpolish/polish）
+        for btn in [self.reset_btn, self.start_btn]:
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)
+        if hasattr(self, 'view_results_btn') and self.view_results_btn.isVisible():
+            self.view_results_btn.style().unpolish(self.view_results_btn)
+            self.view_results_btn.style().polish(self.view_results_btn)
 
     def _check_report_csv(self):
-        """检查是否有 report.db"""
+        """检查是否有 report.db，更新状态条，有结果时自动弹出浏览器。"""
         if not self.directory_path:
-            # self.post_da_btn.setEnabled(False)  # V4.1: 重新评星按钮已禁用
             return
 
         report_path = os.path.join(self.directory_path, ".superpicky", "report.db")
         if os.path.exists(report_path):
-            # self.post_da_btn.setEnabled(True)  # V4.1: 重新评星按钮已禁用
-            self._log(self.i18n.t("messages.report_detected"))
+            counts = self._load_result_counts()
+            self._update_status_banner("has_results", counts)
+            self._update_action_buttons("has_results")
+            QTimer.singleShot(300, self._auto_open_results)
         else:
-            pass  # self.post_da_btn.setEnabled(False)  # V4.1: 重新评星按钮已禁用
+            self._update_status_banner("ready")
+            self._update_action_buttons("ready")
 
     def _update_status(self, text, color=None):
         """更新状态指示器"""
@@ -1446,9 +1612,9 @@ class SuperPickyMainWindow(QMainWindow):
         if hasattr(self, 'birdid_dock') and self.birdid_dock:
             self.worker_signals.crop_preview.connect(self.birdid_dock.update_crop_preview)
 
-        # 禁用按钮
-        self.start_btn.setEnabled(False)
-        self.reset_btn.setEnabled(False)
+        # 禁用按钮，更新状态条
+        self._update_action_buttons("processing")
+        self._update_status_banner("processing")
 
         # 启动工作线程
         self.worker = WorkerThread(
@@ -1469,18 +1635,27 @@ class SuperPickyMainWindow(QMainWindow):
     def _on_log(self, message, tag):
         """日志更新"""
         self._log(message, tag)
+        # 改动 7: 处理中状态条实时显示当前文件名
+        # 格式示例: "📸 处理照片 12/265: IMG_1234.JPG" 或 "[12/265] 处理: IMG_1234.JPG"
+        if tag == "progress" or ("处理" in message and "/" in message and ":" in message):
+            import re
+            m = re.search(r':\s*(.+\.(jpg|jpeg|png|cr2|cr3|arw|nef|orf|rw2|dng))', message, re.IGNORECASE)
+            if m:
+                self._update_status_banner("processing", m.group(1))
 
     @Slot(dict)
     def _on_finished(self, stats):
         """处理完成"""
-        self.start_btn.setEnabled(True)
-        self.reset_btn.setEnabled(True)
-        # self.post_da_btn.setEnabled(True)  # V4.1: 重新评星按钮已禁用
         self.progress_bar.setValue(100)
         self.progress_percent_label.setText("100%")
         self.progress_info_label.setText(self.i18n.t("labels.complete"))
 
         self._update_status(self.i18n.t("labels.complete"), COLORS['success'])
+
+        # 更新状态条为完成状态
+        counts = self._load_result_counts()
+        self._update_status_banner("done", counts)
+        self._update_action_buttons("has_results")
 
         # 显示报告（不清空之前的日志）
         report = self._format_statistics_report(stats)
@@ -1496,25 +1671,15 @@ class SuperPickyMainWindow(QMainWindow):
         # 播放完成音效
         self._play_completion_sound()
 
-        # 打开目录
-        if self.directory_path and os.path.exists(self.directory_path):
-            if sys.platform == 'darwin':
-                subprocess.Popen(['open', self.directory_path])
-            elif sys.platform.startswith('win'):
-                os.startfile(self.directory_path)
-            else:
-                try:
-                    subprocess.Popen(['xdg-open', self.directory_path])
-                except Exception:
-                    pass
+        # 800ms 后自动弹出结果浏览器
+        QTimer.singleShot(800, self._auto_open_results)
 
     @Slot(str)
     def _on_error(self, error_msg):
         """处理错误"""
         self._log(f"Error: {error_msg}", "error")
         self._update_status(self.i18n.t("errors.error_title"), COLORS['error'])
-        self.start_btn.setEnabled(True)
-        self.reset_btn.setEnabled(True)
+        self._check_report_csv()  # 恢复按钮状态 + 状态条
 
     @Slot()
     def _quick_restore_directory(self):
@@ -1765,8 +1930,6 @@ class SuperPickyMainWindow(QMainWindow):
             self._update_status(self.i18n.t("labels.error"), COLORS['error'])
             self._log(self.i18n.t("messages.reset_failed_log"))
 
-        self.reset_btn.setEnabled(True)
-        self.start_btn.setEnabled(True)
         self._check_report_csv()
 
     def _on_reset_error(self, error_msg):
@@ -1778,8 +1941,7 @@ class SuperPickyMainWindow(QMainWindow):
             error_msg,
             "error"
         )
-        self.reset_btn.setEnabled(True)
-        self.start_btn.setEnabled(True)
+        self._check_report_csv()
 
     @Slot()
     def _open_post_adjustment(self):

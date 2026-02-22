@@ -448,6 +448,7 @@ class FullscreenViewer(QWidget):
         self._photos: list = []                        # 当前完整照片列表
 
         self.setStyleSheet(f"background-color: {COLORS['bg_void']};")
+        self.setFocusPolicy(Qt.StrongFocus)            # 允许接收键盘事件
         self._build_ui()
 
     # ------------------------------------------------------------------
@@ -654,6 +655,9 @@ class FullscreenViewer(QWidget):
         # 6. 触发 ±10 预加载
         self._trigger_preload(photo)
 
+        # 确保全屏 viewer 持有键盘焦点（切换照片后维持焦点）
+        self.setFocus()
+
     # ------------------------------------------------------------------
     #  内部
     # ------------------------------------------------------------------
@@ -714,3 +718,21 @@ class FullscreenViewer(QWidget):
                     ordered_paths.append(path)
 
         self._preload_worker.restart(ordered_paths)
+
+    # ------------------------------------------------------------------
+    #  键盘事件（左右箭头导航，F 切换焦点，Escape 返回）
+    # ------------------------------------------------------------------
+
+    def keyPressEvent(self, event):
+        from PySide6.QtCore import Qt as _Qt
+        key = event.key()
+        if key in (_Qt.Key_Left, _Qt.Key_Up):
+            self.prev_requested.emit()
+        elif key in (_Qt.Key_Right, _Qt.Key_Down):
+            self.next_requested.emit()
+        elif key == _Qt.Key_F:
+            self.toggle_focus()
+        elif key == _Qt.Key_Escape:
+            self.close_requested.emit()
+        else:
+            super().keyPressEvent(event)

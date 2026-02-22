@@ -63,6 +63,7 @@ class ResultsBrowserWindow(QMainWindow):
         self.setMinimumSize(1000, 680)
         self.resize(1280, 780)
         self.setStyleSheet(GLOBAL_STYLE)
+        self.setFocusPolicy(Qt.StrongFocus)  # 确保窗口能接收键盘事件
 
         # 尝试复用主窗口图标
         try:
@@ -92,13 +93,26 @@ class ResultsBrowserWindow(QMainWindow):
         file_menu.addAction(close_action)
 
     def _setup_ui(self):
-        """QStackedWidget 双页: Page 0 三栏布局 / Page 1 全屏查看器"""
-        self._stack = QStackedWidget()
-        self.setCentralWidget(self._stack)
+        """
+        布局：外层 QHBoxLayout = [QStackedWidget (左/中)] + [DetailPanel (右，始终可见)]
+        QStackedWidget:
+          Page 0 — 过滤面板 + 缩略图网格（两栏）
+          Page 1 — 全屏查看器
+        DetailPanel 在 Stack 外部，Tab 键开关可见性。
+        """
+        outer = QWidget()
+        self.setCentralWidget(outer)
+        outer_h = QHBoxLayout(outer)
+        outer_h.setContentsMargins(0, 0, 0, 0)
+        outer_h.setSpacing(0)
 
-        # ── Page 0: 三栏布局 ──────────────────────────────────────
-        three_col = QWidget()
-        main_h = QHBoxLayout(three_col)
+        # ── Stack（左/中部分）──────────────────────────────────────
+        self._stack = QStackedWidget()
+        outer_h.addWidget(self._stack, 1)
+
+        # Page 0: 过滤面板 + 缩略图网格
+        two_col = QWidget()
+        main_h = QHBoxLayout(two_col)
         main_h.setContentsMargins(0, 0, 0, 0)
         main_h.setSpacing(0)
 
@@ -123,21 +137,20 @@ class ResultsBrowserWindow(QMainWindow):
         center_layout.addWidget(self._thumb_grid, 1)
 
         main_h.addWidget(center_widget, 1)
+        self._stack.addWidget(two_col)            # index 0
 
-        # 右侧：详情面板
-        self._detail_panel = DetailPanel(self.i18n, self)
-        self._detail_panel.prev_requested.connect(self._prev_photo)
-        self._detail_panel.next_requested.connect(self._next_photo)
-        main_h.addWidget(self._detail_panel)
-
-        self._stack.addWidget(three_col)          # index 0
-
-        # ── Page 1: 全屏查看器 ───────────────────────────────────
+        # Page 1: 全屏查看器
         self._fullscreen = FullscreenViewer(self.i18n, self)
         self._fullscreen.close_requested.connect(self._exit_fullscreen)
         self._fullscreen.prev_requested.connect(self._fullscreen_prev)
         self._fullscreen.next_requested.connect(self._fullscreen_next)
         self._stack.addWidget(self._fullscreen)   # index 1
+
+        # ── 右侧详情面板（始终显示，Tab 键开关）──────────────────
+        self._detail_panel = DetailPanel(self.i18n, self)
+        self._detail_panel.prev_requested.connect(self._prev_photo)
+        self._detail_panel.next_requested.connect(self._next_photo)
+        outer_h.addWidget(self._detail_panel, 0)
 
     def _build_toolbar(self) -> QWidget:
         """构建网格顶部工具栏（目录选择 + 缩略图尺寸滑块）。"""
@@ -152,6 +165,16 @@ class ResultsBrowserWindow(QMainWindow):
         layout = QHBoxLayout(bar)
         layout.setContentsMargins(16, 8, 16, 8)
         layout.setSpacing(12)
+
+        # P2: 返回主界面按钮（最左侧）
+        back_btn = QPushButton("← 返回")
+        back_btn.setObjectName("tertiary")
+        back_btn.setFixedHeight(32)
+        back_btn.setToolTip("返回主界面")
+        back_btn.clicked.connect(self._go_back_to_main)
+        layout.addWidget(back_btn)
+
+        layout.addSpacing(8)
 
         # 目录显示标签
         self._dir_label = QLabel(self.i18n.t("browser.open_dir"))
@@ -254,6 +277,23 @@ class ResultsBrowserWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     @Slot()
+    def _go_back_to_main(self):
+        """P2: 隐藏结果浏览器，将主窗口置前。"""
+        self.hide()
+        if self.parent() is not None:
+            self.parent().show()
+            self.parent().raise_()
+            self.parent().activateWindow()
+        else:
+            # 无父窗口时尝试激活同应用的其他窗口
+            app = QApplication.instance()
+            if app:
+                for widget in app.topLevelWidgets():
+                    if widget is not self and widget.isVisible():
+                        widget.raise_()
+                        widget.activateWindow()
+                        break
+
     def _browse_directory(self):
         """弹出目录选择对话框。"""
         directory = QFileDialog.getExistingDirectory(
@@ -321,12 +361,15 @@ class ResultsBrowserWindow(QMainWindow):
     def _enter_fullscreen(self, photo: dict):
         """双击缩略图 → 进入全屏查看器。"""
         self._fullscreen.show_photo(photo)
+        self._detail_panel.show_photo(photo)
         self._stack.setCurrentIndex(1)
+        self._fullscreen.setFocus()  # 确保全屏 viewer 获得键盘焦点
 
     @Slot()
     def _exit_fullscreen(self):
-        """返回三栏 grid 视图。"""
+        """返回 grid 视图。"""
         self._stack.setCurrentIndex(0)
+        self.setFocus()  # 确保窗口拿回焦点
 
     @Slot()
     def _fullscreen_prev(self):
@@ -334,6 +377,7 @@ class ResultsBrowserWindow(QMainWindow):
         photo = self._thumb_grid.select_prev()
         if photo:
             self._fullscreen.show_photo(photo)
+            self._detail_panel.show_photo(photo)
 
     @Slot()
     def _fullscreen_next(self):
@@ -341,6 +385,7 @@ class ResultsBrowserWindow(QMainWindow):
         photo = self._thumb_grid.select_next()
         if photo:
             self._fullscreen.show_photo(photo)
+            self._detail_panel.show_photo(photo)
 
     @Slot(int)
     def _on_size_changed(self, value: int):
@@ -352,25 +397,34 @@ class ResultsBrowserWindow(QMainWindow):
 
     def keyPressEvent(self, event: QKeyEvent):
         key = event.key()
-        if key == Qt.Key_Left:
-            self._prev_photo()
-        elif key == Qt.Key_Right:
-            self._next_photo()
+        in_fullscreen = (self._stack.currentIndex() == 1)
+
+        if key in (Qt.Key_Left, Qt.Key_Up):
+            if in_fullscreen:
+                self._fullscreen_prev()
+            else:
+                self._prev_photo()
+        elif key in (Qt.Key_Right, Qt.Key_Down):
+            if in_fullscreen:
+                self._fullscreen_next()
+            else:
+                self._next_photo()
+        elif key == Qt.Key_Tab:
+            # Tab: 开关右侧详情面板
+            self._detail_panel.setVisible(not self._detail_panel.isVisible())
         elif key == Qt.Key_Plus or key == Qt.Key_Equal:
             self._size_slider.setValue(min(300, self._size_slider.value() + 20))
         elif key == Qt.Key_Minus:
             self._size_slider.setValue(max(80, self._size_slider.value() - 20))
         elif key == Qt.Key_Escape:
-            if self._stack.currentIndex() == 1:
+            if in_fullscreen:
                 self._exit_fullscreen()   # 全屏时 Escape = 返回 grid
             else:
                 self.close()              # 普通模式 Escape = 关闭窗口
         elif key == Qt.Key_F:
-            if self._stack.currentIndex() == 1:
-                # 全屏模式：切换焦点叠加层
+            if in_fullscreen:
                 self._fullscreen.toggle_focus()
             else:
-                # 普通模式：切换裁切/全图
                 self._detail_panel._switch_view(not self._detail_panel._use_crop_view)
         else:
             super().keyPressEvent(event)
