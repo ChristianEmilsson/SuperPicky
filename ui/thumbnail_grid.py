@@ -187,6 +187,7 @@ class ThumbnailCard(QFrame):
         self.setFixedSize(thumb_size + 8, thumb_size + 32)
         self.setStyleSheet(self._normal_style())
         self.setCursor(Qt.PointingHandCursor)
+        self.setFocusPolicy(Qt.ClickFocus)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
@@ -265,6 +266,22 @@ class ThumbnailCard(QFrame):
             painter.setBrush(dot_color)
             painter.drawEllipse(overlay.width() - 12, overlay.height() - 12, 8, 8)
 
+        # 左下角：burst 编号角标
+        burst_id = self.photo.get("burst_id")
+        burst_pos = self.photo.get("burst_position")
+        if burst_id is not None and burst_pos is not None:
+            burst_text = f"B{burst_id + 1}/{burst_pos}"
+            bg = QColor(0, 0, 0, 160)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(bg)
+            rect_w, rect_h = 38, 16
+            painter.drawRoundedRect(4, overlay.height() - rect_h - 4, rect_w, rect_h, 4, 4)
+            painter.setPen(QColor(220, 220, 220))
+            font = QFont()
+            font.setPixelSize(9)
+            painter.setFont(font)
+            painter.drawText(4, overlay.height() - rect_h - 4, rect_w, rect_h, Qt.AlignCenter, burst_text)
+
         painter.end()
         self.img_label.setPixmap(overlay)
 
@@ -304,6 +321,18 @@ class ThumbnailCard(QFrame):
             self.double_clicked.emit(self.photo)
         super().mouseDoubleClickEvent(event)
 
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key_Left, Qt.Key_Up, Qt.Key_Right, Qt.Key_Down):
+            # 沿 parent 链找到 ThumbnailGrid 并代理箭头键
+            # 层级：card → _container → viewport → ThumbnailGrid
+            node = self.parent()
+            while node is not None:
+                if isinstance(node, ThumbnailGrid):
+                    node.keyPressEvent(event)
+                    return
+                node = node.parent()
+        super().keyPressEvent(event)
+
 
 # ============================================================
 #  ThumbnailGrid — 缩略图网格
@@ -331,6 +360,7 @@ class ThumbnailGrid(QScrollArea):
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setStyleSheet(f"QScrollArea {{ background-color: {COLORS['bg_primary']}; border: none; }}")
+        self.setFocusPolicy(Qt.StrongFocus)
 
         self._container = QWidget()
         self._container.setStyleSheet(f"background-color: {COLORS['bg_primary']};")
@@ -453,6 +483,15 @@ class ThumbnailGrid(QScrollArea):
         filename = photo.get("filename", "")
         self.select_photo(filename)
         self.photo_selected.emit(photo)
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key in (Qt.Key_Left, Qt.Key_Up):
+            self._select_adjacent(-1)
+        elif key in (Qt.Key_Right, Qt.Key_Down):
+            self._select_adjacent(1)
+        else:
+            super().keyPressEvent(event)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

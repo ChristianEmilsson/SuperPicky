@@ -20,7 +20,7 @@ from .file_utils import ensure_hidden_directory
 
 
 # Schema 版本，用于未来升级
-SCHEMA_VERSION = "4"
+SCHEMA_VERSION = "5"
 
 # 所有列定义（有序），用于 CREATE TABLE 和数据验证
 PHOTO_COLUMNS = [
@@ -288,6 +288,27 @@ class ReportDB:
             self._update_schema_version(current_version)
             print("✅ Database schema upgraded to v4")
 
+        # ----------------------------------------------------------------------
+        if current_version == "4":
+            print("🔄 Upgrading database schema from v4 to v5...")
+
+            new_columns_v5 = [
+                ("burst_id",       "INTEGER"),
+                ("burst_position", "INTEGER"),
+            ]
+
+            for col_name, col_type in new_columns_v5:
+                try:
+                    self._conn.execute(
+                        f"ALTER TABLE photos ADD COLUMN {col_name} {col_type} DEFAULT NULL"
+                    )
+                except sqlite3.OperationalError:
+                    pass  # 列已存在，跳过
+
+            current_version = "5"
+            self._update_schema_version(current_version)
+            print("✅ Database schema upgraded to v5")
+
     def _update_schema_version(self, version):
         """更新数据库中的版本号"""
         self._conn.execute(
@@ -485,10 +506,26 @@ class ReportDB:
             conditions.append("bird_species_cn = ?")
             params.append(species)
 
+        # burst 筛选
+        burst_filter = filters.get("burst_filter", "all")
+        if burst_filter == "burst_only":
+            conditions.append("burst_id IS NOT NULL")
+        elif burst_filter == "single_only":
+            conditions.append("burst_id IS NULL")
+        elif burst_filter == "none":
+            conditions.append("1 = 0")  # 全不显示
+
         sql = "SELECT * FROM photos"
         if conditions:
             sql += " WHERE " + " AND ".join(conditions)
-        sql += " ORDER BY filename"
+
+        sort_by = filters.get("sort_by", "filename")
+        order_map = {
+            "filename":       "ORDER BY filename ASC",
+            "sharpness_desc": "ORDER BY COALESCE(adj_sharpness, 0.0) DESC, filename ASC",
+            "aesthetic_desc": "ORDER BY COALESCE(adj_topiq, nima_score, 0.0) DESC, filename ASC",
+        }
+        sql += " " + order_map.get(sort_by, "ORDER BY filename ASC")
 
         cursor = self._conn.execute(sql, params)
         return [dict(row) for row in cursor.fetchall()]
@@ -531,6 +568,15 @@ class ReportDB:
         stats["by_rating"] = {row[0]: row[1] for row in cursor.fetchall()}
 
         return stats
+
+    def get_distinct_species(self) -> List[str]:
+        """返回数据库中所有不重复的鸟种名称列表（非空）。"""
+        cursor = self._conn.execute(
+            "SELECT DISTINCT bird_species_cn FROM photos "
+            "WHERE bird_species_cn IS NOT NULL AND bird_species_cn != '' "
+            "ORDER BY bird_species_cn"
+        )
+        return [row[0] for row in cursor.fetchall()]
 
     def count(self) -> int:
         """返回总记录数。"""
@@ -617,6 +663,20 @@ class ReportDB:
                     count += 1
 
         return count
+
+    def update_burst_ids(self, burst_map: dict) -> None:
+        """
+        批量写入 burst_id / burst_position。
+
+        Args:
+            burst_map: {filename: (burst_id, burst_position)} 字典
+        """
+        with self._conn:
+            for filename, (bid, bpos) in burst_map.items():
+                self._conn.execute(
+                    "UPDATE photos SET burst_id = ?, burst_position = ? WHERE filename = ?",
+                    (bid, bpos, filename)
+                )
 
     # ==========================================================================
     #  元数据操作

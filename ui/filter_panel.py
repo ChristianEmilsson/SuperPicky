@@ -121,6 +121,24 @@ class FilterPanel(QWidget):
         flight_widget = self._build_flight_checkboxes()
         layout.addWidget(flight_widget)
 
+        layout.addWidget(self._divider())
+
+        # --- Burst 连拍筛选 ---
+        layout.addWidget(_section_label("BURST"))
+        burst_widget = self._build_burst_checkboxes()
+        layout.addWidget(burst_widget)
+
+        layout.addWidget(self._divider())
+
+        # --- 排序方式 ---
+        layout.addWidget(_section_label("SORT BY"))
+        self._sort_combo = QComboBox()
+        self._sort_combo.addItem("文件名", "filename")
+        self._sort_combo.addItem("锐度↓", "sharpness_desc")
+        self._sort_combo.addItem("美学↓", "aesthetic_desc")
+        self._sort_combo.currentIndexChanged.connect(self._emit_filters)
+        layout.addWidget(self._sort_combo)
+
         layout.addStretch()
 
         # --- 重置按钮 ---
@@ -244,6 +262,27 @@ class FilterPanel(QWidget):
 
         return w
 
+    def _build_burst_checkboxes(self) -> QWidget:
+        """构建 Burst 连拍筛选（连拍照片 / 单张照片）。"""
+        w = QWidget()
+        w.setStyleSheet("background: transparent;")
+        layout = QHBoxLayout(w)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
+
+        self._burst_cb_burst = QCheckBox("连拍")
+        self._burst_cb_burst.setChecked(True)
+        self._burst_cb_burst.toggled.connect(self._emit_filters)
+
+        self._burst_cb_single = QCheckBox("单张")
+        self._burst_cb_single.setChecked(True)
+        self._burst_cb_single.toggled.connect(self._emit_filters)
+
+        layout.addWidget(self._burst_cb_burst)
+        layout.addWidget(self._burst_cb_single)
+        layout.addStretch()
+        return w
+
     def _divider(self) -> QFrame:
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
@@ -312,11 +351,27 @@ class FilterPanel(QWidget):
         # 鸟种
         bird_species = self.species_combo.currentData() or ""
 
+        sort_by = self._sort_combo.currentData() if hasattr(self, '_sort_combo') else "filename"
+
+        # burst 筛选
+        show_burst = self._burst_cb_burst.isChecked() if hasattr(self, '_burst_cb_burst') else True
+        show_single = self._burst_cb_single.isChecked() if hasattr(self, '_burst_cb_single') else True
+        if show_burst and show_single:
+            burst_filter = "all"
+        elif show_burst:
+            burst_filter = "burst_only"
+        elif show_single:
+            burst_filter = "single_only"
+        else:
+            burst_filter = "none"
+
         return {
             "ratings":         selected_ratings,
             "focus_statuses":  selected_focus,
             "is_flying":       is_flying,
             "bird_species_cn": bird_species,
+            "sort_by":         sort_by,
+            "burst_filter":    burst_filter,
         }
 
     # ------------------------------------------------------------------
@@ -347,6 +402,19 @@ class FilterPanel(QWidget):
         self.species_combo.blockSignals(True)
         self.species_combo.setCurrentIndex(0)
         self.species_combo.blockSignals(False)
+
+        # 排序 -> 文件名（默认）
+        self._sort_combo.blockSignals(True)
+        self._sort_combo.setCurrentIndex(0)
+        self._sort_combo.blockSignals(False)
+
+        # burst -> 全选
+        self._burst_cb_burst.blockSignals(True)
+        self._burst_cb_burst.setChecked(True)
+        self._burst_cb_burst.blockSignals(False)
+        self._burst_cb_single.blockSignals(True)
+        self._burst_cb_single.setChecked(True)
+        self._burst_cb_single.blockSignals(False)
 
         self._emit_filters()
 

@@ -155,7 +155,7 @@ class DetailPanel(QWidget):
         super().__init__(parent)
         self.i18n = i18n
         self._current_photo: Optional[dict] = None
-        self._use_crop_view = True      # True=裁切图, False=全图
+        self._use_crop_view = False     # True=裁切图, False=全图
         self._loader: Optional[_ImageLoader] = None
 
         self.setFixedWidth(300)
@@ -174,8 +174,7 @@ class DetailPanel(QWidget):
 
         # --- 图片预览区 ---
         self._img_label = _ZoomableImageLabel()
-        self._img_label.setMinimumHeight(220)
-        self._img_label.setMaximumHeight(280)
+        self._img_label.setFixedHeight(200)
         layout.addWidget(self._img_label)
 
         # --- 裁切/全图切换 ---
