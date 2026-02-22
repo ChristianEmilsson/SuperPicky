@@ -486,7 +486,7 @@ class FullscreenViewer(QWidget):
         h.setSpacing(12)
 
         # 返回按钮
-        back_btn = QPushButton("← 返回")
+        back_btn = QPushButton(self.i18n.t("browser.back"))
         back_btn.setObjectName("secondary")
         back_btn.setFixedHeight(36)
         back_btn.setMinimumWidth(100)
@@ -494,7 +494,7 @@ class FullscreenViewer(QWidget):
         h.addWidget(back_btn)
 
         # 焦点图层开关按钮
-        self._focus_btn = QPushButton("焦 ●")
+        self._focus_btn = QPushButton(self.i18n.t("browser.focus_toggle"))
         self._focus_btn.setFixedHeight(36)
         self._focus_btn.setMinimumWidth(80)
         self._focus_btn.setToolTip("切换焦点叠加显示 (F)")
@@ -547,14 +547,14 @@ class FullscreenViewer(QWidget):
 
         h.addStretch()
 
-        prev_btn = QPushButton("◀ 上一张")
+        prev_btn = QPushButton(self.i18n.t("browser.prev_arrow"))
         prev_btn.setObjectName("secondary")
         prev_btn.setFixedHeight(32)
         prev_btn.setFixedWidth(100)
         prev_btn.clicked.connect(self.prev_requested)
         h.addWidget(prev_btn)
 
-        next_btn = QPushButton("下一张 ▶")
+        next_btn = QPushButton(self.i18n.t("browser.next_arrow"))
         next_btn.setObjectName("secondary")
         next_btn.setFixedHeight(32)
         next_btn.setFixedWidth(100)

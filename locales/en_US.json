@@ -10,6 +10,7 @@
     "brand_name": "SuperPicky"
   },
   "menu": {
+    "file": "File",
     "settings_menu": "Settings",
     "settings": "Preferences...",
     "advanced_settings": "Advanced Settings...",
@@ -931,6 +932,22 @@
     "full_view": "Yolo View",
     "exposure_good": "Normal",
     "exposure_over": "Overexposed",
-    "exposure_under": "Underexposed"
+    "exposure_under": "Underexposed",
+    "back": "← Back",
+    "back_tooltip": "Back to Main",
+    "size_label": "SIZE",
+    "section_species": "SPECIES",
+    "section_focus": "FOCUS",
+    "section_flight": "FLIGHT",
+    "section_sort": "SORT BY",
+    "sort_filename": "Filename",
+    "sort_sharpness": "Sharpness↓",
+    "sort_aesthetic": "Aesthetic↓",
+    "species_all": "— All —",
+    "focus_toggle": "Focus ●",
+    "prev_arrow": "◀ Prev",
+    "next_arrow": "Next ▶",
+    "flying_option": "Flying",
+    "non_flying_option": "Non-flying"
   }
 }

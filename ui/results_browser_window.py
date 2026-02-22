@@ -78,11 +78,11 @@ class ResultsBrowserWindow(QMainWindow):
     def _setup_menu(self):
         menubar = self.menuBar()
 
-        file_menu = menubar.addMenu("文件" if not self.i18n.current_lang.startswith('en') else "File")
+        file_menu = menubar.addMenu(self.i18n.t("menu.file"))
 
         file_menu.addSeparator()
 
-        close_action = QAction("关闭" if not self.i18n.current_lang.startswith('en') else "Close", self)
+        close_action = QAction(self.i18n.t("buttons.close"), self)
         close_action.setShortcut("Ctrl+W")
         close_action.triggered.connect(self.close)
         file_menu.addAction(close_action)
@@ -162,10 +162,10 @@ class ResultsBrowserWindow(QMainWindow):
         layout.setSpacing(12)
 
         # P2: 返回主界面按钮（最左侧）
-        back_btn = QPushButton("← 返回")
+        back_btn = QPushButton(self.i18n.t("browser.back"))
         back_btn.setObjectName("tertiary")
         back_btn.setFixedHeight(32)
-        back_btn.setToolTip("返回主界面")
+        back_btn.setToolTip(self.i18n.t("browser.back_tooltip"))
         back_btn.clicked.connect(self._go_back_to_main)
         layout.addWidget(back_btn)
 
@@ -187,7 +187,7 @@ class ResultsBrowserWindow(QMainWindow):
         layout.addSpacing(16)
 
         # 缩略图尺寸滑块
-        size_label = QLabel("SIZE")
+        size_label = QLabel(self.i18n.t("browser.size_label"))
         size_label.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 10px; background: transparent;")
         layout.addWidget(size_label)
 
@@ -550,10 +550,10 @@ class ResultsBrowserWidget(QWidget):
         layout.setContentsMargins(16, 8, 16, 8)
         layout.setSpacing(12)
 
-        back_btn = QPushButton("← 返回")
+        back_btn = QPushButton(self.i18n.t("browser.back"))
         back_btn.setObjectName("tertiary")
         back_btn.setFixedHeight(32)
-        back_btn.setToolTip("返回主界面")
+        back_btn.setToolTip(self.i18n.t("browser.back_tooltip"))
         back_btn.clicked.connect(self.back_requested)
         layout.addWidget(back_btn)
 
@@ -573,7 +573,7 @@ class ResultsBrowserWidget(QWidget):
 
         layout.addSpacing(16)
 
-        size_label = QLabel("SIZE")
+        size_label = QLabel(self.i18n.t("browser.size_label"))
         size_label.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 10px; background: transparent;")
         layout.addWidget(size_label)
 

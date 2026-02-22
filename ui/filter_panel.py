@@ -94,9 +94,9 @@ class FilterPanel(QWidget):
         layout.setSpacing(20)
 
         # --- 鸟种（置顶）---
-        layout.addWidget(_section_label("SPECIES"))
+        layout.addWidget(_section_label(self.i18n.t("browser.section_species")))
         self.species_combo = QComboBox()
-        self.species_combo.addItem("— All —", "")
+        self.species_combo.addItem(self.i18n.t("browser.species_all"), "")
         self.species_combo.currentIndexChanged.connect(self._emit_filters)
         layout.addWidget(self.species_combo)
 
@@ -110,25 +110,25 @@ class FilterPanel(QWidget):
         layout.addWidget(self._divider())
 
         # --- 对焦状态（2×2 网格）---
-        layout.addWidget(_section_label("FOCUS"))
+        layout.addWidget(_section_label(self.i18n.t("browser.section_focus")))
         focus_widget = self._build_focus_checkboxes()
         layout.addWidget(focus_widget)
 
         layout.addWidget(self._divider())
 
         # --- 飞行状态（checkbox 模式，2 列）---
-        layout.addWidget(_section_label("FLIGHT"))
+        layout.addWidget(_section_label(self.i18n.t("browser.section_flight")))
         flight_widget = self._build_flight_checkboxes()
         layout.addWidget(flight_widget)
 
         layout.addWidget(self._divider())
 
         # --- 排序方式 ---
-        layout.addWidget(_section_label("SORT BY"))
+        layout.addWidget(_section_label(self.i18n.t("browser.section_sort")))
         self._sort_combo = QComboBox()
-        self._sort_combo.addItem("文件名", "filename")
-        self._sort_combo.addItem("锐度↓", "sharpness_desc")
-        self._sort_combo.addItem("美学↓", "aesthetic_desc")
+        self._sort_combo.addItem(self.i18n.t("browser.sort_filename"), "filename")
+        self._sort_combo.addItem(self.i18n.t("browser.sort_sharpness"), "sharpness_desc")
+        self._sort_combo.addItem(self.i18n.t("browser.sort_aesthetic"), "aesthetic_desc")
         self._sort_combo.currentIndexChanged.connect(self._emit_filters)
         layout.addWidget(self._sort_combo)
 
@@ -235,13 +235,10 @@ class FilterPanel(QWidget):
         grid.setContentsMargins(0, 0, 0, 0)
         grid.setSpacing(6)
 
-        lang = getattr(self.i18n, 'current_lang', 'zh_CN')
-        is_zh = not lang.startswith('en')
-
         # (value, label, row, col)
         options = [
-            (1, "飞行中" if is_zh else "Flying",      0, 0),
-            (0, "非飞行" if is_zh else "Non-flying",  0, 1),
+            (1, self.i18n.t("browser.flying_option"),      0, 0),
+            (0, self.i18n.t("browser.non_flying_option"),  0, 1),
         ]
 
         self._flight_cbs: dict = {}  # value -> QCheckBox
@@ -268,15 +265,12 @@ class FilterPanel(QWidget):
     def update_rating_counts(self, counts: dict):
         """更新各评分数量徽章。counts: {rating: count}"""
         self._rating_counts = counts
-        lang = getattr(self.i18n, 'current_lang', 'zh_CN')
-        is_zh = not lang.startswith('en')
-
         label_map = {
             3: "★★★",
             2: "★★",
             1: "★",
             0: "0",
-            -1: ("无鸟" if is_zh else "No Bird"),
+            -1: self.i18n.t("browser.rating_nobird"),
         }
         for rating, btn in self._rating_btns.items():
             base = label_map.get(rating, str(rating))
@@ -289,8 +283,7 @@ class FilterPanel(QWidget):
         self.species_combo.blockSignals(True)
         current = self.species_combo.currentData()
         self.species_combo.clear()
-        lang = getattr(self.i18n, 'current_lang', 'zh_CN')
-        self.species_combo.addItem("— All —" if lang.startswith('en') else "— 全部 —", "")
+        self.species_combo.addItem(self.i18n.t("browser.species_all"), "")
         for sp in species:
             self.species_combo.addItem(sp, sp)
         # 恢复之前的选择
