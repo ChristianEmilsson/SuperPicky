@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
     QSlider, QComboBox, QMessageBox, QSizePolicy, QApplication,
     QStackedWidget, QMenu
 )
-from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtCore import Qt, Signal, Slot, QProcess
 from PySide6.QtGui import QAction, QKeyEvent, QIcon, QFont
 
 from ui.styles import COLORS, GLOBAL_STYLE, FONTS
@@ -67,13 +67,15 @@ def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
 
     # 在 Finder/Explorer 中显示
     def _reveal():
-        if sys.platform == "darwin" and filepath and os.path.exists(filepath):
-            subprocess.Popen(["open", "--reveal", filepath])
+        if sys.platform == "darwin" and filepath:
+            # QProcess.startDetached 不受 Python subprocess 沙盒限制
+            QProcess.startDetached("open", ["--reveal", filepath])
         elif sys.platform == "win32" and filepath:
-            subprocess.Popen(["explorer", "/select,", filepath.replace("/", "\\")])
+            QProcess.startDetached("explorer", ["/select,", filepath.replace("/", "\\")])
 
     finder_action = QAction("🔍  在 Finder 中显示", parent_widget)
-    finder_action.setEnabled(bool(filepath and os.path.exists(filepath)))
+    # 有路径即启用（open --reveal 在文件不存在时会打开父目录，不会崩溃）
+    finder_action.setEnabled(bool(filepath))
     finder_action.triggered.connect(_reveal)
     menu.addAction(finder_action)
 
@@ -87,14 +89,13 @@ def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
             if not app_name or not app_path:
                 continue
             act = QAction(f"🖼  用 {app_name} 打开", parent_widget)
-            # 仅当有文件路径时启用；应用路径不需要存在（open -a 会处理错误）
             act.setEnabled(bool(filepath))
 
             def _open_in_app(_checked=False, _fp=filepath, _ap=app_path):
                 if sys.platform == "darwin" and _fp:
-                    subprocess.Popen(["open", "-a", _ap, _fp])
+                    QProcess.startDetached("open", ["-a", _ap, _fp])
                 elif sys.platform == "win32" and _fp:
-                    subprocess.Popen([_ap, _fp])
+                    QProcess.startDetached(_ap, [_fp])
 
             act.triggered.connect(_open_in_app)
             menu.addAction(act)

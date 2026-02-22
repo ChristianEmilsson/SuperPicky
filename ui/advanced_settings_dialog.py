@@ -680,40 +680,58 @@ class AdvancedSettingsDialog(QDialog):
 
     @Slot()
     def _on_add_app(self):
-        """macOS 用 osascript choose application；其他平台用文件选择器。"""
+        """
+        macOS：先尝试 osascript choose application（原生选择器）。
+        若 osascript 失败（沙盒/权限拒绝）则自动 fallback 到 Qt 文件对话框。
+        其他平台：直接使用 Qt 文件对话框。
+        """
+        path = ""
+
         if sys.platform == "darwin":
+            # 尝试 macOS 原生应用选择器
             try:
                 result = subprocess.run(
                     ["osascript", "-e", "POSIX path of (choose application)"],
                     capture_output=True, text=True, timeout=30
                 )
-                if result.returncode != 0:
-                    return   # 用户取消
-                path = result.stdout.strip()
+                if result.returncode == 0:
+                    # osascript 返回路径可能有尾部 '/' 或换行，统一清理
+                    path = result.stdout.strip().rstrip("/")
             except Exception:
-                path = ""
+                pass
 
+            # Fallback：osascript 不可用时用 Qt 文件对话框浏览 /Applications
             if not path:
-                return
-        else:
+                path = QFileDialog.getExistingDirectory(
+                    self,
+                    self.i18n.t("advanced_settings.pick_app_title"),
+                    "/Applications",
+                    QFileDialog.Option.DontUseNativeDialog
+                )
+                if path:
+                    path = path.rstrip("/")
+
+        elif sys.platform == "win32":
             path, _ = QFileDialog.getOpenFileName(
                 self,
                 self.i18n.t("advanced_settings.pick_app_title"),
-                "C:\\Program Files" if sys.platform == "win32" else "/",
-                "Executables (*.exe)" if sys.platform == "win32" else "All Files (*)"
+                "C:\\Program Files",
+                "Executables (*.exe)"
             )
-            if not path:
-                return
 
-        # 从路径提取显示名称
-        basename = os.path.basename(path.rstrip("/").rstrip("\\"))
-        name = basename.replace(".app", "").replace(".exe", "")
-
-        # 去重（路径相同则跳过）
-        if any(a.get("path") == path for a in self._apps_data):
+        if not path:
             return
 
-        self._apps_data.append({"name": name, "path": path})
+        # 从路径提取显示名称（去掉 .app / .exe 后缀）
+        basename = os.path.basename(path)
+        name = basename.replace(".app", "").replace(".exe", "")
+
+        # 去重（规范化路径再比较）
+        norm = path.rstrip("/")
+        if any(a.get("path", "").rstrip("/") == norm for a in self._apps_data):
+            return
+
+        self._apps_data.append({"name": name, "path": norm})
         self._refresh_apps_list()
 
     @Slot()
