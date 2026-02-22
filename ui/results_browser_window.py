@@ -37,79 +37,14 @@ from tools.report_db import ReportDB
 
 
 # ============================================================
-#  C4 — 右键菜单应用检测与实现
+#  C4 — 右键菜单实现（应用列表来自用户配置）
 # ============================================================
-
-# 已知应用 bundle ID（macOS）— 每个应用列出所有已知版本 ID，取第一个找到的
-_APP_BUNDLES: dict[str, list[str]] = {
-    "Adobe Photoshop":   ["com.adobe.Photoshop"],
-    "Lightroom Classic": ["com.adobe.LightroomClassicCC7", "com.adobe.lightroomCC",
-                          "com.adobe.LightroomClassicCC8", "com.adobe.LightroomClassicCC9"],
-    "DxO PureRAW":       ["com.dxo-labs.PureRAWv5.standalone", "com.dxo.pureraw4",
-                          "com.dxo.pureraw3", "com.dxo-labs.PureRAWv4.standalone"],
-    "DxO PhotoLab":      ["com.dxo.PhotoLab8", "com.dxo.photolab7", "com.dxo.photolab6"],
-    "Capture One":       ["com.phaseone.captureone"],
-    "Affinity Photo":    ["com.seriflabs.affinityphoto2", "com.seriflabs.affinityphoto"],
-}
-
-# 直接路径 fallback：mdfind 不可用时按路径检查
-_APP_PATHS_MACOS: list[tuple[str, str]] = [
-    ("Adobe Photoshop", "/Applications/Adobe Photoshop 2026/Adobe Photoshop 2026.app"),
-    ("Adobe Photoshop", "/Applications/Adobe Photoshop 2025/Adobe Photoshop 2025.app"),
-    ("Adobe Photoshop", "/Applications/Adobe Photoshop 2024/Adobe Photoshop 2024.app"),
-    ("Lightroom Classic", "/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app"),
-    ("DxO PureRAW", "/Applications/DxO PureRAW 5.app"),
-    ("DxO PureRAW", "/Applications/DxO PureRAW 4.app"),
-    ("DxO PureRAW", "/Applications/DxO PureRAW 3.app"),
-    ("DxO PhotoLab", "/Applications/DXOPhotoLab8.app"),
-    ("DxO PhotoLab", "/Applications/DxO PhotoLab 7.app"),
-    ("Capture One", "/Applications/Capture One.app"),
-    ("Capture One", "/Applications/Capture One 23.app"),
-    ("Affinity Photo", "/Applications/Affinity Photo 2.app"),
-    ("Affinity Photo", "/Applications/Affinity Photo.app"),
-]
-
-_cached_apps: Optional[dict] = None
-
-
-def _detect_installed_apps() -> dict:
-    """返回 {app_name: app_path}，只含已安装的应用（macOS mdfind）。结果缓存。"""
-    global _cached_apps
-    if _cached_apps is not None:
-        return _cached_apps
-
-    result = {}
-    if sys.platform != "darwin":
-        _cached_apps = result
-        return result
-
-    for app_name, bundle_ids in _APP_BUNDLES.items():
-        for bundle_id in bundle_ids:
-            try:
-                # mdfind 查询语法：单个 predicate 字符串作为第一个参数
-                query = "kMDItemCFBundleIdentifier == " + repr(bundle_id)
-                out = subprocess.check_output(
-                    ["mdfind", query],
-                    timeout=2, stderr=subprocess.DEVNULL
-                ).decode("utf-8").strip()
-                if out:
-                    result[app_name] = out.splitlines()[0]
-                    break   # 找到一个版本即停止
-            except Exception:
-                pass
-
-    # Fallback：直接按路径检测（mdfind 沙盒环境或权限受限时）
-    if sys.platform == "darwin":
-        for app_name, app_path in _APP_PATHS_MACOS:
-            if app_name not in result and os.path.exists(app_path):
-                result[app_name] = app_path
-
-    _cached_apps = result
-    return result
 
 
 def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
-    """构建并显示右键菜单（C4）。所有外部调用使用列表参数，无 shell 注入风险。"""
+    """构建并显示右键菜单（C4）。外部应用列表从 advanced_config 读取。"""
+    from advanced_config import get_advanced_config
+
     filepath = photo.get("original_path") or photo.get("current_path") or ""
     if not filepath:
         fn = photo.get("filename", "")
@@ -142,20 +77,33 @@ def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
     finder_action.triggered.connect(_reveal)
     menu.addAction(finder_action)
 
-    # 已安装的应用列表
-    if filepath and os.path.exists(filepath):
-        installed = _detect_installed_apps()
-        if installed:
-            menu.addSeparator()
-            for app_name, app_path in installed.items():
-                act = QAction(f"🖼  用 {app_name} 打开", parent_widget)
+    # 用户配置的外部应用列表（设置 → 外部应用）
+    external_apps = get_advanced_config().get_external_apps()
+    if external_apps:
+        menu.addSeparator()
+        for app in external_apps:
+            app_name = app.get("name", "")
+            app_path = app.get("path", "")
+            if not app_name or not app_path:
+                continue
+            act = QAction(f"🖼  用 {app_name} 打开", parent_widget)
+            # 仅当有文件路径时启用；应用路径不需要存在（open -a 会处理错误）
+            act.setEnabled(bool(filepath))
 
-                def _open_in_app(_checked=False, _fp=filepath, _ap=app_path):
-                    if sys.platform == "darwin":
-                        subprocess.Popen(["open", "-a", _ap, _fp])
+            def _open_in_app(_checked=False, _fp=filepath, _ap=app_path):
+                if sys.platform == "darwin" and _fp:
+                    subprocess.Popen(["open", "-a", _ap, _fp])
+                elif sys.platform == "win32" and _fp:
+                    subprocess.Popen([_ap, _fp])
 
-                act.triggered.connect(_open_in_app)
-                menu.addAction(act)
+            act.triggered.connect(_open_in_app)
+            menu.addAction(act)
+    else:
+        # 未配置时提示用户去设置
+        menu.addSeparator()
+        hint_action = QAction("⚙️  在设置中添加外部应用…", parent_widget)
+        hint_action.setEnabled(False)
+        menu.addAction(hint_action)
 
     menu.addSeparator()
 
