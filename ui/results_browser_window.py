@@ -12,12 +12,14 @@ ResultsBrowserWindow(QMainWindow): 三栏布局
 """
 
 import os
+import subprocess
+import sys
 
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QPushButton, QStatusBar,
     QSlider, QComboBox, QMessageBox, QSizePolicy, QApplication,
-    QStackedWidget
+    QStackedWidget, QMenu
 )
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QAction, QKeyEvent, QIcon, QFont
@@ -27,10 +29,123 @@ from ui.filter_panel import FilterPanel
 from ui.thumbnail_grid import ThumbnailGrid
 from ui.detail_panel import DetailPanel
 from ui.fullscreen_viewer import FullscreenViewer
+from ui.comparison_viewer import ComparisonViewer
 from typing import Optional
 
 from tools.i18n import get_i18n
 from tools.report_db import ReportDB
+
+
+# ============================================================
+#  C4 — 右键菜单应用检测与实现
+# ============================================================
+
+# 已知应用 bundle ID（macOS）— 每个应用列出所有已知版本 ID，取第一个找到的
+_APP_BUNDLES: dict[str, list[str]] = {
+    "Adobe Photoshop":   ["com.adobe.Photoshop"],
+    "Lightroom Classic": ["com.adobe.LightroomClassicCC7", "com.adobe.lightroomCC",
+                          "com.adobe.LightroomClassicCC8", "com.adobe.LightroomClassicCC9"],
+    "DxO PureRAW":       ["com.dxo-labs.PureRAWv5.standalone", "com.dxo.pureraw4",
+                          "com.dxo.pureraw3", "com.dxo-labs.PureRAWv4.standalone"],
+    "DxO PhotoLab":      ["com.dxo.PhotoLab8", "com.dxo.photolab7", "com.dxo.photolab6"],
+    "Capture One":       ["com.phaseone.captureone"],
+    "Affinity Photo":    ["com.seriflabs.affinityphoto2", "com.seriflabs.affinityphoto"],
+}
+
+_cached_apps: Optional[dict] = None
+
+
+def _detect_installed_apps() -> dict:
+    """返回 {app_name: app_path}，只含已安装的应用（macOS mdfind）。结果缓存。"""
+    global _cached_apps
+    if _cached_apps is not None:
+        return _cached_apps
+
+    result = {}
+    if sys.platform != "darwin":
+        _cached_apps = result
+        return result
+
+    for app_name, bundle_ids in _APP_BUNDLES.items():
+        for bundle_id in bundle_ids:
+            try:
+                # mdfind 查询语法：单个 predicate 字符串作为第一个参数
+                query = "kMDItemCFBundleIdentifier == " + repr(bundle_id)
+                out = subprocess.check_output(
+                    ["mdfind", query],
+                    timeout=2, stderr=subprocess.DEVNULL
+                ).decode("utf-8").strip()
+                if out:
+                    result[app_name] = out.splitlines()[0]
+                    break   # 找到一个版本即停止
+            except Exception:
+                pass
+
+    _cached_apps = result
+    return result
+
+
+def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
+    """构建并显示右键菜单（C4）。所有外部调用使用列表参数，无 shell 注入风险。"""
+    filepath = photo.get("original_path") or photo.get("current_path") or ""
+    if not filepath:
+        fn = photo.get("filename", "")
+        if fn and directory:
+            filepath = os.path.join(directory, fn)
+
+    menu = QMenu(parent_widget)
+    menu.setStyleSheet(f"""
+        QMenu {{
+            background-color: {COLORS['bg_elevated']};
+            color: {COLORS['text_primary']};
+            border: 1px solid {COLORS['border']};
+            border-radius: 6px;
+            padding: 4px;
+        }}
+        QMenu::item {{ padding: 6px 16px; border-radius: 4px; }}
+        QMenu::item:selected {{ background-color: {COLORS['bg_card']}; }}
+        QMenu::separator {{ height: 1px; background: {COLORS['border_subtle']}; margin: 4px 8px; }}
+    """)
+
+    # 在 Finder/Explorer 中显示
+    def _reveal():
+        if sys.platform == "darwin" and filepath and os.path.exists(filepath):
+            subprocess.Popen(["open", "--reveal", filepath])
+        elif sys.platform == "win32" and filepath:
+            subprocess.Popen(["explorer", "/select,", filepath.replace("/", "\\")])
+
+    finder_action = QAction("🔍  在 Finder 中显示", parent_widget)
+    finder_action.setEnabled(bool(filepath and os.path.exists(filepath)))
+    finder_action.triggered.connect(_reveal)
+    menu.addAction(finder_action)
+
+    # 已安装的应用列表
+    if filepath and os.path.exists(filepath):
+        installed = _detect_installed_apps()
+        if installed:
+            menu.addSeparator()
+            for app_name, app_path in installed.items():
+                act = QAction(f"🖼  用 {app_name} 打开", parent_widget)
+
+                def _open_in_app(_checked=False, _fp=filepath, _ap=app_path):
+                    if sys.platform == "darwin":
+                        subprocess.Popen(["open", "-a", _ap, _fp])
+
+                act.triggered.connect(_open_in_app)
+                menu.addAction(act)
+
+    menu.addSeparator()
+
+    # 复制路径
+    copy_action = QAction("📋  复制文件路径", parent_widget)
+    copy_action.setEnabled(bool(filepath))
+    if filepath:
+        def _copy_path(_checked=False, _fp=filepath):
+            QApplication.clipboard().setText(_fp)
+        copy_action.triggered.connect(_copy_path)
+    menu.addAction(copy_action)
+
+    menu.exec(pos)
 
 
 class ResultsBrowserWindow(QMainWindow):
@@ -129,6 +244,7 @@ class ResultsBrowserWindow(QMainWindow):
         self._thumb_grid = ThumbnailGrid(self.i18n, self)
         self._thumb_grid.photo_selected.connect(self._on_photo_selected)
         self._thumb_grid.photo_double_clicked.connect(self._enter_fullscreen)
+        self._thumb_grid.multi_selection_changed.connect(self._on_multi_selection_changed)
         center_layout.addWidget(self._thumb_grid, 1)
 
         main_h.addWidget(center_widget, 1)
@@ -141,10 +257,17 @@ class ResultsBrowserWindow(QMainWindow):
         self._fullscreen.next_requested.connect(self._fullscreen_next)
         self._stack.addWidget(self._fullscreen)   # index 1
 
+        # Page 2: 对比查看器（C5）
+        self._comparison = ComparisonViewer(self.i18n, self)
+        self._comparison.close_requested.connect(self._exit_comparison)
+        self._comparison.rating_changed.connect(self._on_rating_changed)
+        self._stack.addWidget(self._comparison)   # index 2
+
         # ── 右侧详情面板（始终显示，Tab 键开关）──────────────────
         self._detail_panel = DetailPanel(self.i18n, self)
         self._detail_panel.prev_requested.connect(self._prev_photo)
         self._detail_panel.next_requested.connect(self._next_photo)
+        self._detail_panel.rating_change_requested.connect(self._on_rating_changed)
         outer_h.addWidget(self._detail_panel, 0)
 
     def _build_toolbar(self) -> QWidget:
@@ -185,6 +308,26 @@ class ResultsBrowserWindow(QMainWindow):
         layout.addWidget(self._dir_label)
 
         layout.addSpacing(16)
+
+        # 多选计数标签（C3，默认隐藏）
+        self._select_count_label = QLabel("")
+        self._select_count_label.setStyleSheet(f"""
+            QLabel {{
+                color: {COLORS['accent']};
+                font-size: 12px;
+                background: transparent;
+            }}
+        """)
+        self._select_count_label.hide()
+        layout.addWidget(self._select_count_label)
+
+        # 对比按钮（C5，多选2张时显示）
+        self._compare_btn = QPushButton("🔀 对比")
+        self._compare_btn.setObjectName("secondary")
+        self._compare_btn.setFixedHeight(32)
+        self._compare_btn.hide()
+        self._compare_btn.clicked.connect(self._enter_comparison)
+        layout.addWidget(self._compare_btn)
 
         # 缩略图尺寸滑块
         size_label = QLabel(self.i18n.t("browser.size_label"))
@@ -370,6 +513,46 @@ class ResultsBrowserWindow(QMainWindow):
             self._fullscreen.show_photo(photo)
             self._detail_panel.show_photo(photo)
 
+    @Slot(str, int)
+    def _on_rating_changed(self, filename: str, new_rating: int):
+        """详情面板评分修改：写入 DB + 刷新缩略图角标。"""
+        if self._db:
+            self._db.update_photo(filename, {"rating": new_rating})
+        for p in self._filtered_photos:
+            if p.get("filename") == filename:
+                p["rating"] = new_rating
+                break
+        self._thumb_grid.refresh_photo(filename, new_rating)
+
+    @Slot(list)
+    def _on_multi_selection_changed(self, photos: list):
+        """C3：多选状态变化，更新工具栏显示。"""
+        n = len(photos)
+        if n > 1:
+            self._select_count_label.setText(f"已选 {n} 张")
+            self._select_count_label.show()
+        else:
+            self._select_count_label.hide()
+        # C5：仅当选中 2 张时显示对比按钮
+        self._compare_btn.setVisible(n == 2)
+
+    def _show_context_menu(self, photo: dict, pos):
+        """C4：右键菜单（由 ThumbnailGrid 通过 parent chain 调用）。"""
+        _show_context_menu_impl(self, photo, pos, self._directory)
+
+    def _enter_comparison(self):
+        """C5：进入 2-up 对比视图（ResultsBrowserWindow）。"""
+        photos = self._thumb_grid.get_multi_selected_photos()
+        if len(photos) >= 2:
+            self._comparison.show_pair(photos[0], photos[1])
+            self._stack.setCurrentIndex(2)
+            self._comparison.setFocus()
+
+    def _exit_comparison(self):
+        """C5：退出对比视图，回到 grid（ResultsBrowserWindow）。"""
+        self._stack.setCurrentIndex(0)
+        self.setFocus()
+
     @Slot(int)
     def _on_size_changed(self, value: int):
         self._thumb_grid.set_thumb_size(value)
@@ -404,6 +587,16 @@ class ResultsBrowserWindow(QMainWindow):
                 self._exit_fullscreen()   # 全屏时 Escape = 返回 grid
             else:
                 self.close()              # 普通模式 Escape = 关闭窗口
+        elif key == Qt.Key_C:
+            if not in_fullscreen and self._stack.currentIndex() == 0:
+                photos = self._thumb_grid.get_multi_selected_photos()
+                if len(photos) >= 2:
+                    self._enter_comparison()
+        elif key == Qt.Key_C:
+            if not in_fullscreen and self._stack.currentIndex() == 0:
+                photos = self._thumb_grid.get_multi_selected_photos()
+                if len(photos) >= 2:
+                    self._enter_comparison()
         elif key == Qt.Key_F:
             if in_fullscreen:
                 self._fullscreen.toggle_focus()
@@ -505,6 +698,7 @@ class ResultsBrowserWidget(QWidget):
         self._thumb_grid = ThumbnailGrid(self.i18n, self)
         self._thumb_grid.photo_selected.connect(self._on_photo_selected)
         self._thumb_grid.photo_double_clicked.connect(self._enter_fullscreen)
+        self._thumb_grid.multi_selection_changed.connect(self._on_multi_selection_changed)
         center_layout.addWidget(self._thumb_grid, 1)
 
         main_h.addWidget(center_widget, 1)
@@ -517,10 +711,17 @@ class ResultsBrowserWidget(QWidget):
         self._fullscreen.next_requested.connect(self._fullscreen_next)
         self._stack.addWidget(self._fullscreen)
 
+        # Page 2: 对比查看器（C5）
+        self._comparison = ComparisonViewer(self.i18n, self)
+        self._comparison.close_requested.connect(self._exit_comparison)
+        self._comparison.rating_changed.connect(self._on_rating_changed)
+        self._stack.addWidget(self._comparison)
+
         # 右侧详情面板
         self._detail_panel = DetailPanel(self.i18n, self)
         self._detail_panel.prev_requested.connect(self._prev_photo)
         self._detail_panel.next_requested.connect(self._next_photo)
+        self._detail_panel.rating_change_requested.connect(self._on_rating_changed)
         outer_h.addWidget(self._detail_panel, 0)
 
         # 底部状态栏（简单 label）
@@ -572,6 +773,26 @@ class ResultsBrowserWidget(QWidget):
         layout.addWidget(self._dir_label)
 
         layout.addSpacing(16)
+
+        # 多选计数标签（C3，默认隐藏）
+        self._select_count_label = QLabel("")
+        self._select_count_label.setStyleSheet(f"""
+            QLabel {{
+                color: {COLORS['accent']};
+                font-size: 12px;
+                background: transparent;
+            }}
+        """)
+        self._select_count_label.hide()
+        layout.addWidget(self._select_count_label)
+
+        # 对比按钮（C5，默认隐藏，多选2张时显示）
+        self._compare_btn = QPushButton("🔀 对比")
+        self._compare_btn.setObjectName("secondary")
+        self._compare_btn.setFixedHeight(32)
+        self._compare_btn.hide()
+        self._compare_btn.clicked.connect(self._enter_comparison)
+        layout.addWidget(self._compare_btn)
 
         size_label = QLabel(self.i18n.t("browser.size_label"))
         size_label.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 10px; background: transparent;")
@@ -774,6 +995,48 @@ class ResultsBrowserWidget(QWidget):
         if photo:
             self._fullscreen.show_photo(photo)
             self._detail_panel.show_photo(photo)
+
+    @Slot(str, int)
+    def _on_rating_changed(self, filename: str, new_rating: int):
+        """详情面板评分修改：写入 DB + 刷新缩略图角标。"""
+        if self._db:
+            self._db.update_photo(filename, {"rating": new_rating})
+        for p in self._filtered_photos:
+            if p.get("filename") == filename:
+                p["rating"] = new_rating
+                break
+        self._thumb_grid.refresh_photo(filename, new_rating)
+
+    @Slot(list)
+    def _on_multi_selection_changed(self, photos: list):
+        """C3：多选状态变化，更新工具栏显示。"""
+        n = len(photos)
+        if n > 1:
+            self._select_count_label.setText(f"已选 {n} 张")
+            self._select_count_label.show()
+        else:
+            self._select_count_label.hide()
+        # C5：仅当选中 2 张时显示对比按钮
+        self._compare_btn.setVisible(n == 2)
+
+    def _show_context_menu(self, photo: dict, pos):
+        """C4：右键菜单（由 ThumbnailGrid 通过 parent chain 调用）。"""
+        _show_context_menu_impl(self, photo, pos, self._directory)
+
+    def _enter_comparison(self):
+        """C5：进入 2-up 对比视图。"""
+        photos = self._thumb_grid.get_multi_selected_photos()
+        if len(photos) >= 2:
+            self._comparison.show_pair(photos[0], photos[1])
+            self._toolbar.hide()
+            self._stack.setCurrentIndex(2)
+            self._comparison.setFocus()
+
+    def _exit_comparison(self):
+        """C5：退出对比视图，回到 grid。"""
+        self._toolbar.show()
+        self._stack.setCurrentIndex(0)
+        self.setFocus()
 
     @Slot(int)
     def _on_size_changed(self, value: int):
