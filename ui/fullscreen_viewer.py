@@ -184,6 +184,10 @@ class _FullscreenImageLabel(QLabel):
         # 双击吸收标志（防止第二次 release 误触发 click 逻辑）
         self._double_click_pending: bool = False
 
+        # 对比视图同步（C5）：_sync_peer 为另一侧 label，_syncing 防止回环
+        self._sync_peer: Optional['_FullscreenImageLabel'] = None
+        self._syncing: bool = False
+
         self.setAlignment(Qt.AlignCenter)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setMinimumSize(200, 200)
@@ -209,13 +213,63 @@ class _FullscreenImageLabel(QLabel):
         self.update()
 
     def toggle_focus(self):
-        """切换焦点叠加显示/隐藏。"""
+        """切换焦点叠加显示/隐藏（同步作用于 peer）。"""
         self._focus_visible = not self._focus_visible
         self.update()
+        if self._sync_peer and not self._syncing:
+            self._sync_peer._focus_visible = self._focus_visible
+            self._sync_peer.update()
 
     @property
     def focus_visible(self) -> bool:
         return self._focus_visible
+
+    # ── 对比视图同步接口（C5）─────────────────────────────────
+
+    def set_sync_peer(self, peer: Optional['_FullscreenImageLabel']):
+        """设置对比视图的另一侧 label 为同步 peer。"""
+        self._sync_peer = peer
+
+    def _emit_transform_sync(self):
+        """将当前 transform 同步给 peer（以归一化坐标传递，适应不同分辨率）。"""
+        if self._syncing or self._sync_peer is None:
+            return
+        if self._pixmap is None or self._pixmap.isNull():
+            return
+        if self._fit_mode:
+            self._sync_peer._apply_sync(-1.0, 0.0, 0.0, True)
+            return
+        fit_scale, _, _ = self._get_fit_transform()
+        img_w = self._pixmap.width()
+        img_h = self._pixmap.height()
+        scale_ratio = self._display_scale / max(fit_scale, 1e-10)
+        # 视口中心在图片坐标系中的归一化位置
+        norm_cx = (self.width() / 2 - self._draw_ox) / max(img_w * self._display_scale, 1)
+        norm_cy = (self.height() / 2 - self._draw_oy) / max(img_h * self._display_scale, 1)
+        self._sync_peer._apply_sync(scale_ratio, norm_cx, norm_cy, False)
+
+    def _apply_sync(self, scale_ratio: float, norm_cx: float, norm_cy: float, is_fit: bool):
+        """接收来自 peer 的 transform 并应用（不回传，防止死循环）。"""
+        self._syncing = True
+        try:
+            if is_fit:
+                self._fit_mode = True
+                self.setCursor(Qt.CrossCursor)
+                self.update()
+                return
+            if self._pixmap is None or self._pixmap.isNull():
+                return
+            fit_scale, _, _ = self._get_fit_transform()
+            img_w = self._pixmap.width()
+            img_h = self._pixmap.height()
+            self._display_scale = fit_scale * scale_ratio
+            self._draw_ox = self.width() / 2 - norm_cx * img_w * self._display_scale
+            self._draw_oy = self.height() / 2 - norm_cy * img_h * self._display_scale
+            self._fit_mode = False
+            self.setCursor(Qt.OpenHandCursor)
+            self.update()
+        finally:
+            self._syncing = False
 
     # ── 内部辅助 ─────────────────────────────────────────────
 
@@ -258,30 +312,47 @@ class _FullscreenImageLabel(QLabel):
         self._fit_mode = False
         self.setCursor(Qt.OpenHandCursor)
         self.update()
+        self._emit_transform_sync()
 
     def _draw_focus_overlay(self, painter: QPainter, fx: float, fy: float):
-        """在 (fx, fy) 处绘制焦点圆圈 + 十字线 + 中心点。"""
+        """2c：专业取景框风格 — 虚线环 + 4个角L形角标 + 中心实心圆点。"""
         dot_color = _FOCUS_COLORS[self._focus_status]
+        r = 22   # 虚线环半径
 
-        # 半透明填充圆（r=18, alpha=160）
-        fill = QColor(dot_color)
-        fill.setAlpha(160)
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QBrush(fill))
-        painter.drawEllipse(int(fx) - 18, int(fy) - 18, 36, 36)
-
-        # 白色十字线（±30px，线宽 1.5，alpha=200）
-        pen = QPen(QColor(255, 255, 255, 200))
-        pen.setWidthF(1.5)
+        # 虚线环（setStyle DashLine，颜色带透明度）
+        ring_color = QColor(dot_color)
+        if self._focus_status == "BEST":
+            ring_color = QColor(255, 255, 255, 230)   # BEST → 白色
+        else:
+            ring_color.setAlpha(230)
+        pen = QPen(ring_color)
+        pen.setWidthF(1.8)
+        pen.setStyle(Qt.DashLine)
+        pen.setDashPattern([6, 3])
         painter.setPen(pen)
         painter.setBrush(Qt.NoBrush)
-        painter.drawLine(int(fx) - 30, int(fy), int(fx) + 30, int(fy))
-        painter.drawLine(int(fx), int(fy) - 30, int(fx), int(fy) + 30)
+        painter.drawEllipse(int(fx) - r, int(fy) - r, r * 2, r * 2)
 
-        # 中心白色小圆点（r=3）
+        # 4个角L形角标（corner bracket）
+        bracket_len = 12    # L臂长度
+        bracket_gap = r + 6  # 离中心的距离（角标在圆外）
+        pen2 = QPen(ring_color)
+        pen2.setWidthF(2.0)
+        pen2.setStyle(Qt.SolidLine)
+        pen2.setCapStyle(Qt.SquareCap)
+        painter.setPen(pen2)
+        for sx, sy in [(-1, -1), (1, -1), (-1, 1), (1, 1)]:
+            bx = int(fx) + sx * bracket_gap
+            by = int(fy) + sy * bracket_gap
+            # 横臂
+            painter.drawLine(bx, by, bx - sx * bracket_len, by)
+            # 竖臂
+            painter.drawLine(bx, by, bx, by - sy * bracket_len)
+
+        # 中心 4px 实心圆点
         painter.setPen(Qt.NoPen)
-        painter.setBrush(QBrush(QColor(255, 255, 255, 220)))
-        painter.drawEllipse(int(fx) - 3, int(fy) - 3, 6, 6)
+        painter.setBrush(QBrush(ring_color))
+        painter.drawEllipse(int(fx) - 4, int(fy) - 4, 8, 8)
 
     # ── Qt 事件重写 ──────────────────────────────────────────
 
@@ -360,6 +431,7 @@ class _FullscreenImageLabel(QLabel):
                 self._draw_ox = self._drag_ox_start + dx
                 self._draw_oy = self._drag_oy_start + dy
                 self.update()
+                self._emit_transform_sync()
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
@@ -383,6 +455,7 @@ class _FullscreenImageLabel(QLabel):
                     self._fit_mode = True
                     self.setCursor(Qt.CrossCursor)
                     self.update()
+                    self._emit_transform_sync()
             else:
                 # 拖拽结束，恢复张开手光标
                 if not self._fit_mode:
@@ -421,6 +494,7 @@ class _FullscreenImageLabel(QLabel):
         self._fit_mode = False
         self.setCursor(Qt.OpenHandCursor)
         self.update()
+        self._emit_transform_sync()
 
 
 # ============================================================
@@ -610,7 +684,8 @@ class FullscreenViewer(QWidget):
         self._filename_label.setText(filename)
 
         rating = photo.get("rating", 0)
-        self._rating_label.setText({3: "★★★", 2: "★★", 1: "★"}.get(rating, ""))
+        _rating_text = {5: "★★★★★", 4: "★★★★", 3: "★★★", 2: "★★", 1: "★"}
+        self._rating_label.setText(_rating_text.get(rating, ""))
 
         # 1. 立即显示缩略图缓存
         try:

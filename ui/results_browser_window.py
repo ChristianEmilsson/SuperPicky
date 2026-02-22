@@ -52,6 +52,23 @@ _APP_BUNDLES: dict[str, list[str]] = {
     "Affinity Photo":    ["com.seriflabs.affinityphoto2", "com.seriflabs.affinityphoto"],
 }
 
+# 直接路径 fallback：mdfind 不可用时按路径检查
+_APP_PATHS_MACOS: list[tuple[str, str]] = [
+    ("Adobe Photoshop", "/Applications/Adobe Photoshop 2026/Adobe Photoshop 2026.app"),
+    ("Adobe Photoshop", "/Applications/Adobe Photoshop 2025/Adobe Photoshop 2025.app"),
+    ("Adobe Photoshop", "/Applications/Adobe Photoshop 2024/Adobe Photoshop 2024.app"),
+    ("Lightroom Classic", "/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app"),
+    ("DxO PureRAW", "/Applications/DxO PureRAW 5.app"),
+    ("DxO PureRAW", "/Applications/DxO PureRAW 4.app"),
+    ("DxO PureRAW", "/Applications/DxO PureRAW 3.app"),
+    ("DxO PhotoLab", "/Applications/DXOPhotoLab8.app"),
+    ("DxO PhotoLab", "/Applications/DxO PhotoLab 7.app"),
+    ("Capture One", "/Applications/Capture One.app"),
+    ("Capture One", "/Applications/Capture One 23.app"),
+    ("Affinity Photo", "/Applications/Affinity Photo 2.app"),
+    ("Affinity Photo", "/Applications/Affinity Photo.app"),
+]
+
 _cached_apps: Optional[dict] = None
 
 
@@ -80,6 +97,12 @@ def _detect_installed_apps() -> dict:
                     break   # 找到一个版本即停止
             except Exception:
                 pass
+
+    # Fallback：直接按路径检测（mdfind 沙盒环境或权限受限时）
+    if sys.platform == "darwin":
+        for app_name, app_path in _APP_PATHS_MACOS:
+            if app_name not in result and os.path.exists(app_path):
+                result[app_name] = app_path
 
     _cached_apps = result
     return result
@@ -545,11 +568,13 @@ class ResultsBrowserWindow(QMainWindow):
         photos = self._thumb_grid.get_multi_selected_photos()
         if len(photos) >= 2:
             self._comparison.show_pair(photos[0], photos[1])
+            self._detail_panel.hide()   # 对比模式不显示详情面板
             self._stack.setCurrentIndex(2)
             self._comparison.setFocus()
 
     def _exit_comparison(self):
         """C5：退出对比视图，回到 grid（ResultsBrowserWindow）。"""
+        self._detail_panel.show()
         self._stack.setCurrentIndex(0)
         self.setFocus()
 
@@ -583,15 +608,17 @@ class ResultsBrowserWindow(QMainWindow):
         elif key == Qt.Key_Minus:
             self._size_slider.setValue(max(80, self._size_slider.value() - 20))
         elif key == Qt.Key_Escape:
-            if in_fullscreen:
-                self._exit_fullscreen()   # 全屏时 Escape = 返回 grid
+            current_page = self._stack.currentIndex()
+            if current_page == 1:
+                self._exit_fullscreen()
+            elif current_page == 2:
+                self._exit_comparison()
             else:
-                self.close()              # 普通模式 Escape = 关闭窗口
-        elif key == Qt.Key_C:
-            if not in_fullscreen and self._stack.currentIndex() == 0:
-                photos = self._thumb_grid.get_multi_selected_photos()
-                if len(photos) >= 2:
-                    self._enter_comparison()
+                # grid 模式：有多选时先清选，否则关闭窗口
+                if self._thumb_grid.get_multi_selected_photos():
+                    self._thumb_grid.clear_multi_select()
+                else:
+                    self.close()
         elif key == Qt.Key_C:
             if not in_fullscreen and self._stack.currentIndex() == 0:
                 photos = self._thumb_grid.get_multi_selected_photos()
@@ -1029,12 +1056,14 @@ class ResultsBrowserWidget(QWidget):
         if len(photos) >= 2:
             self._comparison.show_pair(photos[0], photos[1])
             self._toolbar.hide()
+            self._detail_panel.hide()   # 对比模式不显示详情面板
             self._stack.setCurrentIndex(2)
             self._comparison.setFocus()
 
     def _exit_comparison(self):
         """C5：退出对比视图，回到 grid。"""
         self._toolbar.show()
+        self._detail_panel.show()
         self._stack.setCurrentIndex(0)
         self.setFocus()
 
@@ -1068,10 +1097,22 @@ class ResultsBrowserWidget(QWidget):
         elif key == Qt.Key_Minus:
             self._size_slider.setValue(max(80, self._size_slider.value() - 20))
         elif key == Qt.Key_Escape:
-            if in_fullscreen:
+            current_page = self._stack.currentIndex()
+            if current_page == 1:
                 self._exit_fullscreen()
+            elif current_page == 2:
+                self._exit_comparison()
             else:
-                self.back_requested.emit()
+                # grid 模式：有多选时先清选，否则返回主界面
+                if self._thumb_grid.get_multi_selected_photos():
+                    self._thumb_grid.clear_multi_select()
+                else:
+                    self.back_requested.emit()
+        elif key == Qt.Key_C:
+            if not in_fullscreen and self._stack.currentIndex() == 0:
+                photos = self._thumb_grid.get_multi_selected_photos()
+                if len(photos) >= 2:
+                    self._enter_comparison()
         elif key == Qt.Key_F:
             if in_fullscreen:
                 self._fullscreen.toggle_focus()
