@@ -877,7 +877,7 @@ class SuperPickyMainWindow(QMainWindow):
             icon_container.setStyleSheet(f"""
                 QFrame {{
                     background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                        stop:0 {COLORS['accent']}, stop:1 #00a080);
+                        stop:0 {COLORS['accent']}, stop:1 {COLORS['accent_deep']});
                     border-radius: 12px;
                 }}
             """)
@@ -2490,7 +2490,7 @@ class SuperPickyMainWindow(QMainWindow):
                         font-weight: 500;
                     }}
                     QPushButton:hover {{
-                        background-color: #00e6b8;
+                        background-color: {COLORS['accent_hover']};
                     }}
                 """)
                 mac_btn.clicked.connect(lambda: webbrowser.open(download_url))

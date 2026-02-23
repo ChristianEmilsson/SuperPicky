@@ -22,9 +22,9 @@ from ui.styles import COLORS, FONTS
 
 # 对焦状态指示颜色（WORST 不显示圆点）
 _FOCUS_DOT_COLORS = {
-    "BEST":  QColor("#e05050"),           # 深珊瑚红
-    "GOOD":  QColor(COLORS['accent']),    # app 主色青绿
-    "BAD":   QColor("#999999"),           # 浅灰，深色背景可见
+    "BEST":  QColor(COLORS['focus_best']),   # 绿 — 精焦
+    "GOOD":  QColor(COLORS['focus_good']),   # 琥珀 — 合焦
+    "BAD":   QColor(COLORS['focus_bad']),    # 近白灰 — 失焦
     # WORST 不入表 → _draw_overlays 中 `if focus in _FOCUS_DOT_COLORS` 自动跳过
 }
 

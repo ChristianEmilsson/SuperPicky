@@ -998,7 +998,7 @@ class BirdIDDockWidget(QDockWidget):
             }}
             QProgressBar::chunk {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 {COLORS['accent']}, stop:1 #00ffcc);
+                    stop:0 {COLORS['accent']}, stop:1 {COLORS['accent_light']});
                 border-radius: 2px;
             }}
         """)
@@ -1272,10 +1272,10 @@ class BirdIDDockWidget(QDockWidget):
     }
     # 对焦状态颜色
     _FOCUS_STATUS_COLOR = {
-        'BEST':  '#00e5a0',  # 绿
-        'GOOD':  '#7ec8e3',  # 蓝绿
-        'BAD':   '#f0a500',  # 橙
-        'WORST': '#e05c5c',  # 红
+        'BEST':  COLORS['focus_best'],    # 绿 — 精焦
+        'GOOD':  COLORS['focus_good'],    # 琥珀 — 合焦
+        'BAD':   COLORS['focus_bad'],     # 近白灰 — 失焦
+        'WORST': COLORS['focus_worst'],   # 灰 — 脱焦
     }
 
     def update_crop_preview(self, debug_img, focus_status=None):
@@ -1371,9 +1371,9 @@ class BirdIDDockWidget(QDockWidget):
         if flying > 0 or focus_precise > 0:
             lines.append("")
             if flying > 0:
-                lines.append(f"🟢 飞版: {flying}")
+                lines.append(f"🔵 飞版: {flying}")
             if focus_precise > 0:
-                lines.append(f"🔴 精焦: {focus_precise}")
+                lines.append(f"🟢 精焦: {focus_precise}")
 
         if bird_species:
             is_chinese = self.i18n.current_lang.startswith('zh')

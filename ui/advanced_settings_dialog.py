@@ -115,7 +115,7 @@ class AdvancedSettingsDialog(QDialog):
                 font-weight: 500;
             }}
             QPushButton:hover {{
-                background-color: #00e6b8;
+                background-color: {COLORS['accent_hover']};
             }}
             QPushButton#secondary {{
                 background-color: {COLORS['bg_card']};
@@ -499,7 +499,7 @@ class AdvancedSettingsDialog(QDialog):
                 font-weight: 500;
             }}
             QPushButton:hover {{
-                background-color: #00e6b8;
+                background-color: {COLORS['accent_hover']};
             }}
         """)
         save_btn.clicked.connect(self._save_settings)
@@ -639,7 +639,7 @@ class AdvancedSettingsDialog(QDialog):
                 border-bottom: 1px solid {COLORS['border_subtle']};
             }}
             QListWidget::item:selected {{
-                background-color: rgba(0,212,170,0.15);
+                background-color: {COLORS['accent_dim']};
                 color: {COLORS['accent']};
             }}
         """)

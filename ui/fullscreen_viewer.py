@@ -21,9 +21,9 @@ from ui.styles import COLORS, FONTS
 
 # 焦点状态颜色映射
 _FOCUS_COLORS = {
-    "BEST":  QColor("#00cc44"),   # 绿色 — 精焦（相机合焦确认色）
-    "GOOD":  QColor("#e05050"),   # 红色 — 合焦
-    "BAD":   QColor("#ffcc00"),   # 黄色 — 失焦（在浅/深图片上均可见）
+    "BEST":  QColor(COLORS['focus_best']),   # 绿 — 精焦
+    "GOOD":  QColor(COLORS['focus_good']),   # 琥珀 — 合焦
+    "BAD":   QColor("#ffcc00"),              # 黄 — 失焦（photo overlay 需高对比，保留）
     # WORST 不入表 → 不绘制
 }
 

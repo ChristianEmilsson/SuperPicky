@@ -139,10 +139,10 @@ class StyledMessageBox(QDialog):
                         font-family: {FONTS['sans']};
                     }}
                     QPushButton:hover {{
-                        background-color: #00e6b8;
+                        background-color: {COLORS['accent_hover']};
                     }}
                     QPushButton:pressed {{
-                        background-color: #00b894;
+                        background-color: {COLORS['accent_pressed']};
                     }}
                 """)
             else:  # secondary

@@ -242,7 +242,7 @@ class SkillLevelDialog(QDialog):
                 padding: 8px 24px;
             }}
             QPushButton:hover {{
-                background-color: #00e6b8;
+                background-color: {COLORS['accent_hover']};
             }}
         """)
         confirm_btn.clicked.connect(self._on_confirm)

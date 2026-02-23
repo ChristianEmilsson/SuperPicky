@@ -28,10 +28,10 @@ _RATING_CONFIGS = [
 
 # 对焦状态颜色（与缩略图圆点一致）
 _FOCUS_COLORS = {
-    "BEST":  "#e05050",                  # 深珊瑚红
-    "GOOD":  COLORS['accent'],           # app 主色青绿
-    "BAD":   COLORS['text_primary'],     # 白色
-    "WORST": COLORS['text_secondary'],   # 淡灰 #a1a1a1
+    "BEST":  COLORS['focus_best'],    # 绿 — 精焦
+    "GOOD":  COLORS['focus_good'],    # 琥珀 — 合焦
+    "BAD":   COLORS['focus_bad'],     # 近白灰 — 失焦
+    "WORST": COLORS['focus_worst'],   # 灰 — 脱焦
 }
 
 # 默认勾选的评分（★★★ 和 ★★）
