@@ -192,7 +192,7 @@ class DetailPanel(QWidget):
             btn.setObjectName("secondary")
             btn.setFixedHeight(26)
             btn.setStyleSheet("QPushButton { padding: 2px 8px; font-size: 12px; }")
-        self._crop_btn.setObjectName("")   # 激活状态用默认（accent）样式
+        self._full_btn.setObjectName("")   # 默认全图模式激活（与 _use_crop_view=False 一致）
         self._crop_btn.clicked.connect(lambda: self._switch_view(True))
         self._full_btn.clicked.connect(lambda: self._switch_view(False))
         vb_layout.addWidget(self._crop_btn)
