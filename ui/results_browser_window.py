@@ -144,9 +144,10 @@ def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
             act.setEnabled(bool(filepath))
 
             def _open_in_app(_checked=False, _fp=filepath, _ap=app_path):
+                import subprocess
                 if sys.platform == "darwin" and _fp:
                     ap = _resolve_app_path(_ap)
-                    QProcess.startDetached("open", ["-a", ap, _fp])
+                    subprocess.Popen(["open", "-a", ap, _fp])
                 elif sys.platform == "win32" and _fp:
                     QProcess.startDetached(_ap, [_fp])
 
@@ -424,6 +425,10 @@ class ResultsBrowserWindow(QMainWindow):
         self._filter_panel.update_rating_counts(counts)
         species = self._db.get_distinct_species()
         self._filter_panel.update_species_list(species)
+
+        # 默认筛选若无结果但库中有数据，自动勾选全部评分并刷新
+        if len(self._all_photos) > 0 and len(self._filtered_photos) == 0:
+            self._filter_panel.select_all_ratings()
 
         self.setWindowTitle(f"{self.i18n.t('browser.title')} — {short_name}")
 
@@ -866,6 +871,10 @@ class ResultsBrowserWidget(QWidget):
         self._filter_panel.update_rating_counts(counts)
         species = self._db.get_distinct_species()
         self._filter_panel.update_species_list(species)
+
+        # 默认筛选若无结果但库中有数据，自动勾选全部评分并刷新
+        if len(self._all_photos) > 0 and len(self._filtered_photos) == 0:
+            self._filter_panel.select_all_ratings()
 
     def _compute_burst_ids(self):
         """基于 date_time_original 做秒级 burst 分组，写回 DB。"""

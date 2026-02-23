@@ -1973,9 +1973,10 @@ class PhotoProcessor:
                     adj_topiq_csv = adj_topiq_csv * 1.1
                 
                 # 更新 CSV 中的关键点数据（V4.1: 添加 adj_sharpness, adj_topiq）
+                # 注意：必须用 original_prefix（DB 主键），而非 file_prefix（含缓存路径前缀）
                 csv_update_start = time.time()
                 self._update_csv_keypoint_data(
-                    file_prefix, 
+                    original_prefix,
                     head_sharpness,  # V4.1: 原始头部锐度
                     has_visible_eye, 
                     has_visible_beak,

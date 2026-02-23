@@ -366,6 +366,19 @@ class FilterPanel(QWidget):
 
         self._emit_filters()
 
+    def select_all_ratings(self):
+        """勾选全部评分（当默认筛选无结果时的回退）。"""
+        for rating, btn in self._rating_btns.items():
+            btn.blockSignals(True)
+            btn.setChecked(True)
+            btn.blockSignals(False)
+        # 同时勾选全部对焦状态
+        for cb in self._focus_cbs.values():
+            cb.blockSignals(True)
+            cb.setChecked(True)
+            cb.blockSignals(False)
+        self._emit_filters()
+
     # ------------------------------------------------------------------
     #  信号
     # ------------------------------------------------------------------

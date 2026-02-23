@@ -350,6 +350,12 @@ class _FullscreenImageLabel(QLabel):
             painter.drawLine(cx, cy, cx - sx * arm, cy)   # 横臂（向内）
             painter.drawLine(cx, cy, cx, cy - sy * arm)   # 竖臂（向内）
 
+        # 中心实心圆点，标记精确焦点位置
+        dot_r = 3
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QBrush(color))
+        painter.drawEllipse(x - dot_r, y - dot_r, dot_r * 2, dot_r * 2)
+
     # ── Qt 事件重写 ──────────────────────────────────────────
 
     def paintEvent(self, event):

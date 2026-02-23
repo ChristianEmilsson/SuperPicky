@@ -659,11 +659,11 @@ class SuperPickyMainWindow(QMainWindow):
 
         # 进度区域
         self._create_progress_section(main_layout)
-        main_layout.addSpacing(8)
+        main_layout.addSpacing(4)
 
         # 状态条（进度条下方、按钮上方）
         self._create_status_banner(main_layout)
-        main_layout.addSpacing(8)
+        main_layout.addSpacing(6)
 
         # 控制按钮
         self._create_button_section(main_layout)
@@ -1162,7 +1162,7 @@ class SuperPickyMainWindow(QMainWindow):
         # 日志文本框
         self.log_text = QTextEdit()
         self.log_text.setReadOnly(True)
-        self.log_text.setMinimumHeight(260)
+        self.log_text.setMinimumHeight(220)
         parent_layout.addWidget(self.log_text, 1)
 
     def _create_progress_section(self, parent_layout):
@@ -1174,8 +1174,8 @@ class SuperPickyMainWindow(QMainWindow):
         self.progress_bar.setTextVisible(False)
         self.progress_bar.setFixedHeight(4)
         parent_layout.addWidget(self.progress_bar)
-        
-        parent_layout.addSpacing(6)
+
+        parent_layout.addSpacing(2)
 
         # 进度信息
         progress_info_layout = QHBoxLayout()
@@ -1196,7 +1196,7 @@ class SuperPickyMainWindow(QMainWindow):
     def _create_status_banner(self, parent_layout):
         """创建状态条（进度条下方，按钮上方）"""
         self._status_banner = QLabel("支持 RAW / JPG · 拖拽目录或点击浏览")
-        self._status_banner.setFixedHeight(40)
+        self._status_banner.setFixedHeight(32)
         self._status_banner.setAlignment(Qt.AlignCenter)
         self._status_banner.setStyleSheet(f"""
             QLabel {{
@@ -1651,7 +1651,17 @@ class SuperPickyMainWindow(QMainWindow):
         self._update_status(self.i18n.t("labels.complete"), COLORS['success'])
 
         # 更新状态条为完成状态
-        counts = self._load_result_counts()
+        # 直接从 stats 参数构建（避免 DB 时序问题：处理线程可能还未关闭连接）
+        counts = {
+            "total": stats.get("total", 0),
+            "by_rating": {
+                3:  stats.get("star_3", 0),
+                2:  stats.get("star_2", 0),
+                1:  stats.get("star_1", 0),
+                0:  stats.get("star_0", 0),
+                -1: stats.get("no_bird", 0),
+            },
+        }
         self._update_status_banner("done", counts)
         self._update_action_buttons("has_results")
 
