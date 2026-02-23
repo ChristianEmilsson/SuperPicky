@@ -26,12 +26,12 @@ _RATING_CONFIGS = [
     (-1, "—",     COLORS['text_muted']),
 ]
 
-# 对焦状态颜色
+# 对焦状态颜色（与缩略图圆点一致）
 _FOCUS_COLORS = {
-    "BEST":  COLORS['accent'],
-    "GOOD":  COLORS['success'],
-    "BAD":   COLORS['warning'],
-    "WORST": COLORS['error'],
+    "BEST":  "#e05050",                  # 深珊瑚红
+    "GOOD":  COLORS['accent'],           # app 主色青绿
+    "BAD":   COLORS['text_primary'],     # 白色
+    "WORST": COLORS['text_secondary'],   # 淡灰 #a1a1a1
 }
 
 # 默认勾选的评分（★★★ 和 ★★）
