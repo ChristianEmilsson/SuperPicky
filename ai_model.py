@@ -72,7 +72,8 @@ def _get_iqa_scorer():
     """获取 IQA 评分器单例"""
     global _iqa_scorer
     if _iqa_scorer is None:
-        _iqa_scorer = get_iqa_scorer(device='mps')
+        from config import get_best_device
+        _iqa_scorer = get_iqa_scorer(device=get_best_device().type)
     return _iqa_scorer
 
 
