@@ -1201,7 +1201,7 @@ class SuperPickyMainWindow(QMainWindow):
 
     def _create_status_banner(self, parent_layout):
         """创建状态条（进度条下方，按钮上方）"""
-        self._status_banner = QLabel("👆 请选择一个包含照片的目录")
+        self._status_banner = QLabel("支持 RAW / JPG · 拖拽目录或点击浏览")
         self._status_banner.setFixedHeight(40)
         self._status_banner.setAlignment(Qt.AlignCenter)
         self._status_banner.setStyleSheet(f"""
@@ -1338,7 +1338,7 @@ class SuperPickyMainWindow(QMainWindow):
             return {}
 
     def _auto_open_results(self):
-        """打开/切换结果浏览器窗口。"""
+        """打开/切换结果浏览器窗口，并隐藏主窗口。"""
         if not self.directory_path:
             return
         from ui.results_browser_window import ResultsBrowserWindow
@@ -1348,6 +1348,8 @@ class SuperPickyMainWindow(QMainWindow):
         self._results_browser.show()
         self._results_browser.raise_()
         self._results_browser.activateWindow()
+        # 浏览器打开后隐藏主窗口（托盘图标保持可用）
+        self.hide()
 
     def _update_status_banner(self, state: str, data=None):
         """更新状态条显示。
@@ -1358,7 +1360,7 @@ class SuperPickyMainWindow(QMainWindow):
         if not hasattr(self, '_status_banner'):
             return
         if state == "idle":
-            self._status_banner.setText("👆 请选择一个包含照片的目录")
+            self._status_banner.setText("支持 RAW / JPG · 拖拽目录或点击浏览")
             self._status_banner.setStyleSheet(f"""
                 QLabel {{
                     background-color: {COLORS['bg_card']};
@@ -1390,7 +1392,7 @@ class SuperPickyMainWindow(QMainWindow):
             n2 = by_rating.get(2, 0)
             n1 = by_rating.get(1, 0)
             self._status_banner.setText(
-                f"✅ 已处理：{total}张   ⭐⭐⭐×{n3}  ⭐⭐×{n2}  ⭐×{n1}"
+                f"✅ 已处理 {total} 张    ★★★ {n3}    ★★ {n2}    ★ {n1}"
             )
             self._status_banner.setStyleSheet(f"""
                 QLabel {{
@@ -1424,7 +1426,7 @@ class SuperPickyMainWindow(QMainWindow):
             n2 = by_rating.get(2, 0)
             n1 = by_rating.get(1, 0)
             self._status_banner.setText(
-                f"🎉 完成！{total}张   ⭐⭐⭐×{n3}  ⭐⭐×{n2}  ⭐×{n1}"
+                f"🎉 完成！{total} 张    ★★★ {n3}    ★★ {n2}    ★ {n1}"
             )
             self._status_banner.setStyleSheet(f"""
                 QLabel {{
