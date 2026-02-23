@@ -20,12 +20,12 @@ from PySide6.QtGui import QPixmap, QColor, QPainter, QPen, QFont, QBrush
 from ui.styles import COLORS, FONTS
 
 
-# 对焦状态指示颜色
+# 对焦状态指示颜色（WORST 不显示圆点）
 _FOCUS_DOT_COLORS = {
-    "BEST":  QColor(COLORS['accent']),
-    "GOOD":  QColor(COLORS['success']),
-    "BAD":   QColor(COLORS['warning']),
-    "WORST": QColor(COLORS['error']),
+    "BEST":  QColor("#e05050"),           # 深珊瑚红
+    "GOOD":  QColor(COLORS['accent']),    # app 主色青绿
+    "BAD":   QColor("#666666"),           # 中灰，低调提示
+    # WORST 不入表 → _draw_overlays 中 `if focus in _FOCUS_DOT_COLORS` 自动跳过
 }
 
 # 评分标签颜色（2d：细化颜色）
@@ -313,21 +313,14 @@ class ThumbnailCard(QFrame):
             painter.drawLine(8, 14, 11, 18)
             painter.drawLine(11, 18, 18, 9)
 
-        # 选中状态：四边虚线框，转角留空
+        # 选中状态：2px 实线青绿框
         if getattr(self, '_selected', False):
-            pen = QPen(QColor(74, 136, 120))   # 低饱和青绿 #4a8878
+            pen = QPen(QColor(COLORS['accent']))  # #00d4aa
             pen.setWidth(2)
-            pen.setStyle(Qt.CustomDashLine)
-            pen.setDashPattern([5, 4])          # 5px 实 / 4px 空
+            pen.setStyle(Qt.SolidLine)
             painter.setPen(pen)
             painter.setBrush(Qt.NoBrush)
-            w = overlay.width() - 1
-            h = overlay.height() - 1
-            gap = 10                             # 转角留白
-            painter.drawLine(gap, 0, w - gap, 0)    # 上边
-            painter.drawLine(gap, h, w - gap, h)    # 下边
-            painter.drawLine(0, gap, 0, h - gap)    # 左边
-            painter.drawLine(w, gap, w, h - gap)    # 右边
+            painter.drawRect(1, 1, overlay.width() - 2, overlay.height() - 2)
 
         painter.end()
         self.img_label.setPixmap(overlay)
