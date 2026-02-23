@@ -317,23 +317,6 @@ class ThumbnailCard(QFrame):
     def set_selected(self, selected: bool):
         self._selected = selected
         self.setStyleSheet(self._selected_style() if selected else self._normal_style())
-        # 2e：选中时文件名颜色变为 accent 色
-        if selected:
-            self.name_label.setStyleSheet(f"""
-                QLabel {{
-                    color: {COLORS['accent']};
-                    font-size: 10px;
-                    background: transparent;
-                }}
-            """)
-        else:
-            self.name_label.setStyleSheet(f"""
-                QLabel {{
-                    color: {COLORS['text_muted']};
-                    font-size: 10px;
-                    background: transparent;
-                }}
-            """)
 
     def _normal_style(self):
         return f"""
@@ -349,13 +332,13 @@ class ThumbnailCard(QFrame):
         """
 
     def _selected_style(self):
-        # 2a：淡青色背景晕染 + accent 边框
-        return f"""
-            QFrame {{
-                background-color: rgba(0, 212, 170, 0.08);
-                border: 2px solid {COLORS['accent']};
+        # 低饱和度虚线边框，克制不刺眼
+        return """
+            QFrame {
+                background-color: rgba(0, 150, 110, 0.07);
+                border: 1px dashed #4a8878;
                 border-radius: 8px;
-            }}
+            }
         """
 
     def set_multi_selected(self, selected: bool):
