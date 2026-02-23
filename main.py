@@ -60,6 +60,10 @@ def main():
     app.setApplicationDisplayName(f"慧眼选鸟v{APP_VERSION} ({commit_hash})")
     app.setOrganizationName("JamesPhotography")
     app.setOrganizationDomain("jamesphotography.com.au")
+
+    # 防止隐藏主窗口（切到结果浏览器时）触发 Qt 自动退出
+    # 退出由托盘菜单"退出"或 _quit_app() 显式控制
+    app.setQuitOnLastWindowClosed(False)
     
     # 设置应用图标
     icon_path = os.path.join(os.path.dirname(__file__), "img", "icon.png")

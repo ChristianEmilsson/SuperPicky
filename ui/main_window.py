@@ -1344,6 +1344,8 @@ class SuperPickyMainWindow(QMainWindow):
         from ui.results_browser_window import ResultsBrowserWindow
         if not hasattr(self, '_results_browser') or self._results_browser is None:
             self._results_browser = ResultsBrowserWindow(parent=None)
+            # 浏览器关闭时恢复主窗口（避免无可见窗口的"幽灵"状态）
+            self._results_browser.closed.connect(self._show_main_window)
         self._results_browser.open_directory(self.directory_path)
         self._results_browser.show()
         self._results_browser.raise_()
