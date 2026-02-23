@@ -46,12 +46,12 @@ class _ImageLoader(QThread):
                 self.ready.emit(QPixmap())
 
 
-# 对焦状态显示颜色
+# 对焦状态显示颜色（与缩略图圆点、筛选面板保持一致）
 _FOCUS_COLORS = {
-    "BEST":  COLORS['accent'],
-    "GOOD":  COLORS['success'],
-    "BAD":   COLORS['warning'],
-    "WORST": COLORS['error'],
+    "BEST":  "#e05050",                  # 深珊瑚红
+    "GOOD":  COLORS['accent'],           # app 主色青绿
+    "BAD":   COLORS['text_primary'],     # 白色
+    "WORST": COLORS['text_secondary'],   # 淡灰 #a1a1a1
 }
 
 # 曝光状态中文对照
