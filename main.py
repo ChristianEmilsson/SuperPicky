@@ -21,6 +21,14 @@ multiprocessing.freeze_support()
 # 确保模块路径正确
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Fix Windows console encoding: default cp1252 cannot render emoji/CJK characters,
+# causing UnicodeEncodeError crashes on print(). Reconfigure to UTF-8 with replacement
+# fallback so all log output survives regardless of the console codepage.
+if sys.platform == "win32":
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
