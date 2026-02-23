@@ -316,7 +316,7 @@ class ThumbnailCard(QFrame):
         # 选中状态：四边虚线框，转角留空
         if getattr(self, '_selected', False):
             pen = QPen(QColor(74, 136, 120))   # 低饱和青绿 #4a8878
-            pen.setWidth(1)
+            pen.setWidth(2)
             pen.setStyle(Qt.CustomDashLine)
             pen.setDashPattern([5, 4])          # 5px 实 / 4px 空
             painter.setPen(pen)
