@@ -536,8 +536,8 @@ QFrame[frameShape="5"] {{
 
 /* ==================== Dock 停靠面板 ==================== */
 QDockWidget {{
-    color: {COLORS['text_primary']};
-    font-size: 13px;
+    color: {COLORS['text_tertiary']};
+    font-size: 11px;
     font-weight: 500;
     titlebar-close-icon: url(none);
     titlebar-normal-icon: url(none);
@@ -545,7 +545,7 @@ QDockWidget {{
 
 QDockWidget::title {{
     background-color: {COLORS['bg_elevated']};
-    padding: 8px 12px;
+    padding: 6px 12px;
     text-align: left;
     border-bottom: 1px solid {COLORS['border_subtle']};
 }}
@@ -553,13 +553,9 @@ QDockWidget::title {{
 QDockWidget::close-button, QDockWidget::float-button {{
     background: transparent;
     border: none;
-    padding: 4px;
-    icon-size: 14px;
-}}
-
-QDockWidget::close-button:hover, QDockWidget::float-button:hover {{
-    background-color: {COLORS['bg_card']};
-    border-radius: 4px;
+    padding: 0px;
+    width: 0px;
+    height: 0px;
 }}
 
 /* 主窗口与 Dock 之间的分隔线 - 更柔和的颜色 */

@@ -79,17 +79,18 @@ class DropArea(QFrame):
 
     def __init__(self):
         super().__init__()
+        self.setObjectName("DropArea")
         self.i18n = get_i18n()
         self.setAcceptDrops(True)
         self.setMinimumSize(250, 160)
         self.setStyleSheet(f"""
-            DropArea {{
+            QFrame#DropArea {{
                 border: 2px dashed {COLORS['border']};
                 border-radius: 10px;
                 background-color: {COLORS['bg_elevated']};
             }}
-            DropArea:hover {{
-                border-color: {COLORS['accent']};
+            QFrame#DropArea:hover {{
+                border: 2px dashed {COLORS['accent']};
                 background-color: {COLORS['bg_card']};
             }}
         """)
@@ -98,7 +99,7 @@ class DropArea(QFrame):
         layout.setAlignment(Qt.AlignCenter)
         layout.setSpacing(8)
 
-        # 图标 - 使用 + 号
+        # 图标 - + 号
         icon_label = QLabel("+")
         icon_label.setStyleSheet(f"""
             font-size: 48px;
@@ -110,9 +111,9 @@ class DropArea(QFrame):
         layout.addWidget(icon_label)
 
         # 提示文字
-        # 提示文字
         hint_label = QLabel(self.i18n.t("birdid.drag_hint"))
         hint_label.setAlignment(Qt.AlignCenter)
+        hint_label.setWordWrap(True)
         hint_label.setStyleSheet(f"""
             color: {COLORS['text_tertiary']};
             font-size: 13px;
@@ -174,42 +175,66 @@ class ResultCard(QFrame):
 
     def __init__(self, rank: int, cn_name: str, en_name: str, confidence: float):
         super().__init__()
+        self.setObjectName("ResultCard")
         self.rank = rank
         self.cn_name = cn_name
         self.en_name = en_name
         self.confidence = confidence
         self.i18n = get_i18n()
         self._selected = False
-        
+
         self.setCursor(Qt.PointingHandCursor)
         self._update_style()
 
-        layout = QHBoxLayout(self)
+        # 外层水平布局：左侧色条 + 内容
+        outer_layout = QHBoxLayout(self)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+        outer_layout.setSpacing(0)
+
+        # 左侧色条（#1用teal，其余用暗色）
+        self.accent_bar = QFrame()
+        self.accent_bar.setFixedWidth(3)
+        bar_color = COLORS['accent'] if rank == 1 else COLORS['fill']
+        self.accent_bar.setStyleSheet(f"""
+            QFrame {{
+                background-color: {bar_color};
+                border-radius: 3px;
+            }}
+        """)
+        outer_layout.addWidget(self.accent_bar)
+
+        # 内容布局
+        content_widget = QWidget()
+        content_widget.setStyleSheet("background: transparent;")
+        layout = QHBoxLayout(content_widget)
         layout.setContentsMargins(10, 8, 10, 8)
-        layout.setSpacing(10)
+        layout.setSpacing(8)
 
         # 排名
+        rank_color = COLORS['accent'] if rank == 1 else COLORS['text_tertiary']
         self.rank_label = QLabel(f"#{rank}")
         self.rank_label.setStyleSheet(f"""
-            font-size: 14px;
-            font-weight: bold;
-            color: {COLORS['accent']};
-            min-width: 28px;
+            font-size: 12px;
+            font-weight: 600;
+            color: {rank_color};
+            min-width: 24px;
             background: transparent;
+            font-family: {FONTS['mono']};
         """)
         layout.addWidget(self.rank_label)
 
-        # 名称 - 只显示当前语言
+        # 名称 - 只显示当前语言，单行不换行
         is_en = self.i18n.current_lang.startswith('en')
         display_name = en_name if is_en else cn_name
 
         self.name_label = QLabel(display_name)
         self.name_label.setStyleSheet(f"""
-            font-size: 14px;
-            font-weight: bold;
+            font-size: 13px;
+            font-weight: 500;
             color: {COLORS['text_primary']};
             background: transparent;
         """)
+        self.name_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         layout.addWidget(self.name_label, 1)
 
@@ -223,35 +248,43 @@ class ResultCard(QFrame):
 
         self.conf_label = QLabel(f"{confidence:.0f}%")
         self.conf_label.setStyleSheet(f"""
-            font-size: 14px;
-            font-weight: bold;
+            font-size: 12px;
+            font-weight: 600;
             color: {conf_color};
             font-family: {FONTS['mono']};
             background: transparent;
         """)
-        self.conf_label.setFixedWidth(50)
+        self.conf_label.setFixedWidth(40)
         self.conf_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         layout.addWidget(self.conf_label)
-    
+
+        outer_layout.addWidget(content_widget, 1)
+
     def _update_style(self):
         """更新选中/未选中样式"""
         if self._selected:
             self.setStyleSheet(f"""
-                ResultCard {{
+                QFrame#ResultCard {{
                     background-color: {COLORS['bg_card']};
-                    border: 2px solid {COLORS['accent']};
+                    border: 1px solid {COLORS['accent']};
                     border-radius: 8px;
+                    border-left: none;
                 }}
             """)
         else:
+            is_first = self.rank == 1
+            border_color = COLORS['accent'] if is_first else COLORS['border_subtle']
+            hover_color = COLORS['accent'] if is_first else COLORS['text_muted']
             self.setStyleSheet(f"""
-                ResultCard {{
+                QFrame#ResultCard {{
                     background-color: {COLORS['bg_card']};
-                    border: 1px solid {COLORS['border_subtle']};
+                    border: 1px solid {border_color};
                     border-radius: 8px;
+                    border-left: none;
                 }}
-                ResultCard:hover {{
-                    border: 1px solid {COLORS['text_muted']};
+                QFrame#ResultCard:hover {{
+                    border: 1px solid {hover_color};
+                    border-left: none;
                 }}
             """)
     
@@ -274,7 +307,7 @@ class BirdIDDockWidget(QDockWidget):
 
     def __init__(self, parent=None):
         self.i18n = get_i18n()
-        super().__init__(self.i18n.t("birdid.title"), parent)
+        super().__init__(self.i18n.t("birdid.title").upper(), parent)
         self.setObjectName("BirdIDDock")
         self.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
         self.setMinimumWidth(280)
@@ -297,9 +330,11 @@ class BirdIDDockWidget(QDockWidget):
     def _setup_title_bar(self):
         """创建自定义标题栏 - 标题靠左，按钮靠右"""
         title_bar = QWidget()
+        title_bar.setObjectName("TitleBar")
         title_bar.setStyleSheet(f"""
-            QWidget {{
+            QWidget#TitleBar {{
                 background-color: {COLORS['bg_elevated']};
+                border-bottom: 1px solid {COLORS['border_subtle']};
             }}
         """)
         
@@ -307,24 +342,24 @@ class BirdIDDockWidget(QDockWidget):
         layout.setContentsMargins(12, 6, 8, 6)
         layout.setSpacing(8)
         
-        # 标题文字（靠左）
-        # 标题文字（靠左）
-        title_label = QLabel(self.i18n.t("birdid.title"))
+        # 标题文字（靠左）- 小号灰色 uppercase，与左侧 sectionLabel 风格一致
+        title_label = QLabel(self.i18n.t("birdid.title").upper())
         title_label.setStyleSheet(f"""
-            color: {COLORS['text_primary']};
-            font-size: 13px;
+            color: {COLORS['text_tertiary']};
+            font-size: 11px;
             font-weight: 500;
+            letter-spacing: 1px;
             background: transparent;
         """)
         layout.addWidget(title_label)
         
         layout.addStretch()
         
-        # 浮动按钮（靠右）
-        float_btn = QPushButton("⛶")
-        float_btn.setFixedSize(24, 24)
-        float_btn.setToolTip(self.i18n.t("birdid.toggle_dock"))
-        float_btn.setStyleSheet(f"""
+        # 浮动按钮（靠右）- 用斜箭头表示状态
+        self._float_btn = QPushButton("↗")  # 初始停靠状态 → 可弹出
+        self._float_btn.setFixedSize(24, 24)
+        self._float_btn.setToolTip("弹出面板")
+        self._float_btn.setStyleSheet(f"""
             QPushButton {{
                 background: transparent;
                 border: none;
@@ -337,8 +372,11 @@ class BirdIDDockWidget(QDockWidget):
                 color: {COLORS['text_secondary']};
             }}
         """)
-        float_btn.clicked.connect(self._toggle_floating)
-        layout.addWidget(float_btn)
+        self._float_btn.clicked.connect(self._toggle_floating)
+        layout.addWidget(self._float_btn)
+        
+        # 监听浮动状态变化，动态更新图标
+        self.topLevelChanged.connect(self._on_float_changed)
         
         # 关闭按钮（最右）
         close_btn = QPushButton("✕")
@@ -365,6 +403,16 @@ class BirdIDDockWidget(QDockWidget):
     def _toggle_floating(self):
         """切换浮动/停靠状态"""
         self.setFloating(not self.isFloating())
+
+    def _on_float_changed(self, floating: bool):
+        """浮动状态变化时更新按钮图标和 tooltip"""
+        if hasattr(self, '_float_btn'):
+            if floating:
+                self._float_btn.setText("↙")  # 浮动中 → 可归位
+                self._float_btn.setToolTip("归位到主窗口")
+            else:
+                self._float_btn.setText("↗")  # 停靠中 → 可弹出
+                self._float_btn.setToolTip("弹出面板")
     
     def _load_regions_data(self) -> dict:
         """加载 eBird 区域数据"""
@@ -825,7 +873,7 @@ class BirdIDDockWidget(QDockWidget):
     def _setup_ui(self):
         """设置界面"""
         container = QWidget()
-        container.setStyleSheet(f"background-color: {COLORS['bg_primary']};")
+        container.setStyleSheet(f"background-color: {COLORS['bg_void']};")
 
         layout = QVBoxLayout(container)
         layout.setContentsMargins(12, 12, 12, 12)
@@ -1001,6 +1049,7 @@ class BirdIDDockWidget(QDockWidget):
         self.placeholder_frame.setStyleSheet(f"""
             QFrame {{
                 background-color: {COLORS['bg_elevated']};
+                border: 1px solid {COLORS['border_subtle']};
                 border-radius: 10px;
             }}
         """)
@@ -1011,6 +1060,7 @@ class BirdIDDockWidget(QDockWidget):
         ph_label.setStyleSheet(f"""
             color: {COLORS['text_muted']};
             font-size: 12px;
+            background: transparent;
         """)
         ph_layout.addWidget(ph_label)
         layout.addWidget(self.placeholder_frame, 1)  # stretch=1，与 results_frame 同级
@@ -1438,7 +1488,14 @@ class BirdIDDockWidget(QDockWidget):
             """)
             self.results_layout.addWidget(info_label)
 
-        for i, r in enumerate(results, 1):
+        # 断崖式领先判断：#1 与 #2 差距 >= 80% 时只显示 #1，否则显示 Top 3
+        if len(results) >= 2:
+            gap = results[0].get('confidence', 0) - results[1].get('confidence', 0)
+            show_count = 1 if gap >= 80 else min(3, len(results))
+        else:
+            show_count = 1
+
+        for i, r in enumerate(results[:show_count], 1):
             card = ResultCard(
                 rank=i,
                 cn_name=r.get('cn_name', '未知'),

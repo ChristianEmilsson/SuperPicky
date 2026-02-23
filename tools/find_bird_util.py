@@ -24,11 +24,8 @@ def raw_to_jpeg(raw_file_path):
     # 文件名不带 tmp_ 前缀，直接使用原名前缀
     jpg_file_path = os.path.join(cache_dir, f"{file_prefix}.jpg")
     
-    log_message(f"CONVERSION: Filename is [{filename}], Cache path is [{jpg_file_path}]", directory_path)
-
     if os.path.exists(jpg_file_path):
-        log_message(f"CACHE JPEG already exists: [{jpg_file_path}]", directory_path)
-        return jpg_file_path  # 返回完整路径
+        return jpg_file_path  # 返回完整路径（缓存命中，无需日志）
         
     if not os.path.exists(raw_file_path):
         log_message(f"ERROR, file [{filename}] cannot be found in RAW form", directory_path)
@@ -44,7 +41,7 @@ def raw_to_jpeg(raw_file_path):
                     f.write(thumbnail.data)
             elif thumbnail.format == rawpy.ThumbFormat.BITMAP:
                 imageio.imsave(jpg_file_path, thumbnail.data)
-            log_message(f"CONVERSION: RAW extract to JPEG: {raw_file_path} -> {jpg_file_path}", directory_path)
+            # 成功转换——已由 photo_processor 的批量日志统计，无需逐文件记录
             
             return jpg_file_path  # 返回完整路径
     except Exception as e:
