@@ -4,11 +4,16 @@ SuperPicky - 参数设置对话框
 顶部标签页布局
 """
 
+import os
+import subprocess
+import sys
+
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout,
     QLabel, QSlider, QPushButton,
     QWidget, QFrame, QRadioButton,
-    QButtonGroup, QTabWidget, QCheckBox, QComboBox
+    QButtonGroup, QTabWidget, QCheckBox, QComboBox,
+    QListWidget, QListWidgetItem, QFileDialog, QSizePolicy
 )
 from PySide6.QtCore import Qt, Slot
 
@@ -79,6 +84,10 @@ class AdvancedSettingsDialog(QDialog):
         self.tab_widget.addTab(
             self._create_output_page(),
             self.i18n.t("advanced_settings.section_output")
+        )
+        self.tab_widget.addTab(
+            self._create_apps_page(),
+            self.i18n.t("advanced_settings.section_apps")
         )
 
         main_layout.addWidget(self.tab_widget, 1)
@@ -577,6 +586,9 @@ class AdvancedSettingsDialog(QDialog):
         self.config.set_keep_temp_files(self.vars["keep_temp_files"].isChecked())
         self.config.set_auto_cleanup_days(self.vars["auto_cleanup_days"].currentData())
 
+        # 保存外部应用列表
+        self.config.set_external_apps(self._apps_data)
+
         if self.config.save():
             StyledMessageBox.information(
                 self,
@@ -592,6 +604,143 @@ class AdvancedSettingsDialog(QDialog):
                 self.i18n.t("advanced_settings.save_error_msg"),
                 ok_text=self.i18n.t("buttons.close")
             )
+
+    # ------------------------------------------------------------------
+    #  外部应用标签页（第三页）
+    # ------------------------------------------------------------------
+
+    def _create_apps_page(self) -> QWidget:
+        """创建「外部应用」标签页：用户手动添加右键菜单中的外部编辑器。"""
+        self._apps_data: list = list(self.config.get_external_apps())
+
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setSpacing(12)
+
+        # 说明文字
+        hint = QLabel(self.i18n.t("advanced_settings.apps_hint"))
+        hint.setWordWrap(True)
+        hint.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 12px;")
+        layout.addWidget(hint)
+
+        # 应用列表
+        self._apps_list = QListWidget()
+        self._apps_list.setStyleSheet(f"""
+            QListWidget {{
+                background-color: {COLORS['bg_card']};
+                border: 1px solid {COLORS['border']};
+                border-radius: 6px;
+                color: {COLORS['text_primary']};
+                font-size: 13px;
+            }}
+            QListWidget::item {{
+                padding: 8px 12px;
+                border-bottom: 1px solid {COLORS['border_subtle']};
+            }}
+            QListWidget::item:selected {{
+                background-color: rgba(0,212,170,0.15);
+                color: {COLORS['accent']};
+            }}
+        """)
+        self._apps_list.setMinimumHeight(180)
+        self._refresh_apps_list()
+        layout.addWidget(self._apps_list, 1)
+
+        # 按钮行
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(8)
+
+        add_btn = QPushButton(self.i18n.t("advanced_settings.add_app"))
+        add_btn.setObjectName("secondary")
+        add_btn.setFixedHeight(34)
+        add_btn.clicked.connect(self._on_add_app)
+        btn_row.addWidget(add_btn)
+
+        remove_btn = QPushButton(self.i18n.t("advanced_settings.remove_app"))
+        remove_btn.setObjectName("secondary")
+        remove_btn.setFixedHeight(34)
+        remove_btn.clicked.connect(self._on_remove_app)
+        btn_row.addWidget(remove_btn)
+
+        btn_row.addStretch()
+        layout.addLayout(btn_row)
+
+        return page
+
+    def _refresh_apps_list(self):
+        """用 _apps_data 重建 QListWidget 内容。"""
+        self._apps_list.clear()
+        for app in self._apps_data:
+            name = app.get("name", "")
+            path = app.get("path", "")
+            item = QListWidgetItem(f"  {name}   —   {path}")
+            item.setToolTip(path)
+            self._apps_list.addItem(item)
+
+    @Slot()
+    def _on_add_app(self):
+        """
+        macOS：先尝试 osascript choose application（原生选择器）。
+        若 osascript 失败（沙盒/权限拒绝）则自动 fallback 到 Qt 文件对话框。
+        其他平台：直接使用 Qt 文件对话框。
+        """
+        path = ""
+
+        if sys.platform == "darwin":
+            # 尝试 macOS 原生应用选择器
+            try:
+                result = subprocess.run(
+                    ["osascript", "-e", "POSIX path of (choose application)"],
+                    capture_output=True, text=True, timeout=30
+                )
+                if result.returncode == 0:
+                    # osascript 返回路径可能有尾部 '/' 或换行，统一清理
+                    path = result.stdout.strip().rstrip("/")
+            except Exception:
+                pass
+
+            # Fallback：osascript 不可用时用 Qt 文件对话框浏览 /Applications
+            if not path:
+                path = QFileDialog.getExistingDirectory(
+                    self,
+                    self.i18n.t("advanced_settings.pick_app_title"),
+                    "/Applications",
+                    QFileDialog.Option.DontUseNativeDialog
+                )
+                if path:
+                    path = path.rstrip("/")
+
+        elif sys.platform == "win32":
+            path, _ = QFileDialog.getOpenFileName(
+                self,
+                self.i18n.t("advanced_settings.pick_app_title"),
+                "C:\\Program Files",
+                "Executables (*.exe)"
+            )
+
+        if not path:
+            return
+
+        # 从路径提取显示名称（去掉 .app / .exe 后缀）
+        basename = os.path.basename(path)
+        name = basename.replace(".app", "").replace(".exe", "")
+
+        # 去重（规范化路径再比较）
+        norm = path.rstrip("/")
+        if any(a.get("path", "").rstrip("/") == norm for a in self._apps_data):
+            return
+
+        self._apps_data.append({"name": name, "path": norm})
+        self._refresh_apps_list()
+
+    @Slot()
+    def _on_remove_app(self):
+        """删除列表中选中的应用条目。"""
+        row = self._apps_list.currentRow()
+        if 0 <= row < len(self._apps_data):
+            self._apps_data.pop(row)
+            self._refresh_apps_list()
 
     @Slot(str, int, float)
     def _on_skill_level_changed(self, level_key: str, sharpness: int, aesthetics: float):

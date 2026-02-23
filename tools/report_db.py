@@ -20,7 +20,7 @@ from .file_utils import ensure_hidden_directory
 
 
 # Schema 版本，用于未来升级
-SCHEMA_VERSION = "4"
+SCHEMA_VERSION = "5"
 
 # 所有列定义（有序），用于 CREATE TABLE 和数据验证
 PHOTO_COLUMNS = [
@@ -288,6 +288,27 @@ class ReportDB:
             self._update_schema_version(current_version)
             print("✅ Database schema upgraded to v4")
 
+        # ----------------------------------------------------------------------
+        if current_version == "4":
+            print("🔄 Upgrading database schema from v4 to v5...")
+
+            new_columns_v5 = [
+                ("burst_id",       "INTEGER"),
+                ("burst_position", "INTEGER"),
+            ]
+
+            for col_name, col_type in new_columns_v5:
+                try:
+                    self._conn.execute(
+                        f"ALTER TABLE photos ADD COLUMN {col_name} {col_type} DEFAULT NULL"
+                    )
+                except sqlite3.OperationalError:
+                    pass  # 列已存在，跳过
+
+            current_version = "5"
+            self._update_schema_version(current_version)
+            print("✅ Database schema upgraded to v5")
+
     def _update_schema_version(self, version):
         """更新数据库中的版本号"""
         self._conn.execute(
@@ -437,6 +458,78 @@ class ReportDB:
         )
         return [dict(row) for row in cursor.fetchall()]
 
+    def get_photos_by_filters(self, filters: dict) -> List[dict]:
+        """
+        按过滤条件查询照片。
+
+        Args:
+            filters: FilterPanel.get_filters() 返回的字典，包含：
+                - ratings: List[int]        选中的评分列表
+                - focus_statuses: List[str] 选中的对焦状态列表
+                - is_flying: List[int]      选中的飞行状态 [0]/[1]/[0,1]
+                - bird_species_cn: str      鸟种名称，空字符串表示全部
+        """
+        conditions: List[str] = []
+        params: list = []
+
+        # 评分
+        ratings = filters.get("ratings")
+        if ratings is not None and len(ratings) > 0:
+            placeholders = ",".join("?" * len(ratings))
+            conditions.append(f"rating IN ({placeholders})")
+            params.extend(ratings)
+
+        # 对焦状态
+        focus = filters.get("focus_statuses")
+        if focus is not None and len(focus) > 0:
+            placeholders = ",".join("?" * len(focus))
+            conditions.append(f"(focus_status IN ({placeholders}) OR focus_status IS NULL)")
+            params.extend(focus)
+
+        # 飞行状态 (list: [0], [1], 或 [0, 1])
+        is_flying = filters.get("is_flying")
+        if is_flying is not None:
+            if isinstance(is_flying, list):
+                if len(is_flying) == 1:
+                    conditions.append("is_flying = ?")
+                    params.append(is_flying[0])
+                # 若 len==2 (两种都选)，则不加条件（全部显示）
+            else:
+                # 向后兼容：单值 None/0/1
+                if is_flying is not None:
+                    conditions.append("is_flying = ?")
+                    params.append(int(is_flying))
+
+        # 鸟种
+        species = filters.get("bird_species_cn", "")
+        if species:
+            conditions.append("bird_species_cn = ?")
+            params.append(species)
+
+        # burst 筛选
+        burst_filter = filters.get("burst_filter", "all")
+        if burst_filter == "burst_only":
+            conditions.append("burst_id IS NOT NULL")
+        elif burst_filter == "single_only":
+            conditions.append("burst_id IS NULL")
+        elif burst_filter == "none":
+            conditions.append("1 = 0")  # 全不显示
+
+        sql = "SELECT * FROM photos"
+        if conditions:
+            sql += " WHERE " + " AND ".join(conditions)
+
+        sort_by = filters.get("sort_by", "filename")
+        order_map = {
+            "filename":       "ORDER BY filename ASC",
+            "sharpness_desc": "ORDER BY COALESCE(adj_sharpness, 0.0) DESC, filename ASC",
+            "aesthetic_desc": "ORDER BY COALESCE(adj_topiq, nima_score, 0.0) DESC, filename ASC",
+        }
+        sql += " " + order_map.get(sort_by, "ORDER BY filename ASC")
+
+        cursor = self._conn.execute(sql, params)
+        return [dict(row) for row in cursor.fetchall()]
+
     def get_statistics(self) -> dict:
         """
         获取评分统计信息。
@@ -475,6 +568,15 @@ class ReportDB:
         stats["by_rating"] = {row[0]: row[1] for row in cursor.fetchall()}
 
         return stats
+
+    def get_distinct_species(self) -> List[str]:
+        """返回数据库中所有不重复的鸟种名称列表（非空）。"""
+        cursor = self._conn.execute(
+            "SELECT DISTINCT bird_species_cn FROM photos "
+            "WHERE bird_species_cn IS NOT NULL AND bird_species_cn != '' "
+            "ORDER BY bird_species_cn"
+        )
+        return [row[0] for row in cursor.fetchall()]
 
     def count(self) -> int:
         """返回总记录数。"""
@@ -561,6 +663,20 @@ class ReportDB:
                     count += 1
 
         return count
+
+    def update_burst_ids(self, burst_map: dict) -> None:
+        """
+        批量写入 burst_id / burst_position。
+
+        Args:
+            burst_map: {filename: (burst_id, burst_position)} 字典
+        """
+        with self._conn:
+            for filename, (bid, bpos) in burst_map.items():
+                self._conn.execute(
+                    "UPDATE photos SET burst_id = ?, burst_position = ? WHERE filename = ?",
+                    (bid, bpos, filename)
+                )
 
     # ==========================================================================
     #  元数据操作

@@ -64,6 +64,10 @@ class AdvancedConfig:
         # 临时文件管理 V4.1
         "keep_temp_files": True,        # 保留临时预览图片（统一控制 tmp JPG + debug crops）
         "auto_cleanup_days": 30,        # 自动清理周期：3/7/30/0(永久)
+
+        # 外部编辑应用（右键菜单 "用 X 打开"）
+        # 每项格式：{"name": "显示名称", "path": "/Applications/...app"}
+        "external_apps": [],
     }
 
     def __init__(self, config_file=None):
@@ -294,6 +298,15 @@ class AdvancedConfig:
             self.config["auto_cleanup_days"] = max(0, days)
         except ValueError:
             pass
+
+    # 外部应用配置 getter/setter
+    def get_external_apps(self) -> list:
+        """返回外部编辑应用列表，每项 {"name": str, "path": str}。"""
+        return list(self.config.get("external_apps", []))
+
+    def set_external_apps(self, apps: list):
+        """保存外部编辑应用列表。"""
+        self.config["external_apps"] = list(apps)
 
     def get_dict(self):
         """获取配置字典（用于传递给其他模块）"""
