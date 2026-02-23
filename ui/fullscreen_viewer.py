@@ -21,10 +21,10 @@ from ui.styles import COLORS, FONTS
 
 # 焦点状态颜色映射
 _FOCUS_COLORS = {
-    "BEST":  QColor("#00d4aa"),   # accent 青绿
-    "GOOD":  QColor("#22c55e"),   # success 绿
-    "BAD":   QColor("#eab308"),   # warning 黄
-    "WORST": QColor("#ef4444"),   # error 红
+    "BEST":  QColor("#00cc44"),   # 绿色 — 精焦（相机合焦确认色）
+    "GOOD":  QColor("#e05050"),   # 红色 — 合焦
+    "BAD":   QColor("#ffffff"),   # 白色 — 失焦
+    # WORST 不入表 → 不绘制
 }
 
 
@@ -220,6 +220,18 @@ class _FullscreenImageLabel(QLabel):
             self._sync_peer._focus_visible = self._focus_visible
             self._sync_peer.update()
 
+    def toggle_zoom(self):
+        """Z 键：在 fit（适配）和 100% 之间切换。"""
+        if self._fit_mode:
+            # fit → 100%，以当前视口中心为准
+            self._zoom_to_100(self.width() / 2, self.height() / 2)
+        else:
+            # 100% → fit
+            self._fit_mode = True
+            self.setCursor(Qt.CrossCursor)
+            self.update()
+            self._emit_transform_sync()
+
     @property
     def focus_visible(self) -> bool:
         return self._focus_visible
@@ -315,44 +327,28 @@ class _FullscreenImageLabel(QLabel):
         self._emit_transform_sync()
 
     def _draw_focus_overlay(self, painter: QPainter, fx: float, fy: float):
-        """2c：专业取景框风格 — 虚线环 + 4个角L形角标 + 中心实心圆点。"""
-        dot_color = _FOCUS_COLORS[self._focus_status]
-        r = 22   # 虚线环半径
+        """相机取景器风格 AF 方块：精焦绿 / 合焦红 / 失焦白。"""
+        color = QColor(_FOCUS_COLORS[self._focus_status])
+        color.setAlpha(220)
 
-        # 虚线环（setStyle DashLine，颜色带透明度）
-        ring_color = QColor(dot_color)
-        if self._focus_status == "BEST":
-            ring_color = QColor(255, 255, 255, 230)   # BEST → 白色
-        else:
-            ring_color.setAlpha(230)
-        pen = QPen(ring_color)
-        pen.setWidthF(1.8)
-        pen.setStyle(Qt.DashLine)
-        pen.setDashPattern([6, 3])
+        half = 26   # 方块半边长（屏幕像素）
+        arm = 10    # 角臂长度
+        x, y = int(fx), int(fy)
+
+        pen = QPen(color)
+        pen.setWidthF(2.0)
+        pen.setStyle(Qt.SolidLine)
+        pen.setCapStyle(Qt.FlatCap)
+        pen.setJoinStyle(Qt.MiterJoin)
         painter.setPen(pen)
         painter.setBrush(Qt.NoBrush)
-        painter.drawEllipse(int(fx) - r, int(fy) - r, r * 2, r * 2)
 
-        # 4个角L形角标（corner bracket）
-        bracket_len = 12    # L臂长度
-        bracket_gap = r + 6  # 离中心的距离（角标在圆外）
-        pen2 = QPen(ring_color)
-        pen2.setWidthF(2.0)
-        pen2.setStyle(Qt.SolidLine)
-        pen2.setCapStyle(Qt.SquareCap)
-        painter.setPen(pen2)
+        # 四个角 L 形，组成方框轮廓
         for sx, sy in [(-1, -1), (1, -1), (-1, 1), (1, 1)]:
-            bx = int(fx) + sx * bracket_gap
-            by = int(fy) + sy * bracket_gap
-            # 横臂
-            painter.drawLine(bx, by, bx - sx * bracket_len, by)
-            # 竖臂
-            painter.drawLine(bx, by, bx, by - sy * bracket_len)
-
-        # 中心 4px 实心圆点
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QBrush(ring_color))
-        painter.drawEllipse(int(fx) - 4, int(fy) - 4, 8, 8)
+            cx = x + sx * half
+            cy = y + sy * half
+            painter.drawLine(cx, cy, cx - sx * arm, cy)   # 横臂（向内）
+            painter.drawLine(cx, cy, cx, cy - sy * arm)   # 竖臂（向内）
 
     # ── Qt 事件重写 ──────────────────────────────────────────
 
@@ -809,6 +805,8 @@ class FullscreenViewer(QWidget):
             self.next_requested.emit()
         elif key == _Qt.Key_F:
             self.toggle_focus()
+        elif key == _Qt.Key_Z:
+            self._img_label.toggle_zoom()
         elif key == _Qt.Key_Escape:
             self.close_requested.emit()
         else:
