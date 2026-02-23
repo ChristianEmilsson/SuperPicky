@@ -188,6 +188,7 @@ class ThumbnailCard(QFrame):
         self._thumb_size = thumb_size
         self._selected = False
         self._multi_selected_state = False
+        self._raw_pixmap: Optional[QPixmap] = None  # 原始未叠加 pixmap
 
         self.setFixedSize(thumb_size + 8, thumb_size + 32)
         self.setStyleSheet(self._normal_style())
@@ -228,16 +229,17 @@ class ThumbnailCard(QFrame):
 
     def set_pixmap(self, pixmap: QPixmap):
         if pixmap.isNull():
+            self._raw_pixmap = None
             self.img_label.setText("—")
         else:
-            self.img_label.setPixmap(pixmap)
+            self._raw_pixmap = pixmap  # 存原始，供 _draw_overlays 每次从头绘制
             self.img_label.setText("")
-        # 在图片上绘制叠加层（评分 + 对焦状态）
+        # 在图片上绘制叠加层（评分 + 对焦状态 + 选中边框）
         self._draw_overlays()
 
     def _draw_overlays(self):
-        """在 img_label 的 pixmap 上绘制评分角标和对焦指示点。"""
-        base = self.img_label.pixmap()
+        """在 img_label 的 pixmap 上绘制评分角标、对焦指示点和选中边框。"""
+        base = self._raw_pixmap
         if base is None or base.isNull():
             return
 
@@ -311,12 +313,28 @@ class ThumbnailCard(QFrame):
             painter.drawLine(8, 14, 11, 18)
             painter.drawLine(11, 18, 18, 9)
 
+        # 选中状态：四边虚线框，转角留空
+        if getattr(self, '_selected', False):
+            pen = QPen(QColor(74, 136, 120))   # 低饱和青绿 #4a8878
+            pen.setWidth(1)
+            pen.setStyle(Qt.CustomDashLine)
+            pen.setDashPattern([5, 4])          # 5px 实 / 4px 空
+            painter.setPen(pen)
+            painter.setBrush(Qt.NoBrush)
+            w = overlay.width() - 1
+            h = overlay.height() - 1
+            gap = 10                             # 转角留白
+            painter.drawLine(gap, 0, w - gap, 0)    # 上边
+            painter.drawLine(gap, h, w - gap, h)    # 下边
+            painter.drawLine(0, gap, 0, h - gap)    # 左边
+            painter.drawLine(w, gap, w, h - gap)    # 右边
+
         painter.end()
         self.img_label.setPixmap(overlay)
 
     def set_selected(self, selected: bool):
         self._selected = selected
-        self.setStyleSheet(self._selected_style() if selected else self._normal_style())
+        self._draw_overlays()  # 从原始 pixmap 重绘，含/不含虚线框
 
     def _normal_style(self):
         return f"""
@@ -329,16 +347,6 @@ class ThumbnailCard(QFrame):
                 border: 1px solid {COLORS['text_muted']};
                 background-color: {COLORS['bg_elevated']};
             }}
-        """
-
-    def _selected_style(self):
-        # 低饱和度虚线边框，克制不刺眼
-        return """
-            QFrame {
-                background-color: rgba(0, 150, 110, 0.07);
-                border: 1px dashed #4a8878;
-                border-radius: 8px;
-            }
         """
 
     def set_multi_selected(self, selected: bool):
