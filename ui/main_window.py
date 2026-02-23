@@ -935,12 +935,6 @@ class SuperPickyMainWindow(QMainWindow):
 
     def _create_directory_section(self, parent_layout):
         """创建目录选择区域"""
-        # Section 标签
-        section_label = QLabel(self.i18n.t("labels.photo_directory").upper())
-        section_label.setObjectName("sectionLabel")
-        parent_layout.addWidget(section_label)
-        parent_layout.addSpacing(8)
-
         # 输入区域
         dir_layout = QHBoxLayout()
         dir_layout.setSpacing(8)
