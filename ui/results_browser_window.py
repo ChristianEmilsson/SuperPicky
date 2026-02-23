@@ -348,7 +348,7 @@ class ResultsBrowserWindow(QMainWindow):
         layout.addWidget(self._select_count_label)
 
         # 对比按钮（C5，多选2张时显示）
-        self._compare_btn = QPushButton("🔀 对比")
+        self._compare_btn = QPushButton(self.i18n.t("browser.compare_btn"))
         self._compare_btn.setObjectName("secondary")
         self._compare_btn.setFixedHeight(32)
         self._compare_btn.hide()
@@ -547,7 +547,7 @@ class ResultsBrowserWindow(QMainWindow):
         """C3：多选状态变化，更新工具栏显示。"""
         n = len(photos)
         if n > 1:
-            self._select_count_label.setText(f"已选 {n} 张")
+            self._select_count_label.setText(self.i18n.t("browser.selected_count").format(n=n))
             self._select_count_label.show()
         else:
             self._select_count_label.hide()
@@ -809,7 +809,7 @@ class ResultsBrowserWidget(QWidget):
         layout.addWidget(self._select_count_label)
 
         # 对比按钮（C5，默认隐藏，多选2张时显示）
-        self._compare_btn = QPushButton("🔀 对比")
+        self._compare_btn = QPushButton(self.i18n.t("browser.compare_btn"))
         self._compare_btn.setObjectName("secondary")
         self._compare_btn.setFixedHeight(32)
         self._compare_btn.hide()
@@ -1038,7 +1038,7 @@ class ResultsBrowserWidget(QWidget):
         """C3：多选状态变化，更新工具栏显示。"""
         n = len(photos)
         if n > 1:
-            self._select_count_label.setText(f"已选 {n} 张")
+            self._select_count_label.setText(self.i18n.t("browser.selected_count").format(n=n))
             self._select_count_label.show()
         else:
             self._select_count_label.hide()

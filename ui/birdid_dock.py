@@ -143,7 +143,7 @@ class DropArea(QFrame):
             self,
             self.i18n.t("birdid.select_image"),
             "",
-            "图片文件 (*.jpg *.jpeg *.png *.nef *.cr2 *.cr3 *.arw *.raf *.orf *.rw2 *.dng);;所有文件 (*)"
+            self.i18n.t("birdid.image_filter")
         )
         if file_path:
             self.fileDropped.emit(file_path)
@@ -358,7 +358,7 @@ class BirdIDDockWidget(QDockWidget):
         # 浮动按钮（靠右）- 用斜箭头表示状态
         self._float_btn = QPushButton("↗")  # 初始停靠状态 → 可弹出
         self._float_btn.setFixedSize(24, 24)
-        self._float_btn.setToolTip("弹出面板")
+        self._float_btn.setToolTip(self.i18n.t("birdid.float_panel"))
         self._float_btn.setStyleSheet(f"""
             QPushButton {{
                 background: transparent;
@@ -366,6 +366,7 @@ class BirdIDDockWidget(QDockWidget):
                 color: {COLORS['text_tertiary']};
                 font-size: 14px;
                 border-radius: 4px;
+                padding: 2px;
             }}
             QPushButton:hover {{
                 background-color: {COLORS['bg_card']};
@@ -389,6 +390,7 @@ class BirdIDDockWidget(QDockWidget):
                 color: {COLORS['text_tertiary']};
                 font-size: 12px;
                 border-radius: 4px;
+                padding: 2px;
             }}
             QPushButton:hover {{
                 background-color: {COLORS['error']};
@@ -409,10 +411,10 @@ class BirdIDDockWidget(QDockWidget):
         if hasattr(self, '_float_btn'):
             if floating:
                 self._float_btn.setText("↙")  # 浮动中 → 可归位
-                self._float_btn.setToolTip("归位到主窗口")
+                self._float_btn.setToolTip(self.i18n.t("birdid.dock_panel"))
             else:
                 self._float_btn.setText("↗")  # 停靠中 → 可弹出
-                self._float_btn.setToolTip("弹出面板")
+                self._float_btn.setToolTip(self.i18n.t("birdid.float_panel"))
     
     def _load_regions_data(self) -> dict:
         """加载 eBird 区域数据"""
@@ -1055,7 +1057,7 @@ class BirdIDDockWidget(QDockWidget):
         """)
         ph_layout = QVBoxLayout(self.placeholder_frame)
         ph_layout.setAlignment(Qt.AlignCenter)
-        ph_label = QLabel("拖入鸟类照片\n识别结果将显示在这里")
+        ph_label = QLabel(self.i18n.t("birdid.drag_photo_hint"))
         ph_label.setAlignment(Qt.AlignCenter)
         ph_label.setStyleSheet(f"""
             color: {COLORS['text_muted']};
@@ -1115,12 +1117,12 @@ class BirdIDDockWidget(QDockWidget):
     def on_file_dropped(self, file_path: str):
         """处理文件拖放"""
         if not os.path.exists(file_path):
-            self.status_label.setText("文件不存在")
+            self.status_label.setText(self.i18n.t("birdid.file_not_found_short"))
             self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['error']};")
             return
 
         self.current_image_path = file_path
-        self.status_label.setText("正在识别...")
+        self.status_label.setText(self.i18n.t("birdid.analyzing"))
         self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['accent']};")
 
         # 显示文件名
@@ -1147,7 +1149,7 @@ class BirdIDDockWidget(QDockWidget):
         if hasattr(self, 'current_image_path') and self.current_image_path:
             if os.path.exists(self.current_image_path):
                 print(f"[调试] 国家/地区已改变，重新识别: {self.current_image_path}")
-                self.status_label.setText("正在重新识别...")
+                self.status_label.setText(self.i18n.t("birdid.re_identifying"))
                 self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['accent']};")
                 
                 # 清空之前的结果
@@ -1552,7 +1554,7 @@ class BirdIDDockWidget(QDockWidget):
     def on_identify_error(self, error_msg: str):
         """识别出错"""
         self.progress.hide()
-        self.status_label.setText(f"错误: {error_msg[:30]}")
+        self.status_label.setText(self.i18n.t("birdid.error_prefix") + error_msg[:30])
         self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['error']};")
     
     def on_result_card_clicked(self, rank: int):
@@ -1598,7 +1600,7 @@ class BirdIDDockWidget(QDockWidget):
         self.placeholder_frame.show()
         self._result_crop_pixmap = None
 
-        self.status_label.setText("准备就绪")
+        self.status_label.setText(self.i18n.t("labels.ready"))
         self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['text_muted']};")
         self.current_image_path = None
         self.identify_results = None

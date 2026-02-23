@@ -246,7 +246,7 @@ class DetailPanel(QWidget):
 
         dec_btn = QPushButton("▼")
         dec_btn.setFixedSize(24, 24)
-        dec_btn.setToolTip("降低评分 (-1★)")
+        dec_btn.setToolTip(self.i18n.t("labels.rating_dec_tooltip"))
         dec_btn.setStyleSheet(f"""
             QPushButton {{
                 background: {COLORS['bg_card']};
@@ -254,7 +254,7 @@ class DetailPanel(QWidget):
                 border-radius: 4px;
                 color: {COLORS['text_secondary']};
                 font-size: 12px;
-                padding: 0px;
+                padding: 4px 2px;
             }}
             QPushButton:hover {{ background: {COLORS['bg_input']}; }}
         """)
@@ -263,7 +263,7 @@ class DetailPanel(QWidget):
 
         inc_btn = QPushButton("▲")
         inc_btn.setFixedSize(24, 24)
-        inc_btn.setToolTip("提升评分 (+1★)")
+        inc_btn.setToolTip(self.i18n.t("labels.rating_inc_tooltip"))
         inc_btn.setStyleSheet(f"""
             QPushButton {{
                 background: {COLORS['bg_card']};
@@ -271,7 +271,7 @@ class DetailPanel(QWidget):
                 border-radius: 4px;
                 color: {COLORS['accent']};
                 font-size: 12px;
-                padding: 0px;
+                padding: 4px 2px;
             }}
             QPushButton:hover {{ background: {COLORS['bg_input']}; }}
         """)

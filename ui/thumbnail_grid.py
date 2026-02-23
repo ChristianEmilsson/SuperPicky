@@ -24,7 +24,7 @@ from ui.styles import COLORS, FONTS
 _FOCUS_DOT_COLORS = {
     "BEST":  QColor("#e05050"),           # 深珊瑚红
     "GOOD":  QColor(COLORS['accent']),    # app 主色青绿
-    "BAD":   QColor("#666666"),           # 中灰，低调提示
+    "BAD":   QColor("#999999"),           # 浅灰，深色背景可见
     # WORST 不入表 → _draw_overlays 中 `if focus in _FOCUS_DOT_COLORS` 自动跳过
 }
 
@@ -33,8 +33,8 @@ _RATING_COLORS = {
     5: QColor("#FFD700"),   # 金色
     4: QColor("#E8C000"),   # 稍暗金色
     3: QColor("#FFD700"),   # 金色
-    2: QColor("#B8A000"),   # 中等金色
-    1: QColor("#787000"),   # 暗金色
+    2: QColor("#E8C000"),   # 金色
+    1: QColor("#FFD700"),   # 金色
     0: QColor(COLORS['text_muted']),
     -1: QColor(COLORS['text_muted']),
 }

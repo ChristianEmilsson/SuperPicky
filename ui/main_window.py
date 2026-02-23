@@ -1195,7 +1195,7 @@ class SuperPickyMainWindow(QMainWindow):
 
     def _create_status_banner(self, parent_layout):
         """创建状态条（进度条下方，按钮上方）"""
-        self._status_banner = QLabel("支持 RAW / JPG · 拖拽目录或点击浏览")
+        self._status_banner = QLabel(self.i18n.t("labels.support_format_hint"))
         self._status_banner.setFixedHeight(32)
         self._status_banner.setAlignment(Qt.AlignCenter)
         self._status_banner.setStyleSheet(f"""
@@ -1228,7 +1228,7 @@ class SuperPickyMainWindow(QMainWindow):
         btn_layout.addStretch()
 
         # 查看选鸟结果按钮（主按钮，默认隐藏）
-        self.view_results_btn = QPushButton("查看选鸟结果 →")
+        self.view_results_btn = QPushButton(self.i18n.t("labels.view_results_arrow"))
         self.view_results_btn.setMinimumWidth(160)
         self.view_results_btn.setMinimumHeight(40)
         self.view_results_btn.clicked.connect(self._auto_open_results)
@@ -1356,7 +1356,7 @@ class SuperPickyMainWindow(QMainWindow):
         if not hasattr(self, '_status_banner'):
             return
         if state == "idle":
-            self._status_banner.setText("支持 RAW / JPG · 拖拽目录或点击浏览")
+            self._status_banner.setText(self.i18n.t("labels.support_format_hint"))
             self._status_banner.setStyleSheet(f"""
                 QLabel {{
                     background-color: {COLORS['bg_card']};
@@ -1369,7 +1369,7 @@ class SuperPickyMainWindow(QMainWindow):
             """)
         elif state == "ready":
             dirname = os.path.basename(self.directory_path) if self.directory_path else ""
-            self._status_banner.setText(f"📂 {dirname}    准备就绪")
+            self._status_banner.setText(self.i18n.t("labels.dir_ready").format(dirname=dirname))
             self._status_banner.setStyleSheet(f"""
                 QLabel {{
                     background-color: {COLORS['bg_card']};
@@ -1461,7 +1461,7 @@ class SuperPickyMainWindow(QMainWindow):
                 self.view_results_btn.setVisible(False)
         elif state == "has_results":
             self.reset_btn.setEnabled(True)
-            self.reset_btn.setText("重新处理")
+            self.reset_btn.setText(self.i18n.t("labels.reprocess"))
             self.reset_btn.setObjectName("tertiary")
             self.start_btn.setEnabled(True)
             self.start_btn.setText(self.i18n.t("labels.start_processing"))

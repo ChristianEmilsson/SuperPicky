@@ -23,7 +23,7 @@ from ui.styles import COLORS, FONTS
 _FOCUS_COLORS = {
     "BEST":  QColor("#00cc44"),   # 绿色 — 精焦（相机合焦确认色）
     "GOOD":  QColor("#e05050"),   # 红色 — 合焦
-    "BAD":   QColor("#ffffff"),   # 白色 — 失焦
+    "BAD":   QColor("#ffcc00"),   # 黄色 — 失焦（在浅/深图片上均可见）
     # WORST 不入表 → 不绘制
 }
 
@@ -573,7 +573,7 @@ class FullscreenViewer(QWidget):
         self._focus_btn = QPushButton(self.i18n.t("browser.focus_toggle"))
         self._focus_btn.setFixedHeight(36)
         self._focus_btn.setMinimumWidth(80)
-        self._focus_btn.setToolTip("切换焦点叠加显示 (F)")
+        self._focus_btn.setToolTip(self.i18n.t("browser.focus_toggle_tooltip"))
         self._focus_btn.clicked.connect(self._on_focus_btn_clicked)
         h.addWidget(self._focus_btn)
         # 初始 objectName="" → 默认 accent 色（由 app QSS 自动选中）

@@ -11,6 +11,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
 from ui.styles import COLORS, FONTS
+from tools.i18n import get_i18n
 
 
 class StyledMessageBox(QDialog):
@@ -38,12 +39,13 @@ class StyledMessageBox(QDialog):
         self.dialog_type = dialog_type
         self.result_value = self.No
 
-        # 默认按钮配置
+        # 默认按钮配置（使用 i18n 保证语言切换后显示正确）
         if buttons is None:
+            _i18n = get_i18n()
             if dialog_type == self.Question:
-                buttons = [("否", self.No, "secondary"), ("是", self.Yes, "primary")]
+                buttons = [(_i18n.t("labels.no"), self.No, "secondary"), (_i18n.t("labels.yes"), self.Yes, "primary")]
             else:
-                buttons = [("确定", self.Ok, "primary")]
+                buttons = [(_i18n.t("buttons.confirm"), self.Ok, "primary")]
 
         self._setup_ui(title, message, buttons)
 
@@ -188,11 +190,16 @@ class StyledMessageBox(QDialog):
     # ==================== 静态便捷方法 ====================
 
     @staticmethod
-    def question(parent, title, message, yes_text="是", no_text="否"):
+    def question(parent, title, message, yes_text=None, no_text=None):
         """
         显示询问对话框
         返回: StyledMessageBox.Yes 或 StyledMessageBox.No
         """
+        _i18n = get_i18n()
+        if yes_text is None:
+            yes_text = _i18n.t("labels.yes")
+        if no_text is None:
+            no_text = _i18n.t("labels.no")
         dlg = StyledMessageBox(
             parent=parent,
             title=title,
@@ -206,8 +213,10 @@ class StyledMessageBox(QDialog):
         return dlg.exec()
 
     @staticmethod
-    def information(parent, title, message, ok_text="确定"):
+    def information(parent, title, message, ok_text=None):
         """显示信息对话框"""
+        if ok_text is None:
+            ok_text = get_i18n().t("buttons.confirm")
         dlg = StyledMessageBox(
             parent=parent,
             title=title,
@@ -218,8 +227,10 @@ class StyledMessageBox(QDialog):
         return dlg.exec()
 
     @staticmethod
-    def warning(parent, title, message, ok_text="确定"):
+    def warning(parent, title, message, ok_text=None):
         """显示警告对话框"""
+        if ok_text is None:
+            ok_text = get_i18n().t("buttons.confirm")
         dlg = StyledMessageBox(
             parent=parent,
             title=title,
@@ -230,8 +241,10 @@ class StyledMessageBox(QDialog):
         return dlg.exec()
 
     @staticmethod
-    def critical(parent, title, message, ok_text="确定"):
+    def critical(parent, title, message, ok_text=None):
         """显示错误对话框"""
+        if ok_text is None:
+            ok_text = get_i18n().t("buttons.confirm")
         dlg = StyledMessageBox(
             parent=parent,
             title=title,

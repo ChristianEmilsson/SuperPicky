@@ -80,7 +80,13 @@
     "resetting": "重置中",
     "quick_restoring": "快速复原中",
     "exposure_detection": "曝光检测",
-    "burst": "连拍"
+    "burst": "连拍",
+    "rating_dec_tooltip": "降低评分 (-1★)",
+    "rating_inc_tooltip": "提升评分 (+1★)",
+    "support_format_hint": "支持 RAW / JPG · 拖拽目录或点击浏览",
+    "view_results_arrow": "查看选鸟结果 →",
+    "dir_ready": "📂 {dirname}    准备就绪",
+    "reprocess": "重新处理"
   },
   "dialogs": {
     "file_organization_title": "文件整理",
@@ -793,7 +799,14 @@
     "info_global": "全球模式（无地理过滤）",
     "info_no_bird_hint": "建议降低检测敏感度或重新拍摄",
     "info_identify_fail": "识别失败",
-    "info_no_result": "未能识别"
+    "info_no_result": "未能识别",
+    "float_panel": "弹出面板",
+    "dock_panel": "归位到主窗口",
+    "file_not_found_short": "文件不存在",
+    "re_identifying": "正在重新识别...",
+    "drag_photo_hint": "拖入鸟类照片\n识别结果将显示在这里",
+    "image_filter": "图片文件 (*.jpg *.jpeg *.png *.nef *.cr2 *.cr3 *.arw *.raf *.orf *.rw2 *.dng);;所有文件 (*)",
+    "error_prefix": "错误: "
   },
   "rating_engine": {
     "reject_no_bird": "未检测到鸟类",
@@ -954,6 +967,11 @@
     "prev_arrow": "◀ 上一张",
     "next_arrow": "下一张 ▶",
     "flying_option": "飞行中",
-    "non_flying_option": "非飞行"
+    "non_flying_option": "非飞行",
+    "compare_btn": "🔀 对比",
+    "selected_count": "已选 {n} 张",
+    "focus_toggle_tooltip": "切换焦点叠加显示 (F)",
+    "rate_left_tooltip": "给左侧照片打 {i}★ (键盘 {i})",
+    "rate_right_tooltip": "给右侧照片打 {i}★ (键盘 {key})"
   }
 }

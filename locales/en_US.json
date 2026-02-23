@@ -80,7 +80,13 @@
     "resetting": "Resetting",
     "quick_restoring": "Quick Restoring",
     "exposure_detection": "Exposure Check",
-    "burst": "Burst"
+    "burst": "Burst",
+    "rating_dec_tooltip": "Decrease Rating (-1★)",
+    "rating_inc_tooltip": "Increase Rating (+1★)",
+    "support_format_hint": "Supports RAW / JPG · Drag folder or click to browse",
+    "view_results_arrow": "View Results →",
+    "dir_ready": "📂 {dirname}    Ready",
+    "reprocess": "Reprocess"
   },
   "dialogs": {
     "file_organization_title": "File Organization",
@@ -819,7 +825,14 @@
     "info_global": "Global mode (no geo filter)",
     "info_no_bird_hint": "Try lowering detection sensitivity or retake",
     "info_identify_fail": "Identification failed",
-    "info_no_result": "No bird identified"
+    "info_no_result": "No bird identified",
+    "float_panel": "Float Panel",
+    "dock_panel": "Dock to Main Window",
+    "file_not_found_short": "File Not Found",
+    "re_identifying": "Re-identifying...",
+    "drag_photo_hint": "Drop bird photo here\nResults will appear here",
+    "image_filter": "Image Files (*.jpg *.jpeg *.png *.nef *.cr2 *.cr3 *.arw *.raf *.orf *.rw2 *.dng);;All Files (*)",
+    "error_prefix": "Error: "
   },
   "cli": {
     "banner": "  🐦 SuperPicky CLI v{version} - AI Photo Selector (Command Line)",
@@ -955,6 +968,11 @@
     "prev_arrow": "◀ Prev",
     "next_arrow": "Next ▶",
     "flying_option": "Flying",
-    "non_flying_option": "Non-flying"
+    "non_flying_option": "Non-flying",
+    "compare_btn": "🔀 Compare",
+    "selected_count": "{n} Selected",
+    "focus_toggle_tooltip": "Toggle Focus Overlay (F)",
+    "rate_left_tooltip": "Rate Left Photo {i}★ (Keyboard {i})",
+    "rate_right_tooltip": "Rate Right Photo {i}★ (Keyboard {key})"
   }
 }

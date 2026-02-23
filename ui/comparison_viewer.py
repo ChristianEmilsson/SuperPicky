@@ -183,7 +183,7 @@ class ComparisonViewer(QWidget):
             btn.setObjectName("secondary")
             btn.setFixedHeight(32)
             btn.setFixedWidth(44)
-            btn.setToolTip(f"给左侧照片打 {i}★ (键盘 {i})")
+            btn.setToolTip(self.i18n.t("browser.rate_left_tooltip").format(i=i, key=str(i)))
             _i = i
             btn.clicked.connect(lambda _=None, stars=_i: self._rate_left(stars))
             h.addWidget(btn)
@@ -197,7 +197,7 @@ class ComparisonViewer(QWidget):
             btn.setObjectName("secondary")
             btn.setFixedHeight(32)
             btn.setFixedWidth(44)
-            btn.setToolTip(f"给右侧照片打 {i}★ (键盘 {_keys[i-1]})")
+            btn.setToolTip(self.i18n.t("browser.rate_right_tooltip").format(i=i, key=_keys[i-1]))
             _i = i
             btn.clicked.connect(lambda _=None, stars=_i: self._rate_right(stars))
             h.addWidget(btn)

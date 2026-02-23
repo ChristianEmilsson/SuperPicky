@@ -17,7 +17,7 @@ COLORS = {
     # 文字层级
     'text_primary': '#fafafa',       # 主文字
     'text_secondary': '#a1a1a1',     # 次要文字
-    'text_tertiary': '#666666',      # 第三级文字
+    'text_tertiary': '#909090',      # 第三级文字
     'text_muted': '#404040',         # 静默文字
 
     # 强调色 - 优雅的青绿色
