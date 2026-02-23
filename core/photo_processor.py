@@ -979,7 +979,8 @@ class PhotoProcessor:
         topiq_scorer = None
         try:
             from iqa_scorer import get_iqa_scorer
-            topiq_scorer = get_iqa_scorer(device='mps')
+            from config import get_best_device
+            topiq_scorer = get_iqa_scorer(device=get_best_device().type)
         except Exception:
             topiq_scorer = None
         
@@ -1563,7 +1564,8 @@ class PhotoProcessor:
                     scorer = topiq_scorer
                     if scorer is None:
                         from iqa_scorer import get_iqa_scorer
-                        scorer = get_iqa_scorer(device='mps')
+                        from config import get_best_device
+                        scorer = get_iqa_scorer(device=get_best_device().type)
                         topiq_scorer = scorer
                     
                     # V4.0.5: 复用已加载的原图，避免二次 JPEG 解码
