@@ -191,6 +191,7 @@ class DetailPanel(QWidget):
         for btn in (self._crop_btn, self._full_btn):
             btn.setObjectName("secondary")
             btn.setFixedHeight(26)
+            btn.setStyleSheet("QPushButton { padding: 2px 8px; font-size: 12px; }")
         self._crop_btn.setObjectName("")   # 激活状态用默认（accent）样式
         self._crop_btn.clicked.connect(lambda: self._switch_view(True))
         self._full_btn.clicked.connect(lambda: self._switch_view(False))
@@ -210,6 +211,7 @@ class DetailPanel(QWidget):
         for btn in (prev_btn, next_btn):
             btn.setObjectName("secondary")
             btn.setFixedHeight(30)
+            btn.setStyleSheet("QPushButton { padding: 4px 10px; font-size: 12px; }")
         prev_btn.clicked.connect(self.prev_requested)
         next_btn.clicked.connect(self.next_requested)
         nb_layout.addWidget(prev_btn)
@@ -251,7 +253,8 @@ class DetailPanel(QWidget):
                 border: 1px solid {COLORS['border']};
                 border-radius: 4px;
                 color: {COLORS['text_secondary']};
-                font-size: 10px;
+                font-size: 12px;
+                padding: 0px;
             }}
             QPushButton:hover {{ background: {COLORS['bg_input']}; }}
         """)
@@ -267,7 +270,8 @@ class DetailPanel(QWidget):
                 border: 1px solid {COLORS['border']};
                 border-radius: 4px;
                 color: {COLORS['accent']};
-                font-size: 10px;
+                font-size: 12px;
+                padding: 0px;
             }}
             QPushButton:hover {{ background: {COLORS['bg_input']}; }}
         """)
@@ -437,15 +441,13 @@ class DetailPanel(QWidget):
         """根据当前视图模式解析目标图片路径。"""
         p = self._current_photo
         if self._use_crop_view:
-            # Crop View：YOLO 裁切图
+            # 裁切图：YOLO 裁切区域，退而用干净大图
             path = p.get("debug_crop_path")
             if not path or not os.path.exists(path):
                 path = p.get("temp_jpeg_path")
         else:
-            # Yolo View：带检测框的全图（yolo_debug_path），退而用 temp_jpeg_path
-            path = p.get("yolo_debug_path")
-            if not path or not os.path.exists(path):
-                path = p.get("temp_jpeg_path")
+            # 全图：干净 temp JPEG（无检测框叠加）
+            path = p.get("temp_jpeg_path")
             if not path or not os.path.exists(path):
                 path = p.get("debug_crop_path")
 
