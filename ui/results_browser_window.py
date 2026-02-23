@@ -433,21 +433,9 @@ class ResultsBrowserWindow(QMainWindow):
 
     @Slot()
     def _go_back_to_main(self):
-        """P2: 隐藏结果浏览器，将主窗口置前。"""
+        """P2: 隐藏结果浏览器，通过 closed 信号通知主窗口恢复显示。"""
         self.hide()
-        if self.parent() is not None:
-            self.parent().show()
-            self.parent().raise_()
-            self.parent().activateWindow()
-        else:
-            # 无父窗口时尝试激活同应用的其他窗口
-            app = QApplication.instance()
-            if app:
-                for widget in app.topLevelWidgets():
-                    if widget is not self and widget.isVisible():
-                        widget.raise_()
-                        widget.activateWindow()
-                        break
+        self.closed.emit()
 
     def _resolve_photo_paths(self, photo: dict) -> dict:
         """将 photo dict 中的相对路径解析为相对于当前目录的绝对路径。"""
