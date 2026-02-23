@@ -736,13 +736,15 @@ class FullscreenViewer(QWidget):
     # ------------------------------------------------------------------
 
     def _resolve_hd_path(self, photo: dict) -> Optional[str]:
-        """按优先级解析高清图路径：temp_jpeg_path → yolo_debug_path。"""
+        """按优先级解析高清图路径：temp_jpeg_path → debug_crop_path → 原始 JPEG。
+        yolo_debug_path 永不使用（含红框，不应在大图中显示）。
+        """
         tjp = photo.get("temp_jpeg_path")
         if tjp and os.path.exists(tjp):
             return tjp
-        ydp = photo.get("yolo_debug_path")
-        if ydp and os.path.exists(ydp):
-            return ydp
+        dcp = photo.get("debug_crop_path")
+        if dcp and os.path.exists(dcp):
+            return dcp
         # 最后回退到原始 JPEG
         op = photo.get("original_path") or photo.get("current_path")
         if op and os.path.exists(op):
