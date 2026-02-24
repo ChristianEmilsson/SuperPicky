@@ -69,6 +69,9 @@ class FilterPanel(QWidget):
         self._rating_counts: dict = {}      # {rating: count}
         self._species_list: list = []        # 鸟种列表
 
+        from advanced_config import get_advanced_config
+        self._adv_config = get_advanced_config()
+
         self.setFixedWidth(220)
         self.setStyleSheet(f"background-color: {COLORS['bg_elevated']}; border-right: 1px solid {COLORS['border_subtle']};")
 
@@ -131,7 +134,12 @@ class FilterPanel(QWidget):
         self._sort_combo.addItem(self.i18n.t("browser.sort_filename"), "filename")
         self._sort_combo.addItem(self.i18n.t("browser.sort_sharpness"), "sharpness_desc")
         self._sort_combo.addItem(self.i18n.t("browser.sort_aesthetic"), "aesthetic_desc")
-        self._sort_combo.currentIndexChanged.connect(self._emit_filters)
+        # 恢复用户上次选择（默认锐度）
+        saved_sort = self._adv_config.get_browser_sort()
+        idx = self._sort_combo.findData(saved_sort)
+        if idx >= 0:
+            self._sort_combo.setCurrentIndex(idx)
+        self._sort_combo.currentIndexChanged.connect(self._on_sort_changed)
         layout.addWidget(self._sort_combo)
 
         layout.addStretch()
@@ -361,9 +369,10 @@ class FilterPanel(QWidget):
         self.species_combo.setCurrentIndex(0)
         self.species_combo.blockSignals(False)
 
-        # 排序 -> 文件名（默认）
+        # 排序 -> 锐度（默认）
         self._sort_combo.blockSignals(True)
-        self._sort_combo.setCurrentIndex(0)
+        idx = self._sort_combo.findData("sharpness_desc")
+        self._sort_combo.setCurrentIndex(idx if idx >= 0 else 0)
         self._sort_combo.blockSignals(False)
 
         self._emit_filters()
@@ -387,6 +396,14 @@ class FilterPanel(QWidget):
 
     def _on_rating_toggled(self, rating, color, btn, checked):
         btn.setStyleSheet(self._rating_btn_style(color, checked))
+        self._emit_filters()
+
+    def _on_sort_changed(self, *_):
+        """排序改变时：保存用户偏好，再发出筛选信号。"""
+        sort_val = self._sort_combo.currentData()
+        if sort_val:
+            self._adv_config.set_browser_sort(sort_val)
+            self._adv_config.save()
         self._emit_filters()
 
     def _emit_filters(self, *_):

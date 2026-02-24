@@ -68,6 +68,10 @@ class AdvancedConfig:
         # 外部编辑应用（右键菜单 "用 X 打开"）
         # 每项格式：{"name": "显示名称", "path": "/Applications/...app"}
         "external_apps": [],
+
+        # 浏览器排序偏好（用户上次选择）
+        # 可选值: "filename" | "sharpness_desc" | "aesthetic_desc"
+        "browser_sort": "sharpness_desc",
     }
 
     def __init__(self, config_file=None):
@@ -307,6 +311,15 @@ class AdvancedConfig:
     def set_external_apps(self, apps: list):
         """保存外部编辑应用列表。"""
         self.config["external_apps"] = list(apps)
+
+    def get_browser_sort(self) -> str:
+        """返回浏览器排序偏好: filename | sharpness_desc | aesthetic_desc"""
+        return self.config.get("browser_sort", "sharpness_desc")
+
+    def set_browser_sort(self, value: str):
+        """保存浏览器排序偏好。"""
+        if value in ("filename", "sharpness_desc", "aesthetic_desc"):
+            self.config["browser_sort"] = value
 
     def get_dict(self):
         """获取配置字典（用于传递给其他模块）"""
