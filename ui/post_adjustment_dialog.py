@@ -106,7 +106,7 @@ class PostAdjustmentDialog(QDialog):
                 font-weight: 500;
             }}
             QPushButton:hover {{
-                background-color: #00e6b8;
+                background-color: {COLORS['accent_hover']};
             }}
             QPushButton:disabled {{
                 background-color: {COLORS['bg_card']};

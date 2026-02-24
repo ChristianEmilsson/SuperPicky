@@ -17,13 +17,23 @@ COLORS = {
     # 文字层级
     'text_primary': '#fafafa',       # 主文字
     'text_secondary': '#a1a1a1',     # 次要文字
-    'text_tertiary': '#666666',      # 第三级文字
+    'text_tertiary': '#909090',      # 第三级文字
     'text_muted': '#404040',         # 静默文字
 
     # 强调色 - 优雅的青绿色
     'accent': '#00d4aa',
+    'accent_hover': '#00e6b8',            # :hover 亮一级
+    'accent_pressed': '#00b894',          # :pressed 暗一级
+    'accent_light': '#00ffcc',            # 渐变亮端
+    'accent_deep': '#00a080',             # 渐变暗端
     'accent_dim': 'rgba(0, 212, 170, 0.15)',
     'accent_glow': 'rgba(0, 212, 170, 0.3)',
+
+    # 焦点状态语义色（全系统统一）
+    'focus_best':   '#00cc44',   # 精焦 — 绿（相机 AF 确认色）
+    'focus_good':   '#e8b420',   # 合焦 — 琥珀（可用，非最佳）
+    'focus_bad':    '#e0e0e0',   # 失焦 — 近白灰
+    'focus_worst':  '#a1a1a1',   # 脱焦 — 灰
 
     # 状态色 (降低饱和度，更优雅)
     'star_gold': '#d4a800',          # 星级金色
@@ -155,11 +165,11 @@ QPushButton {{
 }}
 
 QPushButton:hover {{
-    background-color: #00e6b8;
+    background-color: {COLORS['accent_hover']};
 }}
 
 QPushButton:pressed {{
-    background-color: #00b894;
+    background-color: {COLORS['accent_pressed']};
 }}
 
 QPushButton:disabled {{
@@ -262,7 +272,7 @@ QProgressBar {{
 
 QProgressBar::chunk {{
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-        stop:0 {COLORS['accent']}, stop:1 #00ffcc);
+        stop:0 {COLORS['accent']}, stop:1 {COLORS['accent_light']});
     border-radius: 2px;
 }}
 
@@ -308,8 +318,8 @@ QCheckBox::indicator:hover {{
 }}
 
 QCheckBox::indicator:checked:hover {{
-    background-color: #00e6b8;
-    border-color: #00e6b8;
+    background-color: {COLORS['accent_hover']};
+    border-color: {COLORS['accent_hover']};
 }}
 
 /* ==================== 菜单栏 ==================== */

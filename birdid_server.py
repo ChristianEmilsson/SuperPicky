@@ -443,11 +443,9 @@ def recognize_bird():
         return jsonify(response)
 
     except Exception as e:
-        import traceback
         return jsonify({
             'success': False,
             'error': str(e),
-            'traceback': traceback.format_exc()
         }), 500
 
 

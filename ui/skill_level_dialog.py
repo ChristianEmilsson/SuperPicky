@@ -234,7 +234,7 @@ class SkillLevelDialog(QDialog):
         confirm_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS['accent']};
-                color: white;
+                color: {COLORS['bg_void']};
                 border: none;
                 border-radius: 6px;
                 font-size: 14px;
@@ -242,7 +242,7 @@ class SkillLevelDialog(QDialog):
                 padding: 8px 24px;
             }}
             QPushButton:hover {{
-                background-color: #00e6b8;
+                background-color: {COLORS['accent_hover']};
             }}
         """)
         confirm_btn.clicked.connect(self._on_confirm)

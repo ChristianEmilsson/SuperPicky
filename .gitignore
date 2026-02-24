@@ -95,8 +95,9 @@ advanced_config.json
 promo_video/
 pkg_root/
 
-# OSEA 大模型文件（本地使用）
-models/model20240824.pth
+# Models and Data downloaded from Hugging Face
+models/*.pth
+birdid/data/avonet.db
 
 # 针对各平台的临时宣发与推广素材（不上云）
 docs/wechat/promo/

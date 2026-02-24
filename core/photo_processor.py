@@ -979,7 +979,8 @@ class PhotoProcessor:
         topiq_scorer = None
         try:
             from iqa_scorer import get_iqa_scorer
-            topiq_scorer = get_iqa_scorer(device='mps')
+            from config import get_best_device
+            topiq_scorer = get_iqa_scorer(device=get_best_device().type)
         except Exception:
             topiq_scorer = None
         
@@ -1057,7 +1058,18 @@ class PhotoProcessor:
                         'cn_name': cn_name,
                         'en_name': en_name
                     }
-                
+
+                # 写入数据库，供结果浏览器筛选面板和详情面板使用
+                if self.report_db and (cn_name or en_name):
+                    try:
+                        self.report_db.update_photo(file_prefix, {
+                            'bird_species_cn': cn_name,
+                            'bird_species_en': en_name,
+                            'birdid_confidence': birdid_confidence,
+                        })
+                    except Exception as _e:
+                        self._log(f"  ⚠️ Bird species DB write failed [{file_prefix}]: {_e}", "warning")
+
                 for target_file in title_targets:
                     if target_file and os.path.exists(target_file):
                         queue_metadata({
@@ -1334,6 +1346,9 @@ class PhotoProcessor:
                  path_update_data['temp_jpeg_path'] = os.path.relpath(yolo_item['filepath'], self.dir_path)
             elif str(yolo_item.get('file_prefix', '')).startswith('tmp_'):
                  path_update_data['temp_jpeg_path'] = yolo_item['filename']
+            elif yolo_item.get('filepath', '').lower().endswith(('.jpg', '.jpeg')):
+                 # RAW+JPG 配对照片或纯 JPG：直接将 JPG 路径写入 temp_jpeg_path
+                 path_update_data['temp_jpeg_path'] = os.path.relpath(yolo_item['filepath'], self.dir_path)
                  
             if path_update_data and self.report_db:
                  self.report_db.update_photo(original_prefix, path_update_data)
@@ -1423,7 +1438,28 @@ class PhotoProcessor:
                         })
                 
                 self._perf_record_photo(photo_time_ms, photo_stage_ms, early_exit=True)
-                
+
+                # 即使置信度不足，只要检测到鸟就生成 crop_debug 供浏览预览
+                # (yolo_debug_path 已由 ai_model.py 写入 DB，crop_debug 同步生成保持一致)
+                if detected and bird_bbox is not None and img_dims is not None:
+                    try:
+                        import cv2 as _cv2_early
+                        _orig = _cv2_early.imread(filepath)
+                        if _orig is not None:
+                            _h, _w = _orig.shape[:2]
+                            _sw, _sh = img_dims
+                            _sx, _sy = _w / _sw, _h / _sh
+                            _bx, _by, _bw, _bh = bird_bbox
+                            _ox = int(max(0, _bx * _sx))
+                            _oy = int(max(0, _by * _sy))
+                            _ow = int(min(_bw * _sx, _w - _ox))
+                            _oh = int(min(_bh * _sy, _h - _oy))
+                            _crop = _orig[_oy:_oy + _oh, _ox:_ox + _ow]
+                            if _crop.size > 0:
+                                self._save_debug_crop(filename, _crop)
+                    except Exception:
+                        pass
+
                 continue  # 跳过后续所有检测
             
             # Phase 2: 关键点检测（在裁剪区域上执行，更准确）
@@ -1563,7 +1599,8 @@ class PhotoProcessor:
                     scorer = topiq_scorer
                     if scorer is None:
                         from iqa_scorer import get_iqa_scorer
-                        scorer = get_iqa_scorer(device='mps')
+                        from config import get_best_device
+                        scorer = get_iqa_scorer(device=get_best_device().type)
                         topiq_scorer = scorer
                     
                     # V4.0.5: 复用已加载的原图，避免二次 JPEG 解码
@@ -1973,9 +2010,10 @@ class PhotoProcessor:
                     adj_topiq_csv = adj_topiq_csv * 1.1
                 
                 # 更新 CSV 中的关键点数据（V4.1: 添加 adj_sharpness, adj_topiq）
+                # 注意：必须用 original_prefix（DB 主键），而非 file_prefix（含缓存路径前缀）
                 csv_update_start = time.time()
                 self._update_csv_keypoint_data(
-                    file_prefix, 
+                    original_prefix,
                     head_sharpness,  # V4.1: 原始头部锐度
                     has_visible_eye, 
                     has_visible_beak,
@@ -2483,9 +2521,11 @@ class PhotoProcessor:
                     # 新的相对路径
                     new_rel_path = os.path.join(file_info['folder'], orig_filename)
                     
-                    self.report_db.update_photo(file_prefix, {
-                        'current_path': new_rel_path
-                    })
+                    update_data = {'current_path': new_rel_path}
+                    # 若移动的是 JPG 文件，同步更新 temp_jpeg_path 使路径始终有效
+                    if orig_filename.lower().endswith(('.jpg', '.jpeg')):
+                        update_data['temp_jpeg_path'] = new_rel_path
+                    self.report_db.update_photo(file_prefix, update_data)
             except Exception as e:
                 self._log(f"  ⚠️  Failed to update current_path in DB: {e}", "warning")
 

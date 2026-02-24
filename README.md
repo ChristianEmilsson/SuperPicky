@@ -12,6 +12,19 @@ Shoot freely, cull easily! A smart photo culling software designed specifically 
 
 ---
 
+## 🛠️ Installation for Developers
+
+To run SuperPicky from source or build it yourself, you must first download the required AI models:
+
+```bash
+git clone https://github.com/jamesphotography/SuperPicky.git
+cd SuperPicky
+pip install -r requirements.txt
+python scripts/download_models.py
+```
+
+---
+
 ## 🌟 Core Features
 
 ### 🤖 Multi-Model Synergy
