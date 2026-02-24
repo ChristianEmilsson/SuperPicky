@@ -171,15 +171,14 @@ class DetailPanel(QWidget):
         view_bar = QWidget()
         view_bar.setStyleSheet(f"background-color: {COLORS['bg_card']}; border-bottom: 1px solid {COLORS['border_subtle']};")
         vb_layout = QHBoxLayout(view_bar)
-        vb_layout.setContentsMargins(12, 6, 12, 6)
+        vb_layout.setContentsMargins(12, 8, 12, 8)
         vb_layout.setSpacing(8)
 
         self._crop_btn = QPushButton(self.i18n.t("browser.crop_view"))
         self._full_btn = QPushButton(self.i18n.t("browser.full_view"))
         for btn in (self._crop_btn, self._full_btn):
             btn.setObjectName("secondary")
-            btn.setFixedHeight(26)
-            btn.setStyleSheet("QPushButton { padding: 2px 8px; font-size: 12px; }")
+            btn.setFixedHeight(28)
         self._full_btn.setObjectName("")   # 默认全图模式激活（与 _use_crop_view=False 一致）
         self._crop_btn.clicked.connect(lambda: self._switch_view(True))
         self._full_btn.clicked.connect(lambda: self._switch_view(False))
