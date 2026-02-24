@@ -23,6 +23,59 @@ from PIL import Image
 from torchvision import models, transforms
 
 
+def _torch_load_compat(path: str, *, map_location: str, weights_only: bool):
+    """torch.load wrapper that works across PyTorch versions."""
+    try:
+        return torch.load(path, map_location=map_location, weights_only=weights_only)
+    except TypeError:
+        # Older PyTorch does not support weights_only
+        return torch.load(path, map_location=map_location)
+
+
+def _should_retry_without_weights_only(error: Exception) -> bool:
+    message = str(error)
+    return (
+        "weights_only" in message
+        or "Weights only load failed" in message
+        or "WeightsUnpickler" in message
+    )
+
+
+def _extract_state_dict(loaded_obj):
+    if isinstance(loaded_obj, dict):
+        if "state_dict" in loaded_obj:
+            return loaded_obj["state_dict"]
+        if "model_state_dict" in loaded_obj:
+            return loaded_obj["model_state_dict"]
+        return loaded_obj
+    if isinstance(loaded_obj, torch.nn.Module):
+        return loaded_obj.state_dict()
+    raise TypeError(f"不支持的模型格式: {type(loaded_obj)}")
+
+
+def _is_git_lfs_pointer_file(file_path: str) -> bool:
+    """Detect Git LFS pointer files to avoid cryptic torch pickle errors."""
+    try:
+        with open(file_path, "rb") as f:
+            header = f.read(256)
+    except OSError:
+        return False
+    return header.startswith(b"version https://git-lfs.github.com/spec/")
+
+
+def _load_osea_checkpoint(model_path: str):
+    if _is_git_lfs_pointer_file(model_path):
+        raise RuntimeError(
+            f"检测到 Git LFS 指针文件（未下载实际模型权重）: {model_path}"
+        )
+    try:
+        return _torch_load_compat(model_path, map_location="cpu", weights_only=True)
+    except Exception as e:
+        if _should_retry_without_weights_only(e):
+            print("[OSEA] weights_only=True 加载失败，回退 weights_only=False（仅限可信模型）")
+            return _torch_load_compat(model_path, map_location="cpu", weights_only=False)
+        raise
+
 # ==================== 路径配置 ====================
 
 def _get_birdid_dir() -> Path:
@@ -125,9 +178,17 @@ class OSEAClassifier:
         if not os.path.exists(self.model_path):
             raise FileNotFoundError(f"OSEA 模型未找到: {self.model_path}")
 
-        model = models.resnet34(num_classes=11000)
-        state_dict = torch.load(self.model_path, map_location="cpu", weights_only=True)
-        model.load_state_dict(state_dict)
+        try:
+            loaded = _load_osea_checkpoint(self.model_path)
+            if isinstance(loaded, torch.nn.Module):
+                model = loaded
+            else:
+                model = models.resnet34(num_classes=11000)
+                state_dict = _extract_state_dict(loaded)
+                model.load_state_dict(state_dict)
+        except Exception as e:
+            raise RuntimeError(f"OSEA 模型加载失败: {e}")
+
         model.to(self.device)
 
         return model

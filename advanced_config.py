@@ -250,7 +250,16 @@ class AdvancedConfig:
 
     @property
     def arw_write_mode(self):
-        return self.config.get("arw_write_mode", "embedded")
+        return self.config.get("arw_write_mode", "sidecar")
+
+    def get_arw_write_mode_for_file(self, file_path=None):
+        """
+        获取针对当前文件的 ARW 写入策略。
+        若 file_path 为 ARW 格式，强制返回 "sidecar"（只写 XMP 侧车，不修改 ARW 本体）。
+        """
+        if file_path and Path(file_path).suffix.lower() == ".arw":
+            return "sidecar"
+        return self.config.get("arw_write_mode", "sidecar")
 
     def set_arw_write_mode(self, value):
         """设置 ARW 写入策略: sidecar | embedded | inplace | auto"""

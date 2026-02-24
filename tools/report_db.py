@@ -14,13 +14,14 @@ Usage:
 import os
 import sqlite3
 import time
+import threading
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from .file_utils import ensure_hidden_directory
 
 
 # Schema 版本，用于未来升级
-SCHEMA_VERSION = "5"
+SCHEMA_VERSION = "4"
 
 # 所有列定义（有序），用于 CREATE TABLE 和数据验证
 PHOTO_COLUMNS = [
@@ -111,6 +112,8 @@ class ReportDB:
         self.directory = directory
         self._superpicky_dir = os.path.join(directory, ".superpicky")
         self.db_path = os.path.join(self._superpicky_dir, self.DB_FILENAME)
+        # 同一连接会被主线程和后台线程复用，需要串行化访问避免事务冲突
+        self._lock = threading.RLock()
 
         # 确保 .superpicky 目录存在并隐藏（Windows 下设置 Hidden 属性）
         ensure_hidden_directory(self._superpicky_dir)
@@ -144,178 +147,160 @@ class ReportDB:
             + "\n)"
         )
 
-        with self._conn:
-            self._conn.execute(create_sql)
+        with self._lock:
+            with self._conn:
+                self._conn.execute(create_sql)
 
-            # 索引
-            self._conn.execute(
-                "CREATE UNIQUE INDEX IF NOT EXISTS idx_photos_filename "
-                "ON photos(filename)"
-            )
-            self._conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_photos_rating "
-                "ON photos(rating)"
-            )
-            self._conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_photos_has_bird "
-                "ON photos(has_bird)"
-            )
-
-            # 元数据表
-            self._conn.execute("""
-                CREATE TABLE IF NOT EXISTS meta (
-                    key TEXT PRIMARY KEY,
-                    value TEXT
+                # 索引
+                self._conn.execute(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS idx_photos_filename "
+                    "ON photos(filename)"
                 )
-            """)
+                self._conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_photos_rating "
+                    "ON photos(rating)"
+                )
+                self._conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_photos_has_bird "
+                    "ON photos(has_bird)"
+                )
 
-            # 检查并执行 Schema 升级
-            self._upgrade_schema_if_needed()
-            
-            # 初始化元数据
-            self._conn.execute(
-                "INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)",
-                ("schema_version", SCHEMA_VERSION)
-            )
-            self._conn.execute(
-                "INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)",
-                ("directory_path", self.directory)
-            )
+                # 元数据表
+                self._conn.execute("""
+                    CREATE TABLE IF NOT EXISTS meta (
+                        key TEXT PRIMARY KEY,
+                        value TEXT
+                    )
+                """)
+
+                # 检查并执行 Schema 升级
+                self._upgrade_schema_if_needed()
+                
+                # 初始化元数据
+                self._conn.execute(
+                    "INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)",
+                    ("schema_version", SCHEMA_VERSION)
+                )
+                self._conn.execute(
+                    "INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)",
+                    ("directory_path", self.directory)
+                )
     
     def _upgrade_schema_if_needed(self):
         """检查并升级数据库 Schema（支持连续升级 v1 -> v2 -> v3）"""
-        # 获取当前 schema 版本
-        cursor = self._conn.execute(
-            "SELECT value FROM meta WHERE key = 'schema_version'"
-        )
-        row = cursor.fetchone()
-        current_version = row[0] if row else "1"
-        
-        # ----------------------------------------------------------------------
-        #  Upgrade: v1 -> v2 (EXIF metadata)
-        # ----------------------------------------------------------------------
-        if current_version == "1":
-            print("🔄 Upgrading database schema from v1 to v2...")
+        with self._lock:
+            # 获取当前 schema 版本
+            cursor = self._conn.execute(
+                "SELECT value FROM meta WHERE key = 'schema_version'"
+            )
+            row = cursor.fetchone()
+            current_version = row[0] if row else "1"
             
-            # V2 新增字段
-            new_columns = [
-                # 相机设置
-                ("iso", "INTEGER"),
-                ("shutter_speed", "TEXT"),
-                ("aperture", "TEXT"),
-                ("focal_length", "REAL"),
-                ("focal_length_35mm", "INTEGER"),
-                ("camera_model", "TEXT"),
-                ("lens_model", "TEXT"),
-                # GPS
-                ("gps_latitude", "REAL"),
-                ("gps_longitude", "REAL"),
-                ("gps_altitude", "REAL"),
-                # IPTC
-                ("title", "TEXT"),
-                ("caption", "TEXT"),
-                ("city", "TEXT"),
-                ("state_province", "TEXT"),
-                ("country", "TEXT"),
-                # 时间
-                ("date_time_original", "TEXT"),
-                # 鸟种
-                ("bird_species_cn", "TEXT"),
-                ("bird_species_en", "TEXT"),
-                ("birdid_confidence", "REAL"),
-                # 曝光
-                ("exposure_status", "TEXT"),
-            ]
-            
-            for col_name, col_type in new_columns:
-                try:
-                    self._conn.execute(
-                        f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
-                    )
-                except sqlite3.OperationalError:
-                    pass # 列已存在，跳过
-            
-            current_version = "2"
-            self._update_schema_version(current_version)
-            print("✅ Database schema upgraded to v2")
+            # ----------------------------------------------------------------------
+            #  Upgrade: v1 -> v2 (EXIF metadata)
+            # ----------------------------------------------------------------------
+            if current_version == "1":
+                print("🔄 Upgrading database schema from v1 to v2...")
+                
+                # V2 新增字段
+                new_columns = [
+                    # 相机设置
+                    ("iso", "INTEGER"),
+                    ("shutter_speed", "TEXT"),
+                    ("aperture", "TEXT"),
+                    ("focal_length", "REAL"),
+                    ("focal_length_35mm", "INTEGER"),
+                    ("camera_model", "TEXT"),
+                    ("lens_model", "TEXT"),
+                    # GPS
+                    ("gps_latitude", "REAL"),
+                    ("gps_longitude", "REAL"),
+                    ("gps_altitude", "REAL"),
+                    # IPTC
+                    ("title", "TEXT"),
+                    ("caption", "TEXT"),
+                    ("city", "TEXT"),
+                    ("state_province", "TEXT"),
+                    ("country", "TEXT"),
+                    # 时间
+                    ("date_time_original", "TEXT"),
+                    # 鸟种
+                    ("bird_species_cn", "TEXT"),
+                    ("bird_species_en", "TEXT"),
+                    ("birdid_confidence", "REAL"),
+                    # 曝光
+                    ("exposure_status", "TEXT"),
+                ]
+                
+                for col_name, col_type in new_columns:
+                    try:
+                        self._conn.execute(
+                            f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
+                        )
+                    except sqlite3.OperationalError:
+                        pass # 列已存在，跳过
+                
+                current_version = "2"
+                self._update_schema_version(current_version)
+                print("✅ Database schema upgraded to v2")
 
-        # ----------------------------------------------------------------------
-        #  Upgrade: v2 -> v3 (File paths)
-        # ----------------------------------------------------------------------
-        if current_version == "2":
-            print("🔄 Upgrading database schema from v2 to v3...")
-            
-            # V3 新增字段
-            new_columns_v3 = [
-                ("original_path", "TEXT"),
-                ("current_path", "TEXT"),
-                ("temp_jpeg_path", "TEXT"),
-                ("debug_crop_path", "TEXT"),
-            ]
-            
-            for col_name, col_type in new_columns_v3:
-                try:
-                    self._conn.execute(
-                        f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
-                    )
-                except sqlite3.OperationalError:
-                    pass # 列已存在，跳过
-            
-            current_version = "3"
-            self._update_schema_version(current_version)
-            print("✅ Database schema upgraded to v3")
+            # ----------------------------------------------------------------------
+            #  Upgrade: v2 -> v3 (File paths)
+            # ----------------------------------------------------------------------
+            if current_version == "2":
+                print("🔄 Upgrading database schema from v2 to v3...")
+                
+                # V3 新增字段
+                new_columns_v3 = [
+                    ("original_path", "TEXT"),
+                    ("current_path", "TEXT"),
+                    ("temp_jpeg_path", "TEXT"),
+                    ("debug_crop_path", "TEXT"),
+                ]
+                
+                for col_name, col_type in new_columns_v3:
+                    try:
+                        self._conn.execute(
+                            f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
+                        )
+                    except sqlite3.OperationalError:
+                        pass # 列已存在，跳过
+                
+                current_version = "3"
+                self._update_schema_version(current_version)
+                print("✅ Database schema upgraded to v3")
 
-        # ----------------------------------------------------------------------
-        #  Upgrade: v3 -> v4 (Check debug images)
-        # ----------------------------------------------------------------------
-        if current_version == "3":
-            print("🔄 Upgrading database schema from v3 to v4...")
-            
-            # V4 新增字段
-            new_columns_v4 = [
-                ("yolo_debug_path", "TEXT"),
-            ]
-            
-            for col_name, col_type in new_columns_v4:
-                try:
-                    self._conn.execute(
-                        f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
-                    )
-                except sqlite3.OperationalError:
-                    pass # 列已存在，跳过
-            
-            current_version = "4"
-            self._update_schema_version(current_version)
-            print("✅ Database schema upgraded to v4")
-
-        # ----------------------------------------------------------------------
-        if current_version == "4":
-            print("🔄 Upgrading database schema from v4 to v5...")
-
-            new_columns_v5 = [
-                ("burst_id",       "INTEGER"),
-                ("burst_position", "INTEGER"),
-            ]
-
-            for col_name, col_type in new_columns_v5:
-                try:
-                    self._conn.execute(
-                        f"ALTER TABLE photos ADD COLUMN {col_name} {col_type} DEFAULT NULL"
-                    )
-                except sqlite3.OperationalError:
-                    pass  # 列已存在，跳过
-
-            current_version = "5"
-            self._update_schema_version(current_version)
-            print("✅ Database schema upgraded to v5")
+            # ----------------------------------------------------------------------
+            #  Upgrade: v3 -> v4 (Check debug images)
+            # ----------------------------------------------------------------------
+            if current_version == "3":
+                print("🔄 Upgrading database schema from v3 to v4...")
+                
+                # V4 新增字段
+                new_columns_v4 = [
+                    ("yolo_debug_path", "TEXT"),
+                ]
+                
+                for col_name, col_type in new_columns_v4:
+                    try:
+                        self._conn.execute(
+                            f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
+                        )
+                    except sqlite3.OperationalError:
+                        pass # 列已存在，跳过
+                
+                current_version = "4"
+                self._update_schema_version(current_version)
+                print("✅ Database schema upgraded to v4")
 
     def _update_schema_version(self, version):
         """更新数据库中的版本号"""
-        self._conn.execute(
-            "UPDATE meta SET value = ? WHERE key = 'schema_version'",
-            (version,)
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                "UPDATE meta SET value = ? WHERE key = 'schema_version'",
+                (version,)
+            )
+            self._safe_commit()
 
     # ==========================================================================
     #  写入操作
@@ -353,8 +338,9 @@ class ReportDB:
             f"ON CONFLICT(filename) DO UPDATE SET {update_clause}"
         )
 
-        self._conn.execute(sql, values)
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(sql, values)
+            self._safe_commit()
 
     def insert_photos_batch(self, photos: List[dict]) -> int:
         """
@@ -374,29 +360,30 @@ class ReportDB:
         now = _now_iso()
         count = 0
 
-        with self._conn:
-            for data in photos:
-                cleaned = self._clean_data(data)
-                cleaned.setdefault("created_at", now)
-                cleaned["updated_at"] = now
+        with self._lock:
+            with self._conn:
+                for data in photos:
+                    cleaned = self._clean_data(data)
+                    cleaned.setdefault("created_at", now)
+                    cleaned["updated_at"] = now
 
-                columns = [k for k in cleaned if k in COLUMN_NAMES]
-                values = [cleaned[k] for k in columns]
+                    columns = [k for k in cleaned if k in COLUMN_NAMES]
+                    values = [cleaned[k] for k in columns]
 
-                placeholders = ", ".join(["?"] * len(columns))
-                col_str = ", ".join(columns)
+                    placeholders = ", ".join(["?"] * len(columns))
+                    col_str = ", ".join(columns)
 
-                update_clause = ", ".join(
-                    f"{c} = excluded.{c}" for c in columns if c != "filename"
-                )
+                    update_clause = ", ".join(
+                        f"{c} = excluded.{c}" for c in columns if c != "filename"
+                    )
 
-                sql = (
-                    f"INSERT INTO photos ({col_str}) VALUES ({placeholders}) "
-                    f"ON CONFLICT(filename) DO UPDATE SET {update_clause}"
-                )
+                    sql = (
+                        f"INSERT INTO photos ({col_str}) VALUES ({placeholders}) "
+                        f"ON CONFLICT(filename) DO UPDATE SET {update_clause}"
+                    )
 
-                self._conn.execute(sql, values)
-                count += 1
+                    self._conn.execute(sql, values)
+                    count += 1
 
         return count
 
@@ -414,11 +401,12 @@ class ReportDB:
         Returns:
             照片数据字典，未找到返回 None
         """
-        cursor = self._conn.execute(
-            "SELECT * FROM photos WHERE filename = ?", (filename,)
-        )
-        row = cursor.fetchone()
-        return dict(row) if row else None
+        with self._lock:
+            cursor = self._conn.execute(
+                "SELECT * FROM photos WHERE filename = ?", (filename,)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
 
     def get_all_photos(self) -> List[dict]:
         """
@@ -427,8 +415,9 @@ class ReportDB:
         Returns:
             照片数据字典列表
         """
-        cursor = self._conn.execute("SELECT * FROM photos ORDER BY filename")
-        return [dict(row) for row in cursor.fetchall()]
+        with self._lock:
+            cursor = self._conn.execute("SELECT * FROM photos ORDER BY filename")
+            return [dict(row) for row in cursor.fetchall()]
 
     def get_bird_photos(self) -> List[dict]:
         """
@@ -437,10 +426,11 @@ class ReportDB:
         Returns:
             有鸟照片数据字典列表
         """
-        cursor = self._conn.execute(
-            "SELECT * FROM photos WHERE has_bird = 1 ORDER BY filename"
-        )
-        return [dict(row) for row in cursor.fetchall()]
+        with self._lock:
+            cursor = self._conn.execute(
+                "SELECT * FROM photos WHERE has_bird = 1 ORDER BY filename"
+            )
+            return [dict(row) for row in cursor.fetchall()]
 
     def get_photos_by_rating(self, rating: int) -> List[dict]:
         """
@@ -452,85 +442,108 @@ class ReportDB:
         Returns:
             照片数据字典列表
         """
-        cursor = self._conn.execute(
-            "SELECT * FROM photos WHERE rating = ? ORDER BY filename",
-            (rating,)
-        )
-        return [dict(row) for row in cursor.fetchall()]
+        with self._lock:
+            cursor = self._conn.execute(
+                "SELECT * FROM photos WHERE rating = ? ORDER BY filename",
+                (rating,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
 
-    def get_photos_by_filters(self, filters: dict) -> List[dict]:
+    def get_distinct_species(self, use_en: bool = False) -> List[str]:
         """
-        按过滤条件查询照片。
+        获取数据库中去重后的鸟种名称列表（用于结果浏览器筛选下拉框）。
 
         Args:
-            filters: FilterPanel.get_filters() 返回的字典，包含：
-                - ratings: List[int]        选中的评分列表
-                - focus_statuses: List[str] 选中的对焦状态列表
-                - is_flying: List[int]      选中的飞行状态 [0]/[1]/[0,1]
-                - bird_species_cn: str      鸟种名称，空字符串表示全部
-        """
-        conditions: List[str] = []
-        params: list = []
+            use_en: True 使用英文鸟种列，False 使用中文鸟种列
 
-        # 评分
+        Returns:
+            鸟种名称列表（已去重、去空值）
+        """
+        column = "bird_species_en" if use_en else "bird_species_cn"
+        order_clause = f"{column} COLLATE NOCASE" if use_en else column
+
+        with self._lock:
+            cursor = self._conn.execute(
+                f"""
+                SELECT DISTINCT {column}
+                FROM photos
+                WHERE {column} IS NOT NULL
+                  AND TRIM({column}) != ''
+                ORDER BY {order_clause}
+                """
+            )
+            return [row[0] for row in cursor.fetchall()]
+
+    def get_photos_by_filters(self, filters: Optional[dict] = None) -> List[dict]:
+        """
+        按结果浏览器筛选条件查询照片。
+
+        支持的 filters 键：
+            - ratings: List[int]
+            - focus_statuses: List[str]
+            - is_flying: List[int]
+            - bird_species_cn / bird_species_en: str
+            - sort_by: filename | sharpness_desc | aesthetic_desc
+        """
+        filters = filters or {}
+
+        where_clauses = []
+        params: List[Any] = []
+
         ratings = filters.get("ratings")
-        if ratings is not None and len(ratings) > 0:
-            placeholders = ",".join("?" * len(ratings))
-            conditions.append(f"rating IN ({placeholders})")
+        if isinstance(ratings, list):
+            if not ratings:
+                return []
+            placeholders = ", ".join(["?"] * len(ratings))
+            where_clauses.append(f"rating IN ({placeholders})")
             params.extend(ratings)
 
-        # 对焦状态
-        focus = filters.get("focus_statuses")
-        if focus is not None and len(focus) > 0:
-            placeholders = ",".join("?" * len(focus))
-            conditions.append(f"(focus_status IN ({placeholders}) OR focus_status IS NULL)")
-            params.extend(focus)
+        focus_statuses = filters.get("focus_statuses")
+        if isinstance(focus_statuses, list):
+            if not focus_statuses:
+                return []
+            placeholders = ", ".join(["?"] * len(focus_statuses))
+            where_clauses.append(f"focus_status IN ({placeholders})")
+            params.extend(focus_statuses)
 
-        # 飞行状态 (list: [0], [1], 或 [0, 1])
         is_flying = filters.get("is_flying")
-        if is_flying is not None:
-            if isinstance(is_flying, list):
-                if len(is_flying) == 1:
-                    conditions.append("is_flying = ?")
-                    params.append(is_flying[0])
-                # 若 len==2 (两种都选)，则不加条件（全部显示）
-            else:
-                # 向后兼容：单值 None/0/1
-                if is_flying is not None:
-                    conditions.append("is_flying = ?")
-                    params.append(int(is_flying))
+        if isinstance(is_flying, list):
+            if not is_flying:
+                return []
+            placeholders = ", ".join(["?"] * len(is_flying))
+            where_clauses.append(f"is_flying IN ({placeholders})")
+            params.extend(is_flying)
 
-        # 鸟种（支持中英文两个键，根据传入的键决定查哪列）
-        if filters.get("bird_species_en", ""):
-            conditions.append("bird_species_en = ?")
-            params.append(filters["bird_species_en"])
-        elif filters.get("bird_species_cn", ""):
-            conditions.append("bird_species_cn = ?")
-            params.append(filters["bird_species_cn"])
+        species_col = None
+        species_val = None
+        if "bird_species_en" in filters:
+            species_col = "bird_species_en"
+            species_val = filters.get("bird_species_en")
+        elif "bird_species_cn" in filters:
+            species_col = "bird_species_cn"
+            species_val = filters.get("bird_species_cn")
 
-        # burst 筛选
-        burst_filter = filters.get("burst_filter", "all")
-        if burst_filter == "burst_only":
-            conditions.append("burst_id IS NOT NULL")
-        elif burst_filter == "single_only":
-            conditions.append("burst_id IS NULL")
-        elif burst_filter == "none":
-            conditions.append("1 = 0")  # 全不显示
+        if isinstance(species_val, str) and species_val.strip():
+            where_clauses.append(f"{species_col} = ?")
+            params.append(species_val.strip())
 
-        sql = "SELECT * FROM photos"
-        if conditions:
-            sql += " WHERE " + " AND ".join(conditions)
+        where_sql = ""
+        if where_clauses:
+            where_sql = "WHERE " + " AND ".join(where_clauses)
 
-        sort_by = filters.get("sort_by", "filename")
-        order_map = {
-            "filename":       "ORDER BY filename ASC",
-            "sharpness_desc": "ORDER BY COALESCE(adj_sharpness, 0.0) DESC, filename ASC",
-            "aesthetic_desc": "ORDER BY COALESCE(adj_topiq, nima_score, 0.0) DESC, filename ASC",
-        }
-        sql += " " + order_map.get(sort_by, "ORDER BY filename ASC")
+        sort_by = filters.get("sort_by") or "filename"
+        if sort_by == "sharpness_desc":
+            order_sql = "ORDER BY COALESCE(adj_sharpness, head_sharp, -1e99) DESC, filename ASC"
+        elif sort_by == "aesthetic_desc":
+            order_sql = "ORDER BY COALESCE(adj_topiq, nima_score, -1e99) DESC, filename ASC"
+        else:
+            order_sql = "ORDER BY filename ASC"
 
-        cursor = self._conn.execute(sql, params)
-        return [dict(row) for row in cursor.fetchall()]
+        sql = f"SELECT * FROM photos {where_sql} {order_sql}"
+
+        with self._lock:
+            cursor = self._conn.execute(sql, params)
+            return [dict(row) for row in cursor.fetchall()]
 
     def get_statistics(self) -> dict:
         """
@@ -547,46 +560,36 @@ class ReportDB:
         """
         stats = {}
 
-        # 总数
-        row = self._conn.execute("SELECT COUNT(*) FROM photos").fetchone()
-        stats["total"] = row[0]
+        with self._lock:
+            # 总数
+            row = self._conn.execute("SELECT COUNT(*) FROM photos").fetchone()
+            stats["total"] = row[0]
 
-        # 有鸟数
-        row = self._conn.execute(
-            "SELECT COUNT(*) FROM photos WHERE has_bird = 1"
-        ).fetchone()
-        stats["has_bird"] = row[0]
+            # 有鸟数
+            row = self._conn.execute(
+                "SELECT COUNT(*) FROM photos WHERE has_bird = 1"
+            ).fetchone()
+            stats["has_bird"] = row[0]
 
-        # 飞行数
-        row = self._conn.execute(
-            "SELECT COUNT(*) FROM photos WHERE is_flying = 1"
-        ).fetchone()
-        stats["flying"] = row[0]
+            # 飞行数
+            row = self._conn.execute(
+                "SELECT COUNT(*) FROM photos WHERE is_flying = 1"
+            ).fetchone()
+            stats["flying"] = row[0]
 
-        # 按评分统计
-        cursor = self._conn.execute(
-            "SELECT rating, COUNT(*) as cnt FROM photos GROUP BY rating ORDER BY rating"
-        )
-        stats["by_rating"] = {row[0]: row[1] for row in cursor.fetchall()}
+            # 按评分统计
+            cursor = self._conn.execute(
+                "SELECT rating, COUNT(*) as cnt FROM photos GROUP BY rating ORDER BY rating"
+            )
+            stats["by_rating"] = {row[0]: row[1] for row in cursor.fetchall()}
 
         return stats
 
-    def get_distinct_species(self, use_en: bool = False) -> List[str]:
-        """返回数据库中所有不重复的鸟种名称列表（非空）。
-        use_en=True 时返回英文名，否则返回中文名。
-        """
-        col = "bird_species_en" if use_en else "bird_species_cn"
-        cursor = self._conn.execute(
-            f"SELECT DISTINCT {col} FROM photos "
-            f"WHERE {col} IS NOT NULL AND {col} != '' "
-            f"ORDER BY {col}"
-        )
-        return [row[0] for row in cursor.fetchall()]
-
     def count(self) -> int:
         """返回总记录数。"""
-        row = self._conn.execute("SELECT COUNT(*) FROM photos").fetchone()
-        return row[0]
+        with self._lock:
+            row = self._conn.execute("SELECT COUNT(*) FROM photos").fetchone()
+            return row[0]
 
     def exists(self) -> bool:
         """数据库文件是否存在。"""
@@ -621,9 +624,10 @@ class ReportDB:
         sql = f"UPDATE photos SET {set_clause} WHERE filename = ?"
         values.append(filename)
 
-        cursor = self._conn.execute(sql, values)
-        self._conn.commit()
-        return cursor.rowcount > 0
+        with self._lock:
+            cursor = self._conn.execute(sql, values)
+            self._safe_commit()
+            return cursor.rowcount > 0
 
     def update_ratings_batch(self, updates: List[dict]) -> int:
         """
@@ -644,44 +648,40 @@ class ReportDB:
         now = _now_iso()
         count = 0
 
-        with self._conn:
-            for upd in updates:
-                filename = upd.get("filename")
-                if not filename:
-                    continue
+        with self._lock:
+            with self._conn:
+                for upd in updates:
+                    filename = upd.get("filename")
+                    if not filename:
+                        continue
 
-                cleaned = self._clean_data(upd)
-                cleaned["updated_at"] = now
+                    cleaned = self._clean_data(upd)
+                    cleaned["updated_at"] = now
 
-                columns = [k for k in cleaned if k in COLUMN_NAMES and k not in ("filename", "id")]
-                if not columns:
-                    continue
+                    columns = [k for k in cleaned if k in COLUMN_NAMES and k not in ("filename", "id")]
+                    if not columns:
+                        continue
 
-                values = [cleaned[k] for k in columns]
-                set_clause = ", ".join(f"{c} = ?" for c in columns)
+                    values = [cleaned[k] for k in columns]
+                    set_clause = ", ".join(f"{c} = ?" for c in columns)
 
-                sql = f"UPDATE photos SET {set_clause} WHERE filename = ?"
-                values.append(filename)
+                    sql = f"UPDATE photos SET {set_clause} WHERE filename = ?"
+                    values.append(filename)
 
-                cursor = self._conn.execute(sql, values)
-                if cursor.rowcount > 0:
-                    count += 1
+                    cursor = self._conn.execute(sql, values)
+                    if cursor.rowcount > 0:
+                        count += 1
 
         return count
 
-    def update_burst_ids(self, burst_map: dict) -> None:
-        """
-        批量写入 burst_id / burst_position。
-
-        Args:
-            burst_map: {filename: (burst_id, burst_position)} 字典
-        """
-        with self._conn:
-            for filename, (bid, bpos) in burst_map.items():
-                self._conn.execute(
-                    "UPDATE photos SET burst_id = ?, burst_position = ? WHERE filename = ?",
-                    (bid, bpos, filename)
-                )
+    def clear_cache_paths(self) -> int:
+        """清空缓存相关路径字段（临时 JPG、调试裁切、YOLO 调试图）。"""
+        with self._lock:
+            cursor = self._conn.execute(
+                "UPDATE photos SET debug_crop_path = NULL, temp_jpeg_path = NULL, yolo_debug_path = NULL"
+            )
+            self._safe_commit()
+            return cursor.rowcount
 
     # ==========================================================================
     #  元数据操作
@@ -689,19 +689,21 @@ class ReportDB:
 
     def get_meta(self, key: str) -> Optional[str]:
         """获取元数据值。"""
-        cursor = self._conn.execute(
-            "SELECT value FROM meta WHERE key = ?", (key,)
-        )
-        row = cursor.fetchone()
-        return row[0] if row else None
+        with self._lock:
+            cursor = self._conn.execute(
+                "SELECT value FROM meta WHERE key = ?", (key,)
+            )
+            row = cursor.fetchone()
+            return row[0] if row else None
 
     def set_meta(self, key: str, value: str) -> None:
         """设置元数据值。"""
-        self._conn.execute(
-            "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
-            (key, value)
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
+                (key, value)
+            )
+            self._safe_commit()
 
     # ==========================================================================
     #  同步预留
@@ -717,11 +719,12 @@ class ReportDB:
         Returns:
             更新记录列表
         """
-        cursor = self._conn.execute(
-            "SELECT * FROM photos WHERE updated_at > ? ORDER BY updated_at",
-            (since,)
-        )
-        return [dict(row) for row in cursor.fetchall()]
+        with self._lock:
+            cursor = self._conn.execute(
+                "SELECT * FROM photos WHERE updated_at > ? ORDER BY updated_at",
+                (since,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
 
     # ==========================================================================
     #  连接管理
@@ -729,9 +732,10 @@ class ReportDB:
 
     def close(self) -> None:
         """关闭数据库连接。"""
-        if self._conn:
-            self._conn.close()
-            self._conn = None
+        with self._lock:
+            if self._conn:
+                self._conn.close()
+                self._conn = None
 
     def __enter__(self):
         return self
@@ -743,6 +747,19 @@ class ReportDB:
     # ==========================================================================
     #  内部方法
     # ==========================================================================
+
+    def _safe_commit(self) -> None:
+        """仅在存在活动事务时提交，兼容 autocommit 场景。"""
+        if not self._conn:
+            return
+        try:
+            if self._conn.in_transaction:
+                self._conn.commit()
+        except sqlite3.OperationalError as e:
+            # 某些运行时在 autocommit 下会抛 "no transaction is active"
+            if "no transaction is active" in str(e).lower():
+                return
+            raise
 
     @staticmethod
     def _clean_data(data: dict) -> dict:
