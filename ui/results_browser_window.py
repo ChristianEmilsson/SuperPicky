@@ -107,8 +107,9 @@ def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
             border-radius: 6px;
             padding: 4px;
         }}
-        QMenu::item {{ padding: 6px 16px; border-radius: 4px; }}
-        QMenu::item:selected {{ background-color: {COLORS['bg_card']}; }}
+        QMenu::item {{ padding: 6px 16px; border-radius: 4px; color: {COLORS['text_secondary']}; }}
+        QMenu::item:selected {{ background-color: {COLORS['accent_dim']}; color: {COLORS['accent']}; }}
+        QMenu::item:disabled {{ color: {COLORS['text_muted']}; }}
         QMenu::separator {{ height: 1px; background: {COLORS['border_subtle']}; margin: 4px 8px; }}
     """)
 
