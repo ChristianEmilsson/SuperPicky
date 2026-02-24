@@ -64,6 +64,9 @@ class _LRUCache:
         if len(self._cache) > self._maxsize:
             self._cache.popitem(last=False)
 
+    def clear(self):
+        self._cache.clear()
+
 
 _thumb_cache = _LRUCache(500)
 
@@ -438,6 +441,9 @@ class ThumbnailGrid(QScrollArea):
         if self._loader and self._loader.isRunning():
             self._loader.cancel()
             self._loader.wait(500)
+
+        # 清空缩略图缓存，确保新路径（yolo_debug > crop_debug > temp_jpeg）优先级生效
+        _thumb_cache.clear()
 
         self._photos = photos
         self._cards.clear()
