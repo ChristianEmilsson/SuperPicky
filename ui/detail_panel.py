@@ -290,8 +290,12 @@ class DetailPanel(QWidget):
         self._val_flying = _make_value_label()
         self._val_species = _make_value_label()
         self._val_species.setStyleSheet(f"color: {COLORS['accent']}; font-size: 12px; background: transparent;")
+        self._val_species.setWordWrap(False)
+        self._val_species.setMinimumHeight(28)
         self._val_camera = _make_value_label()
         self._val_lens = _make_value_label()
+        self._val_lens.setWordWrap(False)
+        self._val_lens.setMinimumHeight(28)
         self._val_shutter = _make_value_label()
         self._val_iso = _make_value_label()
         self._val_focal = _make_value_label()
@@ -523,12 +527,15 @@ class DetailPanel(QWidget):
         else:
             species = p.get("bird_species_cn") or p.get("bird_species_en") or _unknown
         self._val_species.setText(species)
+        self._val_species.setToolTip(species)
 
         # 相机
         self._val_camera.setText(p.get("camera_model") or _unknown)
 
         # 镜头
-        self._val_lens.setText(p.get("lens_model") or _unknown)
+        lens = p.get("lens_model") or _unknown
+        self._val_lens.setText(lens)
+        self._val_lens.setToolTip(lens)
 
         # 快门
         self._val_shutter.setText(self._format_shutter(p.get("shutter_speed")))
