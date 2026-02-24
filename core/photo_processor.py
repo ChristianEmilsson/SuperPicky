@@ -2570,10 +2570,7 @@ class PhotoProcessor:
                 # 清除数据库中已删除的 debug_crop_path
                 if hasattr(self, 'report_db') and self.report_db:
                     try:
-                        self.report_db._conn.execute(
-                            "UPDATE photos SET debug_crop_path = NULL, temp_jpeg_path = NULL, yolo_debug_path = NULL"
-                        )
-                        self.report_db._conn.commit()
+                        self.report_db.clear_cache_paths()
                     except Exception as e:
                         self._log(f"⚠️ Failed to clear DB paths: {e}", "warning")
             except Exception as e:

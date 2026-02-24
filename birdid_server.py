@@ -27,7 +27,6 @@ from birdid.bird_identifier import (
     load_image,
     extract_gps_from_exif,
     get_classifier,
-    get_bird_info,
     get_database_manager,
     get_yolo_detector,
     YOLO_AVAILABLE
@@ -171,9 +170,6 @@ def ensure_models_loaded():
     print(t("server.loading_models_cli"))
     get_classifier()
     print(t("server.classifier_loaded"))
-
-    get_bird_info()
-    print(t("server.bird_info_loaded"))
 
     db = get_database_manager()
     if db:

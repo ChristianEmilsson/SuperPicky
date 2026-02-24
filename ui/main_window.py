@@ -2363,11 +2363,11 @@ class SuperPickyMainWindow(QMainWindow):
                 from tools.update_checker import UpdateChecker
                 checker = UpdateChecker()  # 使用 update_checker.CURRENT_VERSION
                 has_update, update_info = checker.check_for_updates()
-                print(f"[DEBUG] 更新检查完成: has_update={has_update}, silent={silent}")
+                print(f"[DEBUG] Update check done: has_update={has_update}, silent={silent}")
                 
                 # 静默模式下，只有有更新时才弹窗
                 if silent and not has_update:
-                    print("[DEBUG] 静默模式，无更新，跳过弹窗")
+                    print("[DEBUG] Silent mode, no update, skipping dialog")
                     return
                     
                 # 使用信号发送到主线程

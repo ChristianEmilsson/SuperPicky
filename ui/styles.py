@@ -354,8 +354,8 @@ QMenu::item {{
 }}
 
 QMenu::item:selected {{
-    background-color: {COLORS['accent']};
-    color: {COLORS['bg_void']};
+    background-color: {COLORS['accent_dim']};
+    color: {COLORS['accent']};
 }}
 
 /* ==================== 消息框 ==================== */

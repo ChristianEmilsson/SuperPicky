@@ -106,7 +106,7 @@ class I18n:
         try:
             with open(locale_file, 'r', encoding='utf-8') as f:
                 self.translations = json.load(f)
-            print(f"✅ 已加载语言包: {self.current_lang}")
+            print(f"✅ Language pack loaded: {self.current_lang}")
         except Exception as e:
             print(f"❌ 加载语言包失败: {e}")
             self.translations = {}

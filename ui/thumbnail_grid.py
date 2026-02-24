@@ -222,7 +222,7 @@ class ThumbnailCard(QFrame):
         self.name_label.setAlignment(Qt.AlignCenter)
         self.name_label.setStyleSheet(f"""
             QLabel {{
-                color: {COLORS['text_muted']};
+                color: {COLORS['text_tertiary']};
                 font-size: 10px;
                 background: transparent;
             }}
@@ -340,7 +340,7 @@ class ThumbnailCard(QFrame):
                 border-radius: 8px;
             }}
             QFrame:hover {{
-                border: 1px solid {COLORS['text_muted']};
+                border: 1px solid {COLORS['accent_deep']};
                 background-color: {COLORS['bg_elevated']};
             }}
         """

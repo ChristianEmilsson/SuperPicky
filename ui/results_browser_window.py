@@ -107,8 +107,9 @@ def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
             border-radius: 6px;
             padding: 4px;
         }}
-        QMenu::item {{ padding: 6px 16px; border-radius: 4px; }}
-        QMenu::item:selected {{ background-color: {COLORS['bg_card']}; }}
+        QMenu::item {{ padding: 6px 16px; border-radius: 4px; color: {COLORS['text_secondary']}; }}
+        QMenu::item:selected {{ background-color: {COLORS['accent_dim']}; color: {COLORS['accent']}; }}
+        QMenu::item:disabled {{ color: {COLORS['text_muted']}; }}
         QMenu::separator {{ height: 1px; background: {COLORS['border_subtle']}; margin: 4px 8px; }}
     """)
 
@@ -127,7 +128,7 @@ def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
             QProcess.startDetached("explorer", ["/select,", filepath.replace("/", "\\")])
 
     _i18n = get_i18n()
-    finder_action = QAction(f"🔍  {_i18n.t('browser.ctx_show_in_finder')}", parent_widget)
+    finder_action = QAction(_i18n.t('browser.ctx_show_in_finder'), parent_widget)
     finder_action.setEnabled(bool(filepath))
     finder_action.triggered.connect(_reveal)
     menu.addAction(finder_action)
@@ -141,7 +142,7 @@ def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
             app_path = app.get("path", "")
             if not app_name or not app_path:
                 continue
-            act = QAction(f"🖼  {_i18n.t('browser.ctx_open_with').format(app_name=app_name)}", parent_widget)
+            act = QAction(_i18n.t('browser.ctx_open_with').format(app_name=app_name), parent_widget)
             act.setEnabled(bool(filepath))
 
             def _open_in_app(_checked=False, _fp=filepath, _ap=app_path):
@@ -157,14 +158,14 @@ def _show_context_menu_impl(parent_widget, photo: dict, pos, directory: str):
     else:
         # 未配置时提示用户去设置
         menu.addSeparator()
-        hint_action = QAction(f"⚙️  {_i18n.t('browser.ctx_add_external_app')}", parent_widget)
+        hint_action = QAction(_i18n.t('browser.ctx_add_external_app'), parent_widget)
         hint_action.setEnabled(False)
         menu.addAction(hint_action)
 
     menu.addSeparator()
 
     # 复制路径
-    copy_action = QAction(f"📋  {_i18n.t('browser.ctx_copy_path')}", parent_widget)
+    copy_action = QAction(_i18n.t('browser.ctx_copy_path'), parent_widget)
     copy_action.setEnabled(bool(filepath))
     if filepath:
         def _copy_path(_checked=False, _fp=filepath):

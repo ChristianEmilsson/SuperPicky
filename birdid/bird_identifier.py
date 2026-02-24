@@ -11,7 +11,6 @@ import torchvision.transforms as transforms
 import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 from PIL.ExifTags import TAGS, GPSTAGS
-import json
 import cv2
 import io
 import os
@@ -99,7 +98,6 @@ MODEL_PATH_LEGACY = get_birdid_path('models/birdid2024.pt')
 MODEL_PATH_ENC = get_birdid_path('models/birdid2024.pt.enc')
 # OSEA 模型类别数
 OSEA_NUM_CLASSES = 11000
-BIRD_INFO_PATH = get_birdid_path('data/birdinfo.json')
 DATABASE_PATH = get_birdid_path('data/bird_reference.sqlite')
 
 # YOLO 模型（共用项目根目录的模型）
@@ -107,7 +105,6 @@ YOLO_MODEL_PATH = get_project_path('models/yolo11l-seg.pt')
 
 # ==================== 全局变量（懒加载）====================
 _classifier = None
-_bird_info = None
 _db_manager = None
 _yolo_detector = None
 
@@ -174,7 +171,7 @@ def get_classifier():
             model = model.to(CLASSIFIER_DEVICE)
             model.eval()
             _classifier = model
-            print(f"[BirdID] OSEA ResNet34 模型已加载，设备: {CLASSIFIER_DEVICE}")
+            print(f"[BirdID] OSEA ResNet34 model loaded, device: {CLASSIFIER_DEVICE}")
         else:
             # 回退到旧的 birdid2024 模型
             SECRET_PASSWORD = "SuperBirdID_2024_AI_Model_Encryption_Key_v1"
@@ -200,18 +197,6 @@ def get_classifier():
 def get_bird_model():
     """获取识鸟模型（get_classifier 的别名，用于模型预加载）"""
     return get_classifier()
-
-
-def get_bird_info() -> List:
-    """懒加载鸟类信息"""
-    global _bird_info
-    if _bird_info is None:
-        if os.path.exists(BIRD_INFO_PATH):
-            with open(BIRD_INFO_PATH, 'r', encoding='utf-8') as f:
-                _bird_info = json.load(f)
-        else:
-            _bird_info = []
-    return _bird_info
 
 
 def get_database_manager():
@@ -371,7 +356,7 @@ class YOLOBirdDetector:
                 square.paste(cropped, (paste_x, paste_y))
                 cropped = square
 
-            info = f"置信度{best['confidence']:.3f}, 尺寸{cropped.size}"
+            info = f"conf={best['confidence']:.3f}, size={cropped.size}"
 
             return cropped, info
 
@@ -667,7 +652,6 @@ def predict_bird(
         识别结果列表 [{cn_name, en_name, confidence, ebird_code, ...}, ...]
     """
     model = get_classifier()
-    bird_data = get_bird_info()
     db_manager = get_database_manager()
 
     # 根据是否经过 YOLO 裁剪选择预处理方式
@@ -683,7 +667,7 @@ def predict_bird(
         output = model(input_tensor)[0]
 
     # 截取有效类别数（模型输出可能多于实际物种数）
-    num_classes = min(len(bird_data), output.shape[0])
+    num_classes = min(10964, output.shape[0])
     output = output[:num_classes]
 
     # Softmax（温度=0.9 更平滑：降低过高置信度，避免 99%+ 输出）
@@ -718,11 +702,6 @@ def predict_bird(
                 scientific_name = info.get('scientific_name')
                 ebird_code = info.get('ebird_code')
                 description = info.get('short_description_zh')
-
-        # 回退到 bird_data
-        if not cn_name and class_id < len(bird_data) and len(bird_data[class_id]) >= 2:
-            cn_name = bird_data[class_id][0]
-            en_name = bird_data[class_id][1]
 
         if not cn_name:
             cn_name = f"Unknown (ID: {class_id})"
@@ -810,33 +789,33 @@ def identify_bird(
 
         # YOLO 裁剪
         is_yolo_cropped = False
-        print(f"[YOLO调试] use_yolo={use_yolo}, YOLO_AVAILABLE={YOLO_AVAILABLE}")
+        print(f"[YOLO] use_yolo={use_yolo}, YOLO_AVAILABLE={YOLO_AVAILABLE}")
         if use_yolo and YOLO_AVAILABLE:
             width, height = image.size
-            print(f"[YOLO调试] 图片尺寸: {width}x{height}")
+            print(f"[YOLO] image size: {width}x{height}")
             if max(width, height) > 640:
                 detector = get_yolo_detector()
-                print(f"[YOLO调试] detector={detector is not None}")
+                print(f"[YOLO] detector={detector is not None}")
                 if detector:
                     cropped, info = detector.detect_and_crop_bird(image)
-                    print(f"[YOLO调试] 检测结果: cropped={cropped is not None}, info={info}")
+                    print(f"[YOLO] detect result: cropped={cropped is not None}, info={info}")
                     if cropped:
                         image = cropped
                         result['yolo_info'] = info
-                        result['cropped_image'] = cropped  # 正方形裁剪图（PIL Image）
+                        result['cropped_image'] = cropped  # square-cropped PIL Image
                         is_yolo_cropped = True
-                        print(f"[YOLO调试] ✅ 已裁剪鸟类区域")
+                        print(f"[YOLO] ✅ Bird region cropped")
                     else:
-                        print(f"[YOLO调试] ⚠️ 未检测到鸟类")
-                        # 严格模式：YOLO 未检测到鸟类，直接短路返回
+                        print(f"[YOLO] ⚠️ No bird detected")
+                        # strict mode: no bird found, short-circuit
                         result['success'] = True
                         result['results'] = []
                         result['yolo_info'] = {'bird_count': 0}
                         return result
             else:
-                print(f"[YOLO调试] 图片太小，跳过YOLO裁剪")
+                print(f"[YOLO] Image too small, skipping crop")
         else:
-            print(f"[YOLO调试] YOLO未启用或不可用")
+            print(f"[YOLO] YOLO not enabled or unavailable")
 
         # Avonet 地理过滤
         species_class_ids = None
@@ -860,14 +839,14 @@ def identify_bird(
                             }
                             species_class_ids = species_filter.get_species_by_gps(lat, lon)
                             if species_class_ids:
-                                print(f"[Avonet] GPS ({lat:.2f}, {lon:.2f}): {len(species_class_ids)} 个物种")
+                                print(f"[Avonet] GPS ({lat:.2f}, {lon:.2f}): {len(species_class_ids)} species")
 
                     # 回退到区域代码
                     if species_class_ids is None and (region_code or country_code):
                         effective_region = region_code or country_code
                         species_class_ids = species_filter.get_species_by_region(effective_region)
                         if species_class_ids:
-                            print(f"[Avonet] 区域 {effective_region}: {len(species_class_ids)} 个物种")
+                            print(f"[Avonet] Region {effective_region}: {len(species_class_ids)} species")
 
                     # 记录过滤信息
                     if species_class_ids:
@@ -879,7 +858,7 @@ def identify_bird(
                         }
 
             except Exception as e:
-                print(f"[Avonet] 过滤初始化失败: {e}")
+                print(f"[Avonet] Filter init failed: {e}")
 
         # 执行识别
         results = predict_bird(
@@ -892,7 +871,7 @@ def identify_bird(
 
         # GPS 过滤无匹配时，先尝试 eBird 国家级回退，再全局
         if not results and species_class_ids:
-            print(f"[Avonet] ⚠️ GPS过滤后无匹配（{len(species_class_ids)}种），尝试 eBird 国家级回退")
+            print(f"[Avonet] ⚠️ No match after GPS filter ({len(species_class_ids)} species), trying eBird country fallback")
 
             # 第一步：eBird 国家级回退
             country_cls_ids = None
@@ -901,10 +880,10 @@ def identify_bird(
                 try:
                     country_cls_ids, country_cc = species_filter.get_species_by_country_ebird(lat, lon)
                 except Exception as _e:
-                    print(f"[eBird] 国家级回退失败: {_e}")
+                    print(f"[eBird] Country fallback failed: {_e}")
 
             if country_cls_ids:
-                print(f"[eBird] 尝试国家级回退: {country_cc} ({len(country_cls_ids)} 种)")
+                print(f"[eBird] Trying country fallback: {country_cc} ({len(country_cls_ids)} species)")
                 results = predict_bird(
                     image,
                     top_k=top_k,
@@ -920,7 +899,7 @@ def identify_bird(
 
             # 第二步：仍无结果 → 全局模式
             if not results:
-                print(f"[Avonet] ⚠️ 国家级回退仍无匹配，切换全局模式")
+                print(f"[Avonet] ⚠️ Country fallback still no match, switching to global mode")
                 results = predict_bird(
                     image,
                     top_k=top_k,

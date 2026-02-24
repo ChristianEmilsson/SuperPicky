@@ -76,6 +76,10 @@ class AdvancedConfig:
         # 外部编辑应用（右键菜单 "用 X 打开"）
         # 每项格式：{"name": "显示名称", "path": "/Applications/...app"}
         "external_apps": [],
+
+        # 浏览器排序偏好（用户上次选择）
+        # 可选值: "filename" | "sharpness_desc" | "aesthetic_desc"
+        "browser_sort": "sharpness_desc",
     }
 
     def __init__(self, config_file=None):
@@ -109,7 +113,7 @@ class AdvancedConfig:
                     loaded_config = json.load(f)
                     # 合并配置（保留默认值中有但加载配置中没有的项）
                     self.config.update(loaded_config)
-                print(f"✅ 已加载高级配置: {self.config_file}")
+                print(f"✅ Advanced config loaded: {self.config_file}")
             except Exception as e:
                 print(f"⚠️  加载配置失败，使用默认值: {e}")
 
@@ -254,7 +258,16 @@ class AdvancedConfig:
 
     @property
     def arw_write_mode(self):
-        return self.config.get("arw_write_mode", "embedded")
+        return self.config.get("arw_write_mode", "sidecar")
+
+    def get_arw_write_mode_for_file(self, file_path=None):
+        """
+        获取针对当前文件的 ARW 写入策略。
+        若 file_path 为 ARW 格式，强制返回 "sidecar"（只写 XMP 侧车，不修改 ARW 本体）。
+        """
+        if file_path and Path(file_path).suffix.lower() == ".arw":
+            return "sidecar"
+        return self.config.get("arw_write_mode", "sidecar")
 
     def set_arw_write_mode(self, value):
         """设置 ARW 写入策略: sidecar | embedded | inplace | auto"""
@@ -325,6 +338,15 @@ class AdvancedConfig:
     def set_external_apps(self, apps: list):
         """保存外部编辑应用列表。"""
         self.config["external_apps"] = list(apps)
+
+    def get_browser_sort(self) -> str:
+        """返回浏览器排序偏好: filename | sharpness_desc | aesthetic_desc"""
+        return self.config.get("browser_sort", "sharpness_desc")
+
+    def set_browser_sort(self, value: str):
+        """保存浏览器排序偏好。"""
+        if value in ("filename", "sharpness_desc", "aesthetic_desc"):
+            self.config["browser_sort"] = value
 
     def get_dict(self):
         """获取配置字典（用于传递给其他模块）"""
