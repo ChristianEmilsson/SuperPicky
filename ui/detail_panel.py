@@ -517,8 +517,11 @@ class DetailPanel(QWidget):
         else:
             self._val_flying.setText(_unknown)
 
-        # 鸟种（中文优先）
-        species = p.get("bird_species_cn") or p.get("bird_species_en") or _unknown
+        # 鸟种（跟随界面语言）
+        if self.i18n.current_lang.startswith('en'):
+            species = p.get("bird_species_en") or p.get("bird_species_cn") or _unknown
+        else:
+            species = p.get("bird_species_cn") or p.get("bird_species_en") or _unknown
         self._val_species.setText(species)
 
         # 相机

@@ -118,7 +118,7 @@ class OSEAClassifier:
         self.bird_info = self._load_bird_info()
         self.num_classes = len(self.bird_info)
 
-        print(f"[OSEA] 模型已加载: {self.num_classes} 物种, 设备: {self.device}")
+        print(f"[OSEA] Model loaded: {self.num_classes} species, device: {self.device}")
 
     def _load_model(self) -> torch.nn.Module:
         """加载 ResNet34 模型"""
