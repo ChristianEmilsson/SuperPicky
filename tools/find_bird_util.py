@@ -89,14 +89,26 @@ def reset(directory, log_callback=None, i18n=None):
     tmp_dir = os.path.join(directory, ".superpicky")
     if os.path.exists(tmp_dir) and os.path.isdir(tmp_dir):
         try:
-            # 先尝试修改权限，然后删除
-            def force_remove_readonly(func, path, exc_info):
-                """处理只读文件的删除"""
-                import stat
-                os.chmod(path, stat.S_IWRITE)
-                func(path)
-
-            shutil.rmtree(tmp_dir, onerror=force_remove_readonly)
+            # 先逐文件清空（含 ExFAT 上的 ._* 资源分叉文件），再删目录
+            import stat
+            for dirpath, dirnames, filenames in os.walk(tmp_dir, topdown=False):
+                for fname in filenames:
+                    fpath = os.path.join(dirpath, fname)
+                    try:
+                        os.remove(fpath)
+                    except Exception:
+                        try:
+                            os.chmod(fpath, stat.S_IWRITE | stat.S_IREAD)
+                            os.remove(fpath)
+                        except Exception:
+                            pass
+                for dname in dirnames:
+                    dpath = os.path.join(dirpath, dname)
+                    try:
+                        os.rmdir(dpath)
+                    except Exception:
+                        pass
+            shutil.rmtree(tmp_dir, ignore_errors=True)
             if i18n:
                 log(i18n.t("logs.tmp_deleted"))
             else:
