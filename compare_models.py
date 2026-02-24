@@ -6,7 +6,7 @@ OSEA 模型对比测试工具
 
 import argparse
 import io
-import json
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -45,17 +45,23 @@ def parse_args():
 # ==================== 数据加载 ====================
 
 def load_bird_info():
-    """加载 birdinfo.json (中文名、英文名、学名)"""
-    info_path = BIRDID_DIR / "data" / "birdinfo.json"
-    with open(info_path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def load_osea_labels():
-    """加载 OSEA 标签文件 (学名)"""
-    label_path = BIRDID_DIR / "data" / "osea_labels.txt"
-    with open(label_path, "r", encoding="utf-8") as f:
-        return [line.strip() for line in f.readlines()]
+    """从 bird_reference.sqlite 加载物种信息，返回按 class_id 索引的列表"""
+    db_path = BIRDID_DIR / "data" / "bird_reference.sqlite"
+    conn = sqlite3.connect(str(db_path))
+    try:
+        cur = conn.execute(
+            "SELECT model_class_id, chinese_simplified, english_name, scientific_name "
+            "FROM BirdCountInfo WHERE model_class_id IS NOT NULL ORDER BY model_class_id"
+        )
+        rows = cur.fetchall()
+    finally:
+        conn.close()
+    num_classes = 10964
+    bird_info = [['Unknown', 'Unknown', ''] for _ in range(num_classes)]
+    for class_id, cn_name, en_name, scientific_name in rows:
+        if 0 <= class_id < num_classes:
+            bird_info[class_id] = [cn_name or 'Unknown', en_name or 'Unknown', scientific_name or '']
+    return bird_info
 
 
 # ==================== 模型加载 ====================
@@ -312,8 +318,7 @@ def main():
 
     # 加载数据
     bird_info = load_bird_info()
-    osea_labels = load_osea_labels()
-    print(f"物种数: SuperPicky={len(bird_info)}, OSEA={len(osea_labels)}\n")
+    print(f"物种数: {len(bird_info)}\n")
 
     # 加载模型
     birdid_model = load_birdid_model()

@@ -11,7 +11,6 @@ import torchvision.transforms as transforms
 import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 from PIL.ExifTags import TAGS, GPSTAGS
-import json
 import cv2
 import io
 import os
@@ -99,7 +98,6 @@ MODEL_PATH_LEGACY = get_birdid_path('models/birdid2024.pt')
 MODEL_PATH_ENC = get_birdid_path('models/birdid2024.pt.enc')
 # OSEA 模型类别数
 OSEA_NUM_CLASSES = 11000
-BIRD_INFO_PATH = get_birdid_path('data/birdinfo.json')
 DATABASE_PATH = get_birdid_path('data/bird_reference.sqlite')
 
 # YOLO 模型（共用项目根目录的模型）
@@ -107,7 +105,6 @@ YOLO_MODEL_PATH = get_project_path('models/yolo11l-seg.pt')
 
 # ==================== 全局变量（懒加载）====================
 _classifier = None
-_bird_info = None
 _db_manager = None
 _yolo_detector = None
 
@@ -200,18 +197,6 @@ def get_classifier():
 def get_bird_model():
     """获取识鸟模型（get_classifier 的别名，用于模型预加载）"""
     return get_classifier()
-
-
-def get_bird_info() -> List:
-    """懒加载鸟类信息"""
-    global _bird_info
-    if _bird_info is None:
-        if os.path.exists(BIRD_INFO_PATH):
-            with open(BIRD_INFO_PATH, 'r', encoding='utf-8') as f:
-                _bird_info = json.load(f)
-        else:
-            _bird_info = []
-    return _bird_info
 
 
 def get_database_manager():
@@ -666,7 +651,6 @@ def predict_bird(
         识别结果列表 [{cn_name, en_name, confidence, ebird_code, ...}, ...]
     """
     model = get_classifier()
-    bird_data = get_bird_info()
     db_manager = get_database_manager()
 
     # 根据是否经过 YOLO 裁剪选择预处理方式
@@ -682,7 +666,7 @@ def predict_bird(
         output = model(input_tensor)[0]
 
     # 截取有效类别数（模型输出可能多于实际物种数）
-    num_classes = min(len(bird_data), output.shape[0])
+    num_classes = min(10964, output.shape[0])
     output = output[:num_classes]
 
     # Softmax（温度=0.9 更平滑：降低过高置信度，避免 99%+ 输出）
@@ -717,11 +701,6 @@ def predict_bird(
                 scientific_name = info.get('scientific_name')
                 ebird_code = info.get('ebird_code')
                 description = info.get('short_description_zh')
-
-        # 回退到 bird_data
-        if not cn_name and class_id < len(bird_data) and len(bird_data[class_id]) >= 2:
-            cn_name = bird_data[class_id][0]
-            en_name = bird_data[class_id][1]
 
         if not cn_name:
             cn_name = f"Unknown (ID: {class_id})"

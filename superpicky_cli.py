@@ -53,7 +53,7 @@ def print_banner():
 def cmd_burst(args):
     """连拍检测与分组"""
     from core.burst_detector import BurstDetector
-    from exiftool_manager import ExifToolManager
+    from tools.exiftool_manager import ExifToolManager
     
     print_banner()
     print(t("cli.target_dir", directory=args.directory))
@@ -743,16 +743,20 @@ def cmd_identify(args):
 
     # 写入 EXIF（如果启用）
     if args.write_exif and results:
-        from exiftool_manager import get_exiftool_manager
+        from tools.exiftool_manager import get_exiftool_manager
 
         best = results[0]
         bird_name = f"{best['cn_name']} ({best['en_name']})"
 
         print(f"\n📝 写入 EXIF Title...")
         exiftool_mgr = get_exiftool_manager()
-        success = exiftool_mgr.set_metadata(args.image, {'Title': bird_name})
+        stats = exiftool_mgr.batch_set_metadata([{
+            'file': args.image,
+            'title': bird_name,
+            'caption': bird_name,
+        }])
 
-        if success:
+        if stats.get('success', 0) > 0:
             print(f"  ✅ 已写入: {bird_name}")
         else:
             print(f"  ❌ 写入失败")

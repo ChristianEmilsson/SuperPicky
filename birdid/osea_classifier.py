@@ -12,8 +12,8 @@ OSEA ResNet34 鸟类分类器
 
 __version__ = "1.0.0"
 
-import json
 import os
+import sqlite3
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Set
@@ -85,18 +85,17 @@ class OSEAClassifier:
 
     Attributes:
         model: ResNet34 模型
-        bird_info: 物种信息列表 [[cn_name, en_name, scientific_name], ...]
+        bird_info: 物种信息列表 [[cn_name, en_name, scientific_name], ...]，从 bird_reference.sqlite 加载
         transform: 图像预处理 transform
         num_classes: 物种数量 (10964)
     """
 
     DEFAULT_MODEL_PATH = "models/model20240824.pth"
-    DEFAULT_BIRD_INFO_PATH = "birdid/data/osea_bird_info.json"
+    DEFAULT_DB_PATH = "birdid/data/bird_reference.sqlite"
 
     def __init__(
         self,
         model_path: Optional[str] = None,
-        bird_info_path: Optional[str] = None,
         use_center_crop: bool = True,
         device: Optional[torch.device] = None,
     ):
@@ -105,7 +104,6 @@ class OSEAClassifier:
 
         Args:
             model_path: 模型文件路径 (默认: models/model20240824.pth)
-            bird_info_path: 物种信息文件路径 (默认: birdid/data/osea_bird_info.json)
             use_center_crop: 是否使用中心裁剪预处理 (推荐: True)
             device: 计算设备 (默认: 自动检测)
         """
@@ -116,7 +114,7 @@ class OSEAClassifier:
         self.model_path = model_path or str(_get_resource_path(self.DEFAULT_MODEL_PATH))
         self.model = self._load_model()
 
-        self.bird_info_path = bird_info_path or str(_get_resource_path(self.DEFAULT_BIRD_INFO_PATH))
+        self.db_path = str(_get_resource_path(self.DEFAULT_DB_PATH))
         self.bird_info = self._load_bird_info()
         self.num_classes = len(self.bird_info)
 
@@ -135,12 +133,30 @@ class OSEAClassifier:
         return model
 
     def _load_bird_info(self) -> List[List[str]]:
-        """加载物种信息 JSON"""
-        if not os.path.exists(self.bird_info_path):
-            raise FileNotFoundError(f"物种信息文件未找到: {self.bird_info_path}")
+        """从 bird_reference.sqlite 加载物种信息"""
+        if not os.path.exists(self.db_path):
+            raise FileNotFoundError(f"数据库文件未找到: {self.db_path}")
 
-        with open(self.bird_info_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        conn = sqlite3.connect(self.db_path)
+        try:
+            cur = conn.execute(
+                "SELECT model_class_id, chinese_simplified, english_name, scientific_name "
+                "FROM BirdCountInfo WHERE model_class_id IS NOT NULL ORDER BY model_class_id"
+            )
+            rows = cur.fetchall()
+        finally:
+            conn.close()
+
+        num_classes = 10964
+        bird_info: List[List[str]] = [['Unknown', 'Unknown', ''] for _ in range(num_classes)]
+        for class_id, cn_name, en_name, scientific_name in rows:
+            if 0 <= class_id < num_classes:
+                bird_info[class_id] = [
+                    cn_name or 'Unknown',
+                    en_name or 'Unknown',
+                    scientific_name or '',
+                ]
+        return bird_info
 
     def predict(
         self,
