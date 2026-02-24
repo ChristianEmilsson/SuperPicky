@@ -504,13 +504,20 @@ class DetailPanel(QWidget):
         _exp_key = {"GOOD": "browser.exposure_good", "OVEREXPOSED": "browser.exposure_over", "UNDEREXPOSED": "browser.exposure_under"}
         self._val_exposure.setText(self.i18n.t(_exp_key[exp]) if exp in _exp_key else (exp or _unknown))
 
-        # 锐度
+        # 锐度（颜色跟随对焦状态）
         sharp = p.get("adj_sharpness")
         self._val_sharpness.setText(f"{sharp:.1f}" if sharp is not None else _unknown)
+        sharp_color = _FOCUS_COLORS.get(focus, COLORS['text_primary'])
+        self._val_sharpness.setStyleSheet(
+            f"color: {sharp_color}; font-size: 13px; font-weight: 600; background: transparent;"
+        )
 
-        # 美学分
+        # 美学分（靛紫）
         topiq = p.get("adj_topiq")
         self._val_aesthetic.setText(f"{topiq:.2f}" if topiq is not None else _unknown)
+        self._val_aesthetic.setStyleSheet(
+            "color: #818cf8; font-size: 13px; font-weight: 600; background: transparent;"
+        )
 
         # 飞行
         flying = p.get("is_flying")
