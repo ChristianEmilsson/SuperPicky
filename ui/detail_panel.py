@@ -198,8 +198,8 @@ class DetailPanel(QWidget):
         prev_btn = QPushButton(f"◀  {self.i18n.t('browser.prev')}")
         next_btn = QPushButton(f"{self.i18n.t('browser.next')}  ▶")
         for btn in (prev_btn, next_btn):
-            btn.setObjectName("secondary")
             btn.setFixedHeight(28)
+            btn.setStyleSheet(self._inactive_btn_style())
         prev_btn.clicked.connect(self.prev_requested)
         next_btn.clicked.connect(self.next_requested)
         nb_layout.addWidget(prev_btn)
