@@ -7,6 +7,7 @@ import sqlite3
 import os
 from typing import List, Dict, Optional, Tuple, Set
 import json
+from tools.i18n import t as _t
 
 class BirdDatabaseManager:
     def __init__(self, db_path: str = None):
@@ -41,7 +42,7 @@ class BirdDatabaseManager:
                 cursor = conn.cursor()
                 cursor.execute("SELECT COUNT(*) FROM BirdCountInfo")
                 count = cursor.fetchone()[0]
-                print(f"数据库连接成功，包含 {count} 条鸟类记录")
+                print(_t("logs.db_connected", count=count))
         except Exception as e:
             raise ConnectionError(f"数据库连接失败: {e}")
     
@@ -81,7 +82,7 @@ class BirdDatabaseManager:
                     }
                 return None
         except Exception as e:
-            print(f"查询鸟类信息失败 (class_id: {class_id}): {e}")
+            print(_t("logs.db_query_failed", id=class_id, e=e))
             return None
     
     def get_ebird_code_by_english_name(self, english_name: str) -> Optional[str]:
@@ -107,7 +108,7 @@ class BirdDatabaseManager:
                 result = cursor.fetchone()
                 return result[0] if result else None
         except Exception as e:
-            print(f"查询eBird代码失败 (名称: {english_name}): {e}")
+            print(_t("logs.db_ebird_query_failed", name=english_name, e=e))
             return None
     
     def get_birds_by_ebird_codes(self, ebird_codes: Set[str]) -> List[Dict]:
@@ -147,7 +148,7 @@ class BirdDatabaseManager:
                     for row in results
                 ]
         except Exception as e:
-            print(f"批量查询eBird代码失败: {e}")
+            print(_t("logs.db_batch_ebird_failed", e=e))
             return []
     
     def search_birds(self, query: str, limit: int = 10) -> List[Dict]:
@@ -189,7 +190,7 @@ class BirdDatabaseManager:
                     for row in results
                 ]
         except Exception as e:
-            print(f"搜索鸟类失败: {e}")
+            print(_t("logs.db_search_failed", e=e))
             return []
     
     def get_all_ebird_codes(self) -> Set[str]:
@@ -212,7 +213,7 @@ class BirdDatabaseManager:
                 results = cursor.fetchall()
                 return {row[0] for row in results}
         except Exception as e:
-            print(f"获取所有eBird代码失败: {e}")
+            print(_t("logs.db_all_ebird_failed", e=e))
             return set()
     
     def get_bird_data_for_model(self) -> List[List[str]]:
@@ -235,7 +236,7 @@ class BirdDatabaseManager:
                 results = cursor.fetchall()
                 return [[row[0], row[1]] for row in results]
         except Exception as e:
-            print(f"获取模型数据失败: {e}")
+            print(_t("logs.db_model_data_failed", e=e))
             return []
     
     def get_statistics(self) -> Dict:
@@ -261,7 +262,7 @@ class BirdDatabaseManager:
                     cursor.execute(query)
                     stats[key] = cursor.fetchone()[0]
         except Exception as e:
-            print(f"获取统计信息失败: {e}")
+            print(_t("logs.db_stats_failed", e=e))
             return {}
         
         return stats
@@ -290,7 +291,7 @@ class BirdDatabaseManager:
                 count = cursor.fetchone()[0]
                 return count > 0
         except Exception as e:
-            print(f"检查物种区域失败 (学名: {scientific_name}): {e}")
+            print(_t("logs.db_region_check_failed", name=scientific_name, e=e))
             return False
 
     def _load_avilist_cache(self):

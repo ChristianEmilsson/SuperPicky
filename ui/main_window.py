@@ -2000,11 +2000,11 @@ class SuperPickyMainWindow(QMainWindow):
             # 更新 ai_confidence 变量
             self.ai_confidence = int(self.config.min_confidence * 100)
             # 在控制台显示更新后的设置
-            self._log(f"✅ 参数设置已更新:")
-            self._log(f"   检测敏感度: {self.ai_confidence}%")
-            self._log(f"   最低锐度: {self.config.min_sharpness}")
-            self._log(f"   最低美学: {self.config.min_nima}")
-            self._log(f"   识别确信度: {self.config.birdid_confidence}%")
+            self._log(self.i18n.t("logs.settings_updated"))
+            self._log(self.i18n.t("logs.detection_sensitivity", v=self.ai_confidence))
+            self._log(self.i18n.t("logs.min_sharpness", v=self.config.min_sharpness))
+            self._log(self.i18n.t("logs.min_aesthetics", v=self.config.min_nima))
+            self._log(self.i18n.t("logs.birdid_confidence_log", v=self.config.birdid_confidence))
 
     def _change_language(self, lang_code):
         """切换界面语言"""

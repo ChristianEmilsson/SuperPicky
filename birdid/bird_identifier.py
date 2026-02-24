@@ -16,6 +16,7 @@ import io
 import os
 import sys
 from typing import Optional, List, Dict, Tuple, Set
+from tools.i18n import t as _t
 
 # ==================== 设备配置 ====================
 def get_classifier_device():
@@ -190,7 +191,7 @@ def get_classifier():
             else:
                 raise RuntimeError(f"未找到分类模型: {MODEL_PATH} 或 {MODEL_PATH_LEGACY}")
             _classifier.eval()
-            print(f"[BirdID] 回退使用 birdid2024 模型")
+            print(_t("logs.birdid_fallback_model"))
     return _classifier
 
 
@@ -208,7 +209,7 @@ def get_database_manager():
             if os.path.exists(DATABASE_PATH):
                 _db_manager = BirdDatabaseManager(DATABASE_PATH)
         except Exception as e:
-            print(f"数据库加载失败: {e}")
+            print(_t("logs.db_load_failed", e=e))
             _db_manager = False
     return _db_manager if _db_manager is not False else None
 
@@ -230,11 +231,11 @@ def get_species_filter():
             from birdid.avonet_filter import AvonetFilter
             _avonet_filter = AvonetFilter()
             if _avonet_filter.is_available():
-                print("[Avonet] 离线物种过滤器已加载")
+                print(_t("logs.avonet_loaded"))
             else:
                 _avonet_filter = None
         except Exception as e:
-            print(f"[Avonet] 初始化失败: {e}")
+            print(_t("logs.avonet_init_failed", e=e))
             return None
     return _avonet_filter
 
@@ -255,7 +256,7 @@ class YOLOBirdDetector:
         try:
             self.model = YOLO(model_path)
         except Exception as e:
-            print(f"YOLO模型加载失败: {e}")
+            print(_t("logs.yolo_load_failed", e=e))
             self.model = None
 
     def detect_and_crop_bird(
@@ -393,15 +394,15 @@ def load_image(image_path: str) -> Image.Image:
                             # 直接使用内嵌的 JPEG
                             from io import BytesIO
                             img = Image.open(BytesIO(thumb.data)).convert("RGB")
-                            print(f"[RAW] 使用内嵌 JPEG 预览: {img.size[0]}x{img.size[1]}")
+                            print(_t("logs.raw_embedded_jpeg", w=img.size[0], h=img.size[1]))
                             return img
                         elif thumb.format == rawpy.ThumbFormat.BITMAP:
                             # 位图格式
                             img = Image.fromarray(thumb.data).convert("RGB")
-                            print(f"[RAW] 使用内嵌位图预览: {img.size[0]}x{img.size[1]}")
+                            print(_t("logs.raw_embedded_bitmap", w=img.size[0], h=img.size[1]))
                             return img
                     except Exception as e:
-                        print(f"[RAW] 提取预览失败，使用半尺寸后处理: {e}")
+                        print(_t("logs.raw_preview_failed", e=e))
                     
                     # 如果无法提取预览，使用半尺寸后处理
                     rgb = raw.postprocess(
@@ -412,7 +413,7 @@ def load_image(image_path: str) -> Image.Image:
                         half_size=True  # 使用半尺寸，加快处理
                     )
                     img = Image.fromarray(rgb)
-                    print(f"[RAW] 使用半尺寸后处理: {img.size[0]}x{img.size[1]}")
+                    print(_t("logs.raw_half_size", w=img.size[0], h=img.size[1]))
                     return img
             except Exception as e:
                 raise Exception(f"RAW处理失败: {e}")
@@ -528,10 +529,10 @@ def extract_gps_from_exif(image_path: str) -> Tuple[Optional[float], Optional[fl
                             # 处理西经 (W 或 West)
                             if lon_ref and lon_ref.upper().startswith('W'):
                                 lon = -lon
-                            print(f"[GPS] 从 exiftool 提取: {lat:.6f}, {lon:.6f}")
+                            print(_t("logs.gps_extracted", lat=f"{lat:.6f}", lon=f"{lon:.6f}"))
                             return lat, lon, f"GPS: {lat:.6f}, {lon:.6f}"
     except Exception as e:
-        print(f"[GPS] exiftool 提取失败: {e}")
+        print(_t("logs.gps_failed", e=e))
     
     # 回退到 PIL（仅支持 JPEG 等常规格式）
     try:
@@ -826,7 +827,7 @@ def identify_bird(
             try:
                 species_filter = get_species_filter()
                 if not species_filter:
-                    print("[Avonet] 离线过滤器不可用")
+                    print(_t("logs.avonet_unavailable"))
                 else:
                     # 优先使用 GPS 坐标
                     if use_gps:

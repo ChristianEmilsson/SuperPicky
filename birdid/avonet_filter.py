@@ -14,6 +14,7 @@ AvonetFilter - 基于 avonet.db 的离线物种过滤器
 import os
 import sqlite3
 from typing import Set, List, Optional, Tuple
+from tools.i18n import t as _t
 
 # 区域边界定义 (south, north, west, east)
 # 格式: REGION_CODE: (南纬界, 北纬界, 西经界, 东经界)
@@ -118,7 +119,7 @@ class AvonetFilter:
                 self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
                 self._conn.row_factory = sqlite3.Row
             except sqlite3.Error as e:
-                print(f"[AvonetFilter] 数据库连接失败: {e}")
+                print(_t("logs.avonet_db_failed", e=e))
                 self._conn = None
 
     def _find_database(self) -> Optional[str]:
@@ -192,7 +193,7 @@ class AvonetFilter:
             cursor = self._conn.execute(query, (lat, lon))
             return {row[0] for row in cursor.fetchall()}
         except sqlite3.Error as e:
-            print(f"[AvonetFilter] GPS 查询失败: {e}")
+            print(_t("logs.avonet_gps_failed", e=e))
             return set()
 
     def get_species_by_region(self, region_code: str) -> Set[int]:
@@ -208,7 +209,7 @@ class AvonetFilter:
         region_code = region_code.upper()
 
         if region_code not in REGION_BOUNDS:
-            print(f"[AvonetFilter] 不支持的区域代码: {region_code}")
+            print(_t("logs.avonet_unsupported_region", code=region_code))
             return set()
 
         bounds = REGION_BOUNDS[region_code]
@@ -247,7 +248,7 @@ class AvonetFilter:
             cursor = self._conn.execute(query, (south, north, west, east))
             return {row[0] for row in cursor.fetchall()}
         except sqlite3.Error as e:
-            print(f"[AvonetFilter] 边界框查询失败: {e}")
+            print(_t("logs.avonet_bbox_failed", e=e))
             return set()
 
     def get_supported_regions(self) -> List[str]:
@@ -313,7 +314,7 @@ class AvonetFilter:
                 raw = json.load(f)  # {str(class_id): ebird_code}
             self._ebird_cls_map = {v: int(k) for k, v in raw.items()}
         except Exception as e:
-            print(f"[AvonetFilter] 加载 ebird_classid_mapping 失败: {e}")
+            print(_t("logs.avonet_classid_failed", e=e))
             self._ebird_cls_map = {}
 
         return self._ebird_cls_map
@@ -367,7 +368,7 @@ class AvonetFilter:
             f"species_list_{country_code}.json"
         )
         if not os.path.exists(species_file):
-            print(f"[AvonetFilter] 无 eBird 离线数据: {country_code}")
+            print(_t("logs.avonet_no_ebird_data", code=country_code))
             return set(), None
 
         try:
@@ -376,7 +377,7 @@ class AvonetFilter:
                 data = json.load(f)
             ebird_codes: List[str] = data.get("species", [])
         except Exception as e:
-            print(f"[AvonetFilter] 读取 {country_code} eBird 数据失败: {e}")
+            print(_t("logs.avonet_read_ebird_failed", code=country_code, e=e))
             return set(), None
 
         # 转换 eBird 代码 -> class_id
