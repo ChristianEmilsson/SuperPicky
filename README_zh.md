@@ -169,6 +169,27 @@ python main.py
 
 ---
 
+## 🐦 鸟种命名标准 (AviList 映射)
+
+SuperPicky 通过 **AviList v2025** 映射表支持多种英文鸟种命名标准。在 **设置 > 选片标准 > 鸟种英文名格式** 中选择：
+
+| 格式 | 来源 |
+|------|------|
+| 默认（OSEA 模型） | 模型训练时的原始名称 |
+| AviList v2025 | AviList 统一英文名 |
+| Clements / eBird v2024 | Cornell/eBird 分类法 |
+| BirdLife v9 | BirdLife International |
+| 仅学名 | 拉丁学名 |
+
+**更新 AviList：** 映射表通过离线脚本从 `scripts_dev/AviList-v2025-11Jun-extended.xlsx` 构建。当新版 AviList 发布时（通常每年一次），替换 `scripts_dev/` 中的 xlsx 文件并重新运行：
+
+```bash
+pip install openpyxl  # 仅首次需要
+python scripts_dev/build_avilist_mapping.py
+```
+
+---
+
 ## 📄 许可证
 
 本软件使用 **GPL-3.0 License** 开源。
@@ -177,6 +198,7 @@ python main.py
 - **YOLO11** by Ultralytics
 - **OSEA** by Sun Jiao (github.com/sun-jiao/osea)
 - **TOPIQ** by Chaofeng Chen et al.
+- **AviList**: AviList Core Team. 2025. AviList: The Global Avian Checklist, v2025. https://doi.org/10.2173/avilist.v2025 — 基于 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) 许可
 
 这意味着：
 1. 您可以免费下载、使用和修改本软件。

@@ -290,6 +290,42 @@ class BirdDatabaseManager:
             print(f"检查物种区域失败 (学名: {scientific_name}): {e}")
             return False
 
+    def get_avilist_names_by_class_id(self, class_id: int) -> Optional[Dict]:
+        """
+        Query avilist_map table for alternative English names by model class ID.
+
+        Returns dict with en_name_avilist, en_name_clements, en_name_birdlife,
+        scientific_name_avilist, match_type, etc.  Returns None if no mapping
+        or if the avilist_map table does not exist.
+        """
+        query = """
+        SELECT en_name_avilist, en_name_clements, en_name_birdlife,
+               scientific_name_avilist, match_type, cornell_code,
+               family_english, iucn_category
+        FROM avilist_map
+        WHERE model_class_id = ?
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, (class_id,))
+                row = cursor.fetchone()
+                if row:
+                    return {
+                        'en_name_avilist': row[0],
+                        'en_name_clements': row[1],
+                        'en_name_birdlife': row[2],
+                        'scientific_name_avilist': row[3],
+                        'match_type': row[4],
+                        'cornell_code': row[5],
+                        'family_english': row[6],
+                        'iucn_category': row[7],
+                    }
+                return None
+        except Exception:
+            # Table may not exist yet (before build script is run)
+            return None
+
     def validate_ebird_codes_with_country(self, ebird_species_set: Set[str]) -> Dict:
         """
         验证eBird代码与国家物种列表的匹配情况
