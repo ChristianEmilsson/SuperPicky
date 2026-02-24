@@ -179,8 +179,9 @@ class DetailPanel(QWidget):
         for btn in (self._crop_btn, self._full_btn):
             btn.setObjectName("secondary")
             btn.setFixedHeight(28)
-        # 默认全图模式激活，直接设置 active 样式
+        # 默认全图模式激活
         self._full_btn.setStyleSheet(self._active_btn_style())
+        self._crop_btn.setStyleSheet(self._inactive_btn_style())
         self._crop_btn.clicked.connect(lambda: self._switch_view(True))
         self._full_btn.clicked.connect(lambda: self._switch_view(False))
         vb_layout.addWidget(self._crop_btn)
@@ -397,15 +398,24 @@ class DetailPanel(QWidget):
             f" padding: 2px 8px; }}"
         )
 
+    def _inactive_btn_style(self) -> str:
+        return (
+            f"QPushButton {{ background-color: {COLORS['bg_card']};"
+            f" border: 1px solid {COLORS['border']};"
+            f" border-radius: 6px;"
+            f" color: {COLORS['text_secondary']};"
+            f" font-size: 12px;"
+            f" padding: 2px 8px; }}"
+        )
+
     def _switch_view(self, use_crop: bool):
         self._use_crop_view = use_crop
-        # active 按钮：显式样式；inactive 按钮：清空样式走全局 secondary
         if use_crop:
             self._crop_btn.setStyleSheet(self._active_btn_style())
-            self._full_btn.setStyleSheet("")
+            self._full_btn.setStyleSheet(self._inactive_btn_style())
         else:
             self._full_btn.setStyleSheet(self._active_btn_style())
-            self._crop_btn.setStyleSheet("")
+            self._crop_btn.setStyleSheet(self._inactive_btn_style())
         self._refresh_image()
 
     def _refresh_image(self):
