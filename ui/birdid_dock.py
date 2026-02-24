@@ -1360,7 +1360,7 @@ class BirdIDDockWidget(QDockWidget):
         def pct(n):
             return f"{n/total*100:.1f}%" if total > 0 else "—"
 
-        lines = [f"✅  分析完成  |  {total} 张  |  {total_time/60:.1f} min", ""]
+        lines = [f"分析完成  |  {total} 张  |  {total_time/60:.1f} min", ""]
         if total > 0:
             lines.append(f"⭐⭐⭐  {star_3:>4}  ({pct(star_3)})")
             lines.append(f"⭐⭐    {star_2:>4}  ({pct(star_2)})")

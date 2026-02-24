@@ -1388,7 +1388,7 @@ class SuperPickyMainWindow(QMainWindow):
             n2 = by_rating.get(2, 0)
             n1 = by_rating.get(1, 0)
             self._status_banner.setText(
-                f"✅ 已处理 {total} 张    ★★★ {n3}    ★★ {n2}    ★ {n1}"
+                f"已处理 {total} 张    ★★★ {n3}    ★★ {n2}    ★ {n1}"
             )
             self._status_banner.setStyleSheet(f"""
                 QLabel {{
@@ -1402,7 +1402,7 @@ class SuperPickyMainWindow(QMainWindow):
             """)
         elif state == "processing":
             filename = data or ""
-            text = f"⏳ 正在处理... {filename}" if filename else "⏳ 正在处理..."
+            text = f"正在处理... {filename}" if filename else "正在处理..."
             self._status_banner.setText(text)
             self._status_banner.setStyleSheet(f"""
                 QLabel {{
@@ -1422,7 +1422,7 @@ class SuperPickyMainWindow(QMainWindow):
             n2 = by_rating.get(2, 0)
             n1 = by_rating.get(1, 0)
             self._status_banner.setText(
-                f"🎉 完成！{total} 张    ★★★ {n3}    ★★ {n2}    ★ {n1}"
+                f"完成！{total} 张    ★★★ {n3}    ★★ {n2}    ★ {n1}"
             )
             self._status_banner.setStyleSheet(f"""
                 QLabel {{
