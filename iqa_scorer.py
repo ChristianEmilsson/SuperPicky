@@ -20,6 +20,7 @@ import torchvision.transforms as T
 
 # 使用 TOPIQ 模型
 from topiq_model import CFANet, load_topiq_weights, get_topiq_weight_path
+from tools.i18n import t as _t
 
 
 class IQAScorer:
@@ -82,7 +83,7 @@ class IQAScorer:
     def _load_topiq(self):
         """延迟加载 TOPIQ 模型"""
         if self._topiq_model is None:
-            print("📥 加载 TOPIQ 美学评分模型...")
+            print(_t("logs.topiq_loading"))
             try:
                 # 获取权重路径
                 weight_path = get_topiq_weight_path()

@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import sys
+from tools.i18n import t as _t
 
 
 class AdvancedConfig:
@@ -115,17 +116,17 @@ class AdvancedConfig:
                     self.config.update(loaded_config)
                 print(f"✅ Advanced config loaded: {self.config_file}")
             except Exception as e:
-                print(f"⚠️  加载配置失败，使用默认值: {e}")
+                print(_t("logs.config_load_failed", e=e))
 
     def save(self):
         """保存配置到文件"""
         try:
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(self.config, f, indent=2, ensure_ascii=False)
-            print(f"✅ 已保存高级配置: {self.config_file}")
+            print(_t("logs.config_saved", path=self.config_file))
             return True
         except Exception as e:
-            print(f"❌ 保存配置失败: {e}")
+            print(_t("logs.config_save_failed", e=e))
             return False
 
     def reset_to_default(self):

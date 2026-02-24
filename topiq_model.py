@@ -28,6 +28,7 @@ from PIL import Image
 from collections import OrderedDict
 
 import timm
+from tools.i18n import t as _t
 
 
 # ImageNet 标准化参数
@@ -436,7 +437,7 @@ def load_topiq_weights(model: CFANet, weight_path: str, device: torch.device) ->
     if not os.path.exists(weight_path):
         raise FileNotFoundError(f"权重文件不存在: {weight_path}")
     
-    print(f"📥 加载 TOPIQ 权重: {os.path.basename(weight_path)}")
+    print(_t("logs.topiq_weight_loading", name=os.path.basename(weight_path)))
     state_dict = torch.load(weight_path, map_location=device, weights_only=False)
     
     # pyiqa 权重格式: {'params': {...}}
@@ -449,11 +450,11 @@ def load_topiq_weights(model: CFANet, weight_path: str, device: torch.device) ->
     missing, unexpected = model.load_state_dict(state_dict, strict=False)
     
     if missing:
-        print(f"  ⚠️  缺失的键: {len(missing)}")
+        print(_t("logs.topiq_weight_missing", count=len(missing)))
     if unexpected:
-        print(f"  ⚠️  未预期的键: {len(unexpected)}")
+        print(_t("logs.topiq_weight_unexpected", count=len(unexpected)))
     
-    print(f"✅ TOPIQ 权重加载完成")
+    print(_t("logs.topiq_loaded"))
 
 
 def get_topiq_weight_path():

@@ -315,7 +315,7 @@ class YOLOBirdDetector:
                             })
 
             if not detections:
-                return None, "未检测到鸟类"
+                return None, _t("logs.no_bird_detected")
 
             best = max(detections, key=lambda x: x['confidence'])
             img_width, img_height = image.size

@@ -2095,17 +2095,15 @@ class PhotoProcessor:
         # 批量落盘 EXIF 队列（避免每张图一次写入）
         if metadata_batch:
             pending_with_caption = sum(1 for it in metadata_batch if it.get('caption'))
-            self._log(
-                f"📝 正在提交 EXIF 批量写入: {len(metadata_batch)} 条, "
-                f"其中 {pending_with_caption} 条带 caption"
-            )
+            self._log(self.i18n.t("logs.exif_batch_submit",
+                count=len(metadata_batch), caption_count=pending_with_caption))
         flush_metadata_batch()
         if metadata_async_enabled and metadata_queue is not None:
             pending_batches = metadata_queue.qsize()
             if pending_batches > 0:
-                self._log(f"⏳ 正在等待 EXIF 写入队列完成 ({pending_batches} 个批次)...")
+                self._log(self.i18n.t("logs.exif_queue_wait", batches=pending_batches))
             else:
-                self._log("⏳ 正在等待 EXIF 写入线程完成...")
+                self._log(self.i18n.t("logs.exif_thread_wait"))
             exif_wait_start = time.time()
             metadata_queue.put(None)  # writer 退出哨兵
             metadata_queue.join()
@@ -2597,10 +2595,10 @@ class PhotoProcessor:
                     })
                     saved_count += 1
             except Exception as e:
-                self._log(f"  ⚠️  保存临时路径失败 {file_prefix}: {e}", "warning")
+                self._log(self.i18n.t("logs.cache_path_save_failed", prefix=file_prefix, e=e), "warning")
         
         if saved_count > 0:
-            self._log(f"  ✅ 已保存 {saved_count} 个临时预览路径到数据库")
+            self._log(self.i18n.t("logs.cache_paths_saved", count=saved_count))
 
     def _cleanup_expired_cache(self):
         """V4.1: 清理过期的缓存文件"""

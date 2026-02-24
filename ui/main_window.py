@@ -192,7 +192,7 @@ class WorkerThread(threading.Thread):
                 birdid_settings_dir = os.path.join(os.path.expanduser('~'), 'Documents', 'SuperPicky_Data')
             birdid_settings_path = os.path.join(birdid_settings_dir, 'birdid_dock_settings.json')
 
-            _dbg_msg = f"[DEBUG] 检查设置文件: {birdid_settings_path}, 存在: {os.path.exists(birdid_settings_path)}"
+            _dbg_msg = f"[DEBUG] Checking settings file: {birdid_settings_path}, exists: {os.path.exists(birdid_settings_path)}"
             print(_dbg_msg)
             _log_to_file(_dbg_msg, self.dir_path, file_only=True)
             
@@ -238,14 +238,14 @@ class WorkerThread(threading.Thread):
                             if match:
                                 birdid_region_code = match.group(1)
             _dbg_msg2 = (
-                f"[DEBUG] BirdID 设置读取: auto_identify={birdid_auto_identify}, "
+                f"[DEBUG] BirdID settings: auto_identify={birdid_auto_identify}, "
                 f"country={birdid_country_code}, region={birdid_region_code}, "
                 f"confidence={birdid_confidence_threshold}%"
             )
             print(_dbg_msg2)
             _log_to_file(_dbg_msg2, self.dir_path, file_only=True)
         except Exception as e:
-            _dbg_err = f"[DEBUG] BirdID 设置读取失败: {e}"
+            _dbg_err = f"[DEBUG] BirdID settings load failed: {e}"
             print(_dbg_err)
             _log_to_file(_dbg_err, self.dir_path, file_only=True)
             # BirdID 设置读取失败不影响主流程
@@ -2579,7 +2579,7 @@ class SuperPickyMainWindow(QMainWindow):
         # 更新水平显示标签
         self._update_skill_level_label(level_key)
         
-        print(f"✅ 已选择摄影水平: {level_key}")
+        print(self.i18n.t("logs.skill_level_selected", level=level_key))
     
     def _apply_skill_level_thresholds(self, level_key: str):
         """应用水平预设的阈值到滑块"""
