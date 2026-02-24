@@ -47,7 +47,8 @@ class IdentifyWorker(QThread):
 
     def __init__(self, image_path: str, top_k: int = 5,
                  use_gps: bool = True, use_ebird: bool = True,
-                 country_code: str = None, region_code: str = None):
+                 country_code: str = None, region_code: str = None,
+                 name_format: str = None):
         super().__init__()
         self.image_path = image_path
         self.top_k = top_k
@@ -55,6 +56,7 @@ class IdentifyWorker(QThread):
         self.use_ebird = use_ebird
         self.country_code = country_code
         self.region_code = region_code
+        self.name_format = name_format
 
     def run(self):
         try:
@@ -65,7 +67,8 @@ class IdentifyWorker(QThread):
                 use_gps=self.use_gps,
                 use_ebird=self.use_ebird,
                 country_code=self.country_code,
-                region_code=self.region_code
+                region_code=self.region_code,
+                name_format=self.name_format,
             )
             self.finished.emit(result)
         except Exception as e:
@@ -1199,13 +1202,15 @@ class BirdIDDockWidget(QDockWidget):
                     region_code = match.group(1)
 
         # 启动识别
+        from advanced_config import get_advanced_config
         self.worker = IdentifyWorker(
             file_path,
             top_k=5,
             use_gps=use_gps,
             use_ebird=use_ebird,
             country_code=country_code,
-            region_code=region_code
+            region_code=region_code,
+            name_format=get_advanced_config().name_format,
         )
         self.worker.finished.connect(self.on_identify_finished)
         self.worker.error.connect(self.on_identify_error)
