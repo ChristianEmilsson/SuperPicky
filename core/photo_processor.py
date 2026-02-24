@@ -1058,7 +1058,18 @@ class PhotoProcessor:
                         'cn_name': cn_name,
                         'en_name': en_name
                     }
-                
+
+                # 写入数据库，供结果浏览器筛选面板和详情面板使用
+                if self.report_db and (cn_name or en_name):
+                    try:
+                        self.report_db.update_photo(file_prefix, {
+                            'bird_species_cn': cn_name,
+                            'bird_species_en': en_name,
+                            'birdid_confidence': birdid_confidence,
+                        })
+                    except Exception as _e:
+                        self._log(f"  ⚠️ Bird species DB write failed [{file_prefix}]: {_e}", "warning")
+
                 for target_file in title_targets:
                     if target_file and os.path.exists(target_file):
                         queue_metadata({
