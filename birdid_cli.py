@@ -181,27 +181,13 @@ def write_exif(image_path: str, result: dict, threshold: float = 70.0) -> bool:
     
     exiftool_mgr = get_exiftool_manager()
     
-    # 写入 Title 和 Caption
-    metadata = {
-        'Title': bird_name,
-        'Caption-Abstract': bird_name,
-        'XMP-dc:Title': bird_name,
-        'XMP-dc:Description': bird_name,
-    }
-    
-    # 写入关键词
-    keywords = [best['cn_name'], best['en_name']]
-    if best.get('family_cn'):
-        keywords.append(best['family_cn'])
-    if best.get('family_en'):
-        keywords.append(best['family_en'])
-    
-    success = exiftool_mgr.set_metadata(image_path, metadata)
-    if success:
-        # 添加关键词
-        exiftool_mgr.add_keywords(image_path, keywords)
-    
-    return success
+    stats = exiftool_mgr.batch_set_metadata([{
+        'file': image_path,
+        'title': bird_name,
+        'caption': bird_name,
+    }])
+
+    return stats.get('success', 0) > 0
 
 
 def cmd_identify(args):
