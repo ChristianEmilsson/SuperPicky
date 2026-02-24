@@ -576,7 +576,8 @@ class FullscreenViewer(QWidget):
         self._focus_btn.setToolTip(self.i18n.t("browser.focus_toggle_tooltip"))
         self._focus_btn.clicked.connect(self._on_focus_btn_clicked)
         h.addWidget(self._focus_btn)
-        # 初始 objectName="" → 默认 accent 色（由 app QSS 自动选中）
+        # 初始状态：焦点关闭 → inactive 样式
+        self._update_focus_btn_style(False)
 
         h.addStretch()
 
@@ -623,17 +624,26 @@ class FullscreenViewer(QWidget):
 
         h.addStretch()
 
+        _nav_btn_style = (
+            f"QPushButton {{ background-color: {COLORS['bg_card']};"
+            f" border: 1px solid {COLORS['border']};"
+            f" border-radius: 6px;"
+            f" color: {COLORS['text_secondary']};"
+            f" font-size: 12px;"
+            f" padding: 2px 10px; }}"
+        )
+
         prev_btn = QPushButton(self.i18n.t("browser.prev_arrow"))
-        prev_btn.setObjectName("secondary")
         prev_btn.setFixedHeight(32)
         prev_btn.setFixedWidth(100)
+        prev_btn.setStyleSheet(_nav_btn_style)
         prev_btn.clicked.connect(self.prev_requested)
         h.addWidget(prev_btn)
 
         next_btn = QPushButton(self.i18n.t("browser.next_arrow"))
-        next_btn.setObjectName("secondary")
         next_btn.setFixedHeight(32)
         next_btn.setFixedWidth(100)
+        next_btn.setStyleSheet(_nav_btn_style)
         next_btn.clicked.connect(self.next_requested)
         h.addWidget(next_btn)
 
@@ -654,12 +664,25 @@ class FullscreenViewer(QWidget):
         self.toggle_focus()
 
     def _update_focus_btn_style(self, visible: bool):
-        """visible=True → accent 主按钮色；False → secondary 灰色；两种状态均用浅灰文字。"""
-        self._focus_btn.setObjectName("" if visible else "secondary")
-        self._focus_btn.style().unpolish(self._focus_btn)
-        self._focus_btn.style().polish(self._focus_btn)
-        # 两种状态都强制浅灰文字，避免深色背景下出现黑字
-        self._focus_btn.setStyleSheet(f"color: {COLORS['text_secondary']};")
+        """visible=True → accent 激活色；False → 灰色 secondary 样式。"""
+        if visible:
+            self._focus_btn.setStyleSheet(
+                f"QPushButton {{ background-color: {COLORS['bg_input']};"
+                f" border: 1px solid {COLORS['accent']};"
+                f" border-radius: 6px;"
+                f" color: {COLORS['accent']};"
+                f" font-size: 12px;"
+                f" padding: 2px 10px; }}"
+            )
+        else:
+            self._focus_btn.setStyleSheet(
+                f"QPushButton {{ background-color: {COLORS['bg_card']};"
+                f" border: 1px solid {COLORS['border']};"
+                f" border-radius: 6px;"
+                f" color: {COLORS['text_secondary']};"
+                f" font-size: 12px;"
+                f" padding: 2px 10px; }}"
+            )
 
     # ------------------------------------------------------------------
     #  公共接口

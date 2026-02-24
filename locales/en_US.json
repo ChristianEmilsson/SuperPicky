@@ -985,6 +985,8 @@
     "ctx_show_in_finder": "Show in Finder",
     "ctx_open_with": "Open with {app_name}",
     "ctx_add_external_app": "Add external app in Settings…",
-    "ctx_copy_path": "Copy File Path"
+    "ctx_copy_path": "Copy File Path",
+    "copy_exif": "Copy EXIF Info",
+    "copy_exif_done": "Copied ✓"
   }
 }

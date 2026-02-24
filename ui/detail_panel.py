@@ -12,8 +12,8 @@ from PySide6.QtWidgets import (
     QPushButton, QScrollArea, QFrame, QFormLayout,
     QSizePolicy
 )
-from PySide6.QtCore import Qt, Signal, QSize, QThread, Slot
-from PySide6.QtGui import QPixmap, QFont
+from PySide6.QtCore import Qt, Signal, QSize, QThread, Slot, QTimer
+from PySide6.QtGui import QPixmap, QFont, QGuiApplication
 
 from ui.styles import COLORS, FONTS
 
@@ -81,6 +81,13 @@ def _make_value_label(text: str = "—") -> QLabel:
     """)
     lbl.setWordWrap(True)
     return lbl
+
+
+class _NoWrapLabel(QLabel):
+    """单行不换行的 QLabel：minimumSizeHint 返回小宽度，避免撑宽父容器。"""
+    def minimumSizeHint(self):
+        h = super().minimumSizeHint()
+        return QSize(40, h.height())
 
 
 class _ZoomableImageLabel(QLabel):
@@ -288,12 +295,13 @@ class DetailPanel(QWidget):
         self._val_sharpness = _make_value_label()
         self._val_aesthetic = _make_value_label()
         self._val_flying = _make_value_label()
-        self._val_species = _make_value_label()
+        self._val_species = _NoWrapLabel()
         self._val_species.setStyleSheet(f"color: {COLORS['accent']}; font-size: 12px; background: transparent;")
         self._val_species.setWordWrap(False)
         self._val_species.setMinimumHeight(28)
         self._val_camera = _make_value_label()
-        self._val_lens = _make_value_label()
+        self._val_lens = _NoWrapLabel()
+        self._val_lens.setStyleSheet(f"color: {COLORS['text_primary']}; font-size: 12px; font-family: {FONTS['mono']}; background: transparent;")
         self._val_lens.setWordWrap(False)
         self._val_lens.setMinimumHeight(28)
         self._val_shutter = _make_value_label()
@@ -328,6 +336,21 @@ class DetailPanel(QWidget):
         meta_scroll.setWidget(meta_container)
         layout.addWidget(meta_scroll, 1)
 
+        # --- 底部：复制 EXIF 信息按钮 ---
+        copy_bar = QWidget()
+        copy_bar.setStyleSheet(f"background-color: {COLORS['bg_card']}; border-top: 1px solid {COLORS['border_subtle']};")
+        cb_layout = QHBoxLayout(copy_bar)
+        cb_layout.setContentsMargins(8, 6, 8, 6)
+
+        self._copy_exif_btn = QPushButton(self.i18n.t("browser.copy_exif"))
+        self._copy_exif_btn.setFixedHeight(28)
+        self._copy_exif_btn.setStyleSheet(self._inactive_btn_style())
+        self._copy_exif_btn.clicked.connect(self._on_copy_exif)
+        self._copy_exif_btn.setEnabled(False)
+        cb_layout.addWidget(self._copy_exif_btn)
+
+        layout.addWidget(copy_bar)
+
     def _divider(self) -> QFrame:
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
@@ -341,12 +364,14 @@ class DetailPanel(QWidget):
     def show_photo(self, photo: dict):
         """显示一张照片的详情。"""
         self._current_photo = photo
+        self._copy_exif_btn.setEnabled(True)
         self._refresh_image()
         self._refresh_metadata()
 
     def clear(self):
         """清空面板。"""
         self._current_photo = None
+        self._copy_exif_btn.setEnabled(False)
         self._img_label.set_pixmap(QPixmap())
         for val in (
             self._val_focus, self._val_exposure, self._val_sharpness,
@@ -387,6 +412,59 @@ class DetailPanel(QWidget):
         self._refresh_metadata()
         fn = self._current_photo.get("filename", "")
         self.rating_change_requested.emit(fn, new_val)
+
+    def _on_copy_exif(self):
+        """复制当前照片的 EXIF 信息到剪贴板。"""
+        if not self._current_photo:
+            return
+        p = self._current_photo
+        lang = getattr(self.i18n, 'current_lang', 'zh_CN')
+        is_zh = not lang.startswith('en')
+
+        def t(key):
+            return self.i18n.t(key)
+
+        _rating_text = {5: "★★★★★", 4: "★★★★", 3: "★★★", 2: "★★", 1: "★", 0: "0", -1: "—"}
+        rating = p.get("rating", 0)
+
+        focus = p.get("focus_status") or "—"
+        sharp = p.get("adj_sharpness")
+        topiq = p.get("adj_topiq")
+        fl = p.get("focal_length")
+        iso = p.get("iso")
+        conf = p.get("confidence")
+
+        if is_zh:
+            species = p.get("bird_species_cn") or p.get("bird_species_en") or "—"
+        else:
+            species = p.get("bird_species_en") or p.get("bird_species_cn") or "—"
+
+        lines = [
+            f"{t('browser.meta_filename')}: {p.get('filename') or '—'}",
+            f"{t('browser.meta_datetime')}: {(p.get('date_time_original') or '—')[:19]}",
+            f"{t('browser.meta_camera')}: {p.get('camera_model') or '—'}",
+            f"{t('browser.meta_lens')}: {p.get('lens_model') or '—'}",
+            f"{t('browser.meta_shutter')}: {self._format_shutter(p.get('shutter_speed'))}",
+            f"{t('browser.meta_iso')}: {iso if iso else '—'}",
+            f"{t('browser.meta_focal')}: {f'{fl:.0f}mm' if fl else '—'}",
+            f"{t('browser.meta_species')}: {species}",
+            f"{t('browser.meta_focus')}: {focus}",
+            f"{t('browser.meta_sharpness')}: {f'{sharp:.1f}' if sharp is not None else '—'}",
+            f"{t('browser.meta_aesthetic')}: {f'{topiq:.2f}' if topiq is not None else '—'}",
+            f"{t('browser.meta_confidence')}: {f'{conf*100:.1f}%' if conf else '—'}",
+            f"{t('browser.meta_rating')}: {_rating_text.get(rating, '—')}",
+        ]
+        text = "\n".join(lines)
+        QGuiApplication.clipboard().setText(text)
+
+        # 短暂反馈
+        self._copy_exif_btn.setText(self.i18n.t("browser.copy_exif_done"))
+        self._copy_exif_btn.setStyleSheet(self._active_btn_style())
+        QTimer.singleShot(1500, self._reset_copy_btn)
+
+    def _reset_copy_btn(self):
+        self._copy_exif_btn.setText(self.i18n.t("browser.copy_exif"))
+        self._copy_exif_btn.setStyleSheet(self._inactive_btn_style())
 
     def _active_btn_style(self) -> str:
         return (
