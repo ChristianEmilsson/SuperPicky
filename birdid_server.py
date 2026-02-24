@@ -285,6 +285,7 @@ def recognize_bird():
         print(t("server.log_location", country=country_code or 'N/A', region=region_code or 'N/A'))
 
         # 执行识别
+        from advanced_config import get_advanced_config
         result = identify_bird(
             image_path,
             use_yolo=use_yolo,
@@ -292,7 +293,8 @@ def recognize_bird():
             top_k=top_k,
             country_code=country_code,
             region_code=region_code,
-            use_ebird=use_ebird
+            use_ebird=use_ebird,
+            name_format=get_advanced_config().name_format,
         )
         
         # 日志：显示识别结果

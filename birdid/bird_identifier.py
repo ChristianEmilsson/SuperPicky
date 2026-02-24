@@ -636,7 +636,8 @@ def predict_bird(
     image: Image.Image,
     top_k: int = 5,
     species_class_ids: Optional[Set[int]] = None,
-    is_yolo_cropped: bool = False
+    is_yolo_cropped: bool = False,
+    name_format: str = None
 ) -> List[Dict]:
     """
     识别鸟类（OSEA ResNet34）
@@ -706,6 +707,22 @@ def predict_bird(
             cn_name = f"Unknown (ID: {class_id})"
             en_name = f"Unknown (ID: {class_id})"
 
+        # AviList name format override
+        if name_format and name_format != "default" and db_manager:
+            avilist_info = db_manager.get_avilist_names_by_class_id(class_id)
+            if avilist_info and avilist_info.get('match_type') != 'no_match':
+                if name_format == "scientific":
+                    en_name = avilist_info.get('scientific_name_avilist') or scientific_name or en_name
+                else:
+                    # Map format to column: avilist/clements/birdlife
+                    col = f"en_name_{name_format}"
+                    alt_name = avilist_info.get(col)
+                    # Fallback chain: selected -> avilist -> keep default
+                    if alt_name:
+                        en_name = alt_name
+                    elif name_format != "avilist" and avilist_info.get('en_name_avilist'):
+                        en_name = avilist_info['en_name_avilist']
+
         # Avonet 地理过滤
         region_match = False
         if species_class_ids:
@@ -738,7 +755,8 @@ def identify_bird(
     use_ebird: bool = True,
     country_code: str = None,
     region_code: str = None,
-    top_k: int = 5
+    top_k: int = 5,
+    name_format: str = None
 ) -> Dict:
     """
     端到端鸟类识别
@@ -847,7 +865,8 @@ def identify_bird(
             image,
             top_k=top_k,
             species_class_ids=species_class_ids,
-            is_yolo_cropped=is_yolo_cropped
+            is_yolo_cropped=is_yolo_cropped,
+            name_format=name_format
         )
 
         # GPS 过滤无匹配时，先尝试 eBird 国家级回退，再全局
@@ -869,7 +888,8 @@ def identify_bird(
                     image,
                     top_k=top_k,
                     species_class_ids=country_cls_ids,
-                    is_yolo_cropped=is_yolo_cropped
+                    is_yolo_cropped=is_yolo_cropped,
+                    name_format=name_format
                 )
                 if results:
                     if not result.get('ebird_info'):
@@ -884,7 +904,8 @@ def identify_bird(
                     image,
                     top_k=top_k,
                     species_class_ids=None,
-                    is_yolo_cropped=is_yolo_cropped
+                    is_yolo_cropped=is_yolo_cropped,
+                    name_format=name_format
                 )
                 if results and result.get('ebird_info'):
                     result['ebird_info']['gps_fallback'] = True

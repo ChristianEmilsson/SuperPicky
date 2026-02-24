@@ -65,6 +65,14 @@ class AdvancedConfig:
         "keep_temp_files": True,        # 保留临时预览图片（统一控制 tmp JPG + debug crops）
         "auto_cleanup_days": 30,        # 自动清理周期：3/7/30/0(永久)
 
+        # 鸟种英文名显示格式 V4.x (AviList mapping)
+        #   "default"    = OSEA model original names
+        #   "avilist"    = AviList v2025 English names
+        #   "clements"   = Clements / eBird v2024 English names
+        #   "birdlife"   = BirdLife v9 English names
+        #   "scientific" = Scientific name only
+        "name_format": "default",
+
         # 外部编辑应用（右键菜单 "用 X 打开"）
         # 每项格式：{"name": "显示名称", "path": "/Applications/...app"}
         "external_apps": [],
@@ -311,6 +319,16 @@ class AdvancedConfig:
             self.config["auto_cleanup_days"] = max(0, days)
         except ValueError:
             pass
+
+    # V4.x: 鸟种英文名显示格式
+    @property
+    def name_format(self):
+        return self.config.get("name_format", "default")
+
+    def set_name_format(self, value):
+        """设置鸟种英文名显示格式: default | avilist | clements | birdlife | scientific"""
+        if value in ("default", "avilist", "clements", "birdlife", "scientific"):
+            self.config["name_format"] = value
 
     # 外部应用配置 getter/setter
     def get_external_apps(self) -> list:

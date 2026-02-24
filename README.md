@@ -105,6 +105,29 @@ Automatically set thresholds based on your experience:
 
 ---
 
+## 🐦 Species Naming Standards (AviList Mapping)
+
+SuperPicky supports multiple English naming standards for bird species via the **AviList v2025** mapping. Choose your preferred format in **Settings > Culling Criteria > Species Name Format**:
+
+| Format | Source |
+|--------|--------|
+| Default (OSEA Model) | Original model training names |
+| AviList v2025 | AviList unified English names |
+| Clements / eBird v2024 | Cornell/eBird taxonomy |
+| BirdLife v9 | BirdLife International |
+| Scientific Name Only | Binomial nomenclature |
+
+**Updating AviList:** The mapping is built from `AviList-v2025-11Jun-extended.xlsx` (located in `scripts_dev/`) using an offline build script. When a new AviList version is released (typically annually), replace the xlsx file in `scripts_dev/` and re-run:
+
+```bash
+pip install openpyxl  # first time only
+python scripts_dev/build_avilist_mapping.py
+```
+
+Review unmatched species in the report output and add manual overrides to `scripts_dev/avilist_manual_overrides.json` if needed.
+
+---
+
 ## 📄 License
 
 Open sourced under **GPL-3.0 License**.
@@ -113,3 +136,4 @@ This project uses:
 - **YOLO11** by Ultralytics
 - **OSEA** by Sun Jiao (github.com/sun-jiao/osea)
 - **TOPIQ** by Chaofeng Chen et al.
+- **AviList**: AviList Core Team. 2025. AviList: The Global Avian Checklist, v2025. https://doi.org/10.2173/avilist.v2025 — Licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)

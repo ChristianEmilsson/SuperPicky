@@ -221,6 +221,38 @@ class AdvancedSettingsDialog(QDialog):
             format_func=lambda v: f"{v}%"
         )
 
+        # 鸟种英文名格式
+        nf_container = QHBoxLayout()
+        nf_container.setSpacing(16)
+
+        nf_label = QLabel(self.i18n.t("advanced_settings.name_format"))
+        nf_label.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 13px; min-width: 80px;")
+        nf_container.addWidget(nf_label)
+
+        name_format_combo = QComboBox()
+        name_format_combo.addItem(self.i18n.t("advanced_settings.name_format_default"), "default")
+        name_format_combo.addItem(self.i18n.t("advanced_settings.name_format_avilist"), "avilist")
+        name_format_combo.addItem(self.i18n.t("advanced_settings.name_format_clements"), "clements")
+        name_format_combo.addItem(self.i18n.t("advanced_settings.name_format_birdlife"), "birdlife")
+        name_format_combo.addItem(self.i18n.t("advanced_settings.name_format_scientific"), "scientific")
+        self.vars["name_format"] = name_format_combo
+        nf_container.addWidget(name_format_combo)
+        nf_container.addStretch()
+
+        layout.addLayout(nf_container)
+
+        nf_hint = QLabel(self.i18n.t("advanced_settings.name_format_hint"))
+        nf_hint.setStyleSheet(f"""
+            color: {COLORS['text_muted']};
+            font-size: 11px;
+            margin-left: 96px;
+            margin-bottom: 8px;
+        """)
+        layout.addWidget(nf_hint)
+
+        # 分隔线
+        self._add_divider(layout)
+
         # 连拍速度
         self.vars["burst_fps"] = self._create_slider_setting(
             layout,
@@ -515,6 +547,11 @@ class AdvancedSettingsDialog(QDialog):
         self.vars["burst_fps"].setValue(int(self.config.burst_fps))
         self.vars["birdid_confidence"].setValue(int(self.config.birdid_confidence))
 
+        # 加载鸟种英文名格式
+        nf_combo = self.vars["name_format"]
+        nf_index = nf_combo.findData(self.config.name_format)
+        nf_combo.setCurrentIndex(nf_index if nf_index >= 0 else 0)
+
         # 加载全局元数据写入模式设置
         try:
             global_mode = self.config.get_metadata_write_mode()
@@ -574,6 +611,10 @@ class AdvancedSettingsDialog(QDialog):
         self.config.set_min_nima(min_nima)
         self.config.set_burst_fps(burst_fps)
         self.config.set_birdid_confidence(birdid_confidence)
+
+        # 保存鸟种英文名格式
+        name_format = self.vars["name_format"].currentData()
+        self.config.set_name_format(name_format)
 
         # 保存全局元数据写入模式设置
         btn_id = self.xmp_button_group.checkedId()

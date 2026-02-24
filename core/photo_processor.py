@@ -66,6 +66,8 @@ class ProcessingSettings:
     birdid_country_code: str = None   # eBird 国家代码
     birdid_region_code: str = None    # eBird 区域代码
     birdid_confidence_threshold: float = 70.0  # 置信度阈值（70%+才写入）
+    # 鸟种英文名显示格式 (AviList mapping)
+    name_format: str = "default"       # "default" | "avilist" | "clements" | "birdlife" | "scientific"
     # 性能日志模式
     perf_logging: bool = False         # 是否输出性能分解日志
     perf_log_every: int = 25           # 每处理 N 张输出一次中间性能摘要
@@ -1011,6 +1013,7 @@ class PhotoProcessor:
             source_display = source_filename or file_prefix or os.path.basename(image_path)
             try:
                 submit_start = time.time()
+                nf = self.settings.name_format if self.settings.name_format != "default" else None
                 future = birdid_executor.submit(
                     identify_bird_fn,
                     image_path,
@@ -1019,7 +1022,8 @@ class PhotoProcessor:
                     self.settings.birdid_use_ebird,
                     self.settings.birdid_country_code,
                     self.settings.birdid_region_code,
-                    1       # top_k
+                    1,      # top_k
+                    nf      # name_format
                 )
                 self._perf_add_stage('birdid_submit', (time.time() - submit_start) * 1000)
                 birdid_tasks.append((future, file_prefix, list(title_targets), source_display))

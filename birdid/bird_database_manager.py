@@ -28,7 +28,10 @@ class BirdDatabaseManager:
         
         # 测试数据库连接
         self._test_connection()
-        
+
+        # AviList 名称映射缓存（懒加载，首次调用时填充）
+        self._avilist_cache: Optional[Dict] = None
+
         print(f"BirdDatabaseManager initialized with database: {db_path}")
     
     def _test_connection(self):
@@ -289,6 +292,54 @@ class BirdDatabaseManager:
         except Exception as e:
             print(f"检查物种区域失败 (学名: {scientific_name}): {e}")
             return False
+
+    def _load_avilist_cache(self):
+        """一次性加载 avilist_map 表到内存字典，键为 model_class_id。"""
+        query = """
+        SELECT model_class_id, en_name_avilist, en_name_clements, en_name_birdlife,
+               scientific_name_avilist, match_type, cornell_code,
+               family_english, iucn_category
+        FROM avilist_map
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(query)
+                rows = cursor.fetchall()
+            self._avilist_cache = {}
+            for row in rows:
+                if row[0] is not None:
+                    self._avilist_cache[row[0]] = {
+                        'en_name_avilist': row[1],
+                        'en_name_clements': row[2],
+                        'en_name_birdlife': row[3],
+                        'scientific_name_avilist': row[4],
+                        'match_type': row[5],
+                        'cornell_code': row[6],
+                        'family_english': row[7],
+                        'iucn_category': row[8],
+                    }
+            print(f"AviList cache loaded: {len(self._avilist_cache)} entries")
+        except Exception as e:
+            # avilist_map 表不存在时为正常情况（build 脚本未运行）
+            if "no such table" not in str(e).lower():
+                print(f"⚠️ AviList cache load failed: {e}")
+            self._avilist_cache = {}
+
+    def get_avilist_names_by_class_id(self, class_id: int) -> Optional[Dict]:
+        """
+        Query avilist_map table for alternative English names by model class ID.
+
+        Returns dict with en_name_avilist, en_name_clements, en_name_birdlife,
+        scientific_name_avilist, match_type, etc.  Returns None if no mapping
+        or if the avilist_map table does not exist.
+
+        Uses in-memory cache loaded on first call to avoid per-identification
+        SQLite round-trips.
+        """
+        if self._avilist_cache is None:
+            self._load_avilist_cache()
+        return self._avilist_cache.get(class_id)
 
     def validate_ebird_codes_with_country(self, ebird_species_set: Set[str]) -> Dict:
         """
