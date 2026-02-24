@@ -101,7 +101,7 @@ class AdvancedConfig:
                     loaded_config = json.load(f)
                     # 合并配置（保留默认值中有但加载配置中没有的项）
                     self.config.update(loaded_config)
-                print(f"✅ 已加载高级配置: {self.config_file}")
+                print(f"✅ Advanced config loaded: {self.config_file}")
             except Exception as e:
                 print(f"⚠️  加载配置失败，使用默认值: {e}")
 

@@ -585,7 +585,7 @@ class BirdIDDockWidget(QDockWidget):
                     if idx >= 0:
                         self.country_combo.setCurrentIndex(idx)
                         matched = True
-                        print(f"[DEBUG] 通过 country_code={country_code} 匹配到: {display_name}")
+                        print(f"[DEBUG] Matched via country_code={country_code}: {display_name}")
                     break
         
         if not matched:
@@ -593,7 +593,7 @@ class BirdIDDockWidget(QDockWidget):
             idx = self.country_combo.findText(saved_country)
             if idx >= 0:
                 self.country_combo.setCurrentIndex(idx)
-                print(f"[DEBUG] 通过文本匹配到: {saved_country}")
+                print(f"[DEBUG] Matched via text: {saved_country}")
             else:
                 # 如果都找不到，可能是从"更多国家"选的，需要动态添加
                 if country_code and country_code not in [None, "GLOBAL", "MORE"]:

@@ -171,7 +171,7 @@ def get_classifier():
             model = model.to(CLASSIFIER_DEVICE)
             model.eval()
             _classifier = model
-            print(f"[BirdID] OSEA ResNet34 模型已加载，设备: {CLASSIFIER_DEVICE}")
+            print(f"[BirdID] OSEA ResNet34 model loaded, device: {CLASSIFIER_DEVICE}")
         else:
             # 回退到旧的 birdid2024 模型
             SECRET_PASSWORD = "SuperBirdID_2024_AI_Model_Encryption_Key_v1"
