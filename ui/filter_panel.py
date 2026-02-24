@@ -317,8 +317,10 @@ class FilterPanel(QWidget):
             v for v, cb in self._flight_cbs.items() if cb.isChecked()
         ]
 
-        # 鸟种
+        # 鸟种（根据当前语言决定用哪列过滤）
         bird_species = self.species_combo.currentData() or ""
+        is_en = self.i18n.current_lang.startswith('en')
+        species_key = "bird_species_en" if is_en else "bird_species_cn"
 
         sort_by = self._sort_combo.currentData() if hasattr(self, '_sort_combo') else "filename"
 
@@ -326,7 +328,7 @@ class FilterPanel(QWidget):
             "ratings":         selected_ratings,
             "focus_statuses":  selected_focus,
             "is_flying":       is_flying,
-            "bird_species_cn": bird_species,
+            species_key:       bird_species,
             "sort_by":         sort_by,
         }
 

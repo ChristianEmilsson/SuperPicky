@@ -500,11 +500,13 @@ class ReportDB:
                     conditions.append("is_flying = ?")
                     params.append(int(is_flying))
 
-        # 鸟种
-        species = filters.get("bird_species_cn", "")
-        if species:
+        # 鸟种（支持中英文两个键，根据传入的键决定查哪列）
+        if filters.get("bird_species_en", ""):
+            conditions.append("bird_species_en = ?")
+            params.append(filters["bird_species_en"])
+        elif filters.get("bird_species_cn", ""):
             conditions.append("bird_species_cn = ?")
-            params.append(species)
+            params.append(filters["bird_species_cn"])
 
         # burst 筛选
         burst_filter = filters.get("burst_filter", "all")
@@ -569,12 +571,15 @@ class ReportDB:
 
         return stats
 
-    def get_distinct_species(self) -> List[str]:
-        """返回数据库中所有不重复的鸟种名称列表（非空）。"""
+    def get_distinct_species(self, use_en: bool = False) -> List[str]:
+        """返回数据库中所有不重复的鸟种名称列表（非空）。
+        use_en=True 时返回英文名，否则返回中文名。
+        """
+        col = "bird_species_en" if use_en else "bird_species_cn"
         cursor = self._conn.execute(
-            "SELECT DISTINCT bird_species_cn FROM photos "
-            "WHERE bird_species_cn IS NOT NULL AND bird_species_cn != '' "
-            "ORDER BY bird_species_cn"
+            f"SELECT DISTINCT {col} FROM photos "
+            f"WHERE {col} IS NOT NULL AND {col} != '' "
+            f"ORDER BY {col}"
         )
         return [row[0] for row in cursor.fetchall()]
 

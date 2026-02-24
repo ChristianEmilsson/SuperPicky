@@ -424,7 +424,7 @@ class ResultsBrowserWindow(QMainWindow):
         # 重置后再更新计数/鸟种（确保是最终显示状态，不被后续事件覆盖）
         counts = self._db.get_statistics().get("by_rating", {})
         self._filter_panel.update_rating_counts(counts)
-        species = self._db.get_distinct_species()
+        species = self._db.get_distinct_species(use_en=self.i18n.current_lang.startswith('en'))
         self._filter_panel.update_species_list(species)
 
         # 默认筛选若无结果但库中有数据，自动勾选全部评分并刷新
@@ -870,7 +870,7 @@ class ResultsBrowserWidget(QWidget):
         self._filter_panel.reset_all()
         counts = self._db.get_statistics().get("by_rating", {})
         self._filter_panel.update_rating_counts(counts)
-        species = self._db.get_distinct_species()
+        species = self._db.get_distinct_species(use_en=self.i18n.current_lang.startswith('en'))
         self._filter_panel.update_species_list(species)
 
         # 默认筛选若无结果但库中有数据，自动勾选全部评分并刷新
