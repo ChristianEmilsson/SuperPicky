@@ -82,6 +82,10 @@ class AdvancedSettingsDialog(QDialog):
             self.i18n.t("advanced_settings.section_selection")
         )
         self.tab_widget.addTab(
+            self._create_birdid_page(),
+            self.i18n.t("advanced_settings.section_birdid")
+        )
+        self.tab_widget.addTab(
             self._create_output_page(),
             self.i18n.t("advanced_settings.section_output")
         )
@@ -211,6 +215,26 @@ class AdvancedSettingsDialog(QDialog):
         # 分隔线
         self._add_divider(layout)
 
+        # 连拍速度
+        self.vars["burst_fps"] = self._create_slider_setting(
+            layout,
+            self.i18n.t("advanced_settings.burst_fps"),
+            self.i18n.t("advanced_settings.burst_fps_hint"),
+            min_val=4, max_val=20, default=10,
+            step=1,
+            format_func=lambda v: f"{v} fps"
+        )
+
+        layout.addStretch()
+        return page
+
+    def _create_birdid_page(self):
+        """创建识鸟设置页面"""
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setSpacing(12)
+
         # 识别确信度
         self.vars["birdid_confidence"] = self._create_slider_setting(
             layout,
@@ -220,6 +244,9 @@ class AdvancedSettingsDialog(QDialog):
             step=5,
             format_func=lambda v: f"{v}%"
         )
+
+        # 分隔线
+        self._add_divider(layout)
 
         # 鸟种英文名格式
         nf_container = QHBoxLayout()
@@ -249,19 +276,6 @@ class AdvancedSettingsDialog(QDialog):
             margin-bottom: 8px;
         """)
         layout.addWidget(nf_hint)
-
-        # 分隔线
-        self._add_divider(layout)
-
-        # 连拍速度
-        self.vars["burst_fps"] = self._create_slider_setting(
-            layout,
-            self.i18n.t("advanced_settings.burst_fps"),
-            self.i18n.t("advanced_settings.burst_fps_hint"),
-            min_val=4, max_val=20, default=10,
-            step=1,
-            format_func=lambda v: f"{v} fps"
-        )
 
         layout.addStretch()
         return page

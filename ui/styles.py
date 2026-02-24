@@ -57,7 +57,7 @@ COLORS = {
 # 注意: Qt 不支持 CSS 的 -apple-system/BlinkMacSystemFont，需要使用实际字体名
 FONTS = {
     # 无衬线: 苹方优先 (中英文都很优雅)
-    'sans': '"PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif',
+    'sans': '"PingFang SC", "Noto Sans CJK SC", sans-serif',
     # 等宽: Menlo 优先 (macOS 内置)
     'mono': '"Menlo", "Monaco", "PingFang SC", monospace',
 }
