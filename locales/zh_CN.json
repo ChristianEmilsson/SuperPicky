@@ -86,7 +86,11 @@
     "support_format_hint": "支持 RAW / JPG · 拖拽目录或点击浏览",
     "view_results_arrow": "查看选鸟结果 →",
     "dir_ready": "📂 {dirname}    准备就绪",
-    "reprocess": "重新处理"
+    "reprocess": "重新处理",
+    "status_processing": "正在处理... {filename}",
+    "status_processing_idle": "正在处理...",
+    "status_processed": "已处理 {total} 张    ★★★ {n3}    ★★ {n2}    ★ {n1}",
+    "status_done": "完成！{total} 张    ★★★ {n3}    ★★ {n2}    ★ {n1}"
   },
   "dialogs": {
     "file_organization_title": "文件整理",
@@ -806,7 +810,11 @@
     "re_identifying": "正在重新识别...",
     "drag_photo_hint": "拖入鸟类照片\n识别结果将显示在这里",
     "image_filter": "图片文件 (*.jpg *.jpeg *.png *.nef *.cr2 *.cr3 *.arw *.raf *.orf *.rw2 *.dng);;所有文件 (*)",
-    "error_prefix": "错误: "
+    "error_prefix": "错误: ",
+    "stats_complete": "分析完成  |  {total} 张  |  {time_min:.1f} min",
+    "stats_flying": "🔵 飞版: {count}",
+    "stats_focus_precise": "🟢 精焦: {count}",
+    "stats_species": "🦜 {count} 种: {names}"
   },
   "rating_engine": {
     "reject_no_bird": "未检测到鸟类",
@@ -972,6 +980,10 @@
     "selected_count": "已选 {n} 张",
     "focus_toggle_tooltip": "切换焦点叠加显示 (F)",
     "rate_left_tooltip": "给左侧照片打 {i}★ (键盘 {i})",
-    "rate_right_tooltip": "给右侧照片打 {i}★ (键盘 {key})"
+    "rate_right_tooltip": "给右侧照片打 {i}★ (键盘 {key})",
+    "ctx_show_in_finder": "在 Finder 中显示",
+    "ctx_open_with": "用 {app_name} 打开",
+    "ctx_add_external_app": "在设置中添加外部应用…",
+    "ctx_copy_path": "复制文件路径"
   }
 }

@@ -54,18 +54,6 @@ _FOCUS_COLORS = {
     "WORST": COLORS['focus_worst'],   # 灰 — 脱焦
 }
 
-# 曝光状态中文对照
-_EXPOSURE_ZH = {
-    "GOOD":         "正常",
-    "OVEREXPOSED":  "过曝",
-    "UNDEREXPOSED": "欠曝",
-}
-_EXPOSURE_EN = {
-    "GOOD":         "Normal",
-    "OVEREXPOSED":  "Overexposed",
-    "UNDEREXPOSED": "Underexposed",
-}
-
 
 def _make_section_label(text: str) -> QLabel:
     lbl = QLabel(text)
@@ -509,8 +497,8 @@ class DetailPanel(QWidget):
 
         # 曝光
         exp = p.get("exposure_status", "")
-        exp_map = _EXPOSURE_ZH if is_zh else _EXPOSURE_EN
-        self._val_exposure.setText(exp_map.get(exp, exp or _unknown))
+        _exp_key = {"GOOD": "browser.exposure_good", "OVEREXPOSED": "browser.exposure_over", "UNDEREXPOSED": "browser.exposure_under"}
+        self._val_exposure.setText(self.i18n.t(_exp_key[exp]) if exp in _exp_key else (exp or _unknown))
 
         # 锐度
         sharp = p.get("adj_sharpness")

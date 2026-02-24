@@ -1360,7 +1360,7 @@ class BirdIDDockWidget(QDockWidget):
         def pct(n):
             return f"{n/total*100:.1f}%" if total > 0 else "—"
 
-        lines = [f"分析完成  |  {total} 张  |  {total_time/60:.1f} min", ""]
+        lines = [self.i18n.t("birdid.stats_complete").format(total=total, time_min=total_time/60), ""]
         if total > 0:
             lines.append(f"⭐⭐⭐  {star_3:>4}  ({pct(star_3)})")
             lines.append(f"⭐⭐    {star_2:>4}  ({pct(star_2)})")
@@ -1371,9 +1371,9 @@ class BirdIDDockWidget(QDockWidget):
         if flying > 0 or focus_precise > 0:
             lines.append("")
             if flying > 0:
-                lines.append(f"🔵 飞版: {flying}")
+                lines.append(self.i18n.t("birdid.stats_flying").format(count=flying))
             if focus_precise > 0:
-                lines.append(f"🟢 精焦: {focus_precise}")
+                lines.append(self.i18n.t("birdid.stats_focus_precise").format(count=focus_precise))
 
         if bird_species:
             is_chinese = self.i18n.current_lang.startswith('zh')
@@ -1389,7 +1389,7 @@ class BirdIDDockWidget(QDockWidget):
                     names.append(name)
             if names:
                 lines.append("")
-                lines.append(f"🦜 {len(names)} 种: {', '.join(names)}")
+                lines.append(self.i18n.t("birdid.stats_species").format(count=len(names), names=', '.join(names)))
 
         info_label = QLabel('\n'.join(lines))
         info_label.setStyleSheet(f"""
