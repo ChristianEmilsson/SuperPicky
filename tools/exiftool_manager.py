@@ -1150,7 +1150,8 @@ class ExifToolManager:
             # 构建ExifTool命令（移除-if条件，强制重置）
             # V4.0: 添加 XMP 字段清除（City/State/Country/Description）
             # V4.2: 添加 XMP:Title 清除（鸟种名称）
-            # 修复：添加-ignoreMinorErrors忽略ARW文件警告，-fast加速处理
+            # V4.1: 使用 -overwrite_original_in_place 原地修改，不创建临时文件，
+            #       避免 ExFAT/NTFS 外置盘上 rename() 失败导致 RAW 文件丢失
             has_arw = any(Path(f).suffix.lower() == '.arw' for f in valid_files)
             cmd = [
                 self.exiftool_path,
@@ -1158,20 +1159,20 @@ class ExifToolManager:
                 '-Rating=',
                 '-XMP:Pick=',
                 '-XMP:Label=',
-                '-XMP:City=',           # V4.0: ??
-                '-XMP:State=',          # V4.0: TOPIQ??
-                '-XMP:Country=',        # V4.0: ????
-                '-XMP:Description=',    # V4.0: ??????
-                '-XMP:Title=',          # V4.2: ????
-                '-IPTC:City=',          # ????
+                '-XMP:City=',
+                '-XMP:State=',
+                '-XMP:Country=',
+                '-XMP:Description=',
+                '-XMP:Title=',
+                '-IPTC:City=',
                 '-IPTC:Country-PrimaryLocationName=',
                 '-IPTC:Province-State=',
-                '-overwrite_original',
+                '-overwrite_original_in_place',
             ]
             if not has_arw:
                 cmd += [
-                    '-ignoreMinorErrors',   # ??"Oversized SubIFD StripByteCounts"?????
-                    '-fast'                 # ?????????
+                    '-ignoreMinorErrors',
+                    '-fast'
                 ]
             cmd += valid_files
 
