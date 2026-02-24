@@ -728,7 +728,7 @@ class ExifToolManager:
                     stats['failed'] += 1
             return stats
 
-        caption_temp_files: List[str] = []  # 用于写入 caption 的临时 UTF-8 文件，执行后删除
+        caption_temp_files: List[str] = []  # 用于写入 caption/title 的临时 UTF-8 文件，执行后删除
         num_with_caption = sum(1 for it in files_metadata if it.get('caption'))
 
         # 前置日志：批量写入前先给出反馈，避免大批量时看起来像卡住
@@ -793,9 +793,17 @@ class ExifToolManager:
             if item.get('focus_status') is not None:
                 args_list.append(f'-XMP:Country={item["focus_status"]}')
                 
-            # Title
+            # Title（使用临时 UTF-8 文件，与 Caption 保持一致，避免非 ASCII 编码风险）
             if item.get('title') is not None:
-                args_list.append(f'-XMP:Title={item["title"]}')
+                try:
+                    fd, tmp_path = tempfile.mkstemp(suffix='.txt', prefix='sp_title_')
+                    with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                        f.write(item['title'])
+                    caption_temp_files.append(tmp_path)
+                    args_list.append(f'-XMP:Title<={tmp_path}')
+                except Exception as e:
+                    print(f"⚠️ Title temp file failed: {e}, fallback to inline")
+                    args_list.append(f'-XMP:Title={item["title"]}')
                 
             # Caption (使用临时 UTF-8 文件，避免换行破坏 -@ 参数流)
             caption = item.get('caption')
@@ -840,6 +848,7 @@ class ExifToolManager:
         # 让我们把 _send_to_process 改名为 _send_raw_command 更贴切
         
         num_executes = 0
+        total_timeout = 30.0
         try:
             with self._lock:
                 self._start_process()

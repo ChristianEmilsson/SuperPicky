@@ -173,9 +173,6 @@ class ReportDB:
                     )
                 """)
 
-                # 检查并执行 Schema 升级
-                self._upgrade_schema_if_needed()
-                
                 # 初始化元数据
                 self._conn.execute(
                     "INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)",
@@ -185,9 +182,12 @@ class ReportDB:
                     "INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)",
                     ("directory_path", self.directory)
                 )
+
+        # Schema 升级在独立事务中执行，避免嵌套 commit 冲突
+        self._upgrade_schema_if_needed()
     
     def _upgrade_schema_if_needed(self):
-        """检查并升级数据库 Schema（支持连续升级 v1 -> v2 -> v3）"""
+        """检查并升级数据库 Schema（支持连续升级 v1 -> v2 -> v3 -> v4）"""
         with self._lock:
             # 获取当前 schema 版本
             cursor = self._conn.execute(
@@ -195,16 +195,13 @@ class ReportDB:
             )
             row = cursor.fetchone()
             current_version = row[0] if row else "1"
-            
+
             # ----------------------------------------------------------------------
             #  Upgrade: v1 -> v2 (EXIF metadata)
             # ----------------------------------------------------------------------
             if current_version == "1":
                 print("🔄 Upgrading database schema from v1 to v2...")
-                
-                # V2 新增字段
                 new_columns = [
-                    # 相机设置
                     ("iso", "INTEGER"),
                     ("shutter_speed", "TEXT"),
                     ("aperture", "TEXT"),
@@ -212,36 +209,30 @@ class ReportDB:
                     ("focal_length_35mm", "INTEGER"),
                     ("camera_model", "TEXT"),
                     ("lens_model", "TEXT"),
-                    # GPS
                     ("gps_latitude", "REAL"),
                     ("gps_longitude", "REAL"),
                     ("gps_altitude", "REAL"),
-                    # IPTC
                     ("title", "TEXT"),
                     ("caption", "TEXT"),
                     ("city", "TEXT"),
                     ("state_province", "TEXT"),
                     ("country", "TEXT"),
-                    # 时间
                     ("date_time_original", "TEXT"),
-                    # 鸟种
                     ("bird_species_cn", "TEXT"),
                     ("bird_species_en", "TEXT"),
                     ("birdid_confidence", "REAL"),
-                    # 曝光
                     ("exposure_status", "TEXT"),
                 ]
-                
-                for col_name, col_type in new_columns:
-                    try:
-                        self._conn.execute(
-                            f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
-                        )
-                    except sqlite3.OperationalError:
-                        pass # 列已存在，跳过
-                
+                with self._conn:
+                    for col_name, col_type in new_columns:
+                        try:
+                            self._conn.execute(
+                                f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
+                            )
+                        except sqlite3.OperationalError:
+                            pass  # 列已存在，跳过
+                    self._update_schema_version("2")
                 current_version = "2"
-                self._update_schema_version(current_version)
                 print("✅ Database schema upgraded to v2")
 
             # ----------------------------------------------------------------------
@@ -249,25 +240,22 @@ class ReportDB:
             # ----------------------------------------------------------------------
             if current_version == "2":
                 print("🔄 Upgrading database schema from v2 to v3...")
-                
-                # V3 新增字段
                 new_columns_v3 = [
                     ("original_path", "TEXT"),
                     ("current_path", "TEXT"),
                     ("temp_jpeg_path", "TEXT"),
                     ("debug_crop_path", "TEXT"),
                 ]
-                
-                for col_name, col_type in new_columns_v3:
-                    try:
-                        self._conn.execute(
-                            f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
-                        )
-                    except sqlite3.OperationalError:
-                        pass # 列已存在，跳过
-                
+                with self._conn:
+                    for col_name, col_type in new_columns_v3:
+                        try:
+                            self._conn.execute(
+                                f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
+                            )
+                        except sqlite3.OperationalError:
+                            pass  # 列已存在，跳过
+                    self._update_schema_version("3")
                 current_version = "3"
-                self._update_schema_version(current_version)
                 print("✅ Database schema upgraded to v3")
 
             # ----------------------------------------------------------------------
@@ -275,32 +263,28 @@ class ReportDB:
             # ----------------------------------------------------------------------
             if current_version == "3":
                 print("🔄 Upgrading database schema from v3 to v4...")
-                
-                # V4 新增字段
                 new_columns_v4 = [
                     ("yolo_debug_path", "TEXT"),
                 ]
-                
-                for col_name, col_type in new_columns_v4:
-                    try:
-                        self._conn.execute(
-                            f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
-                        )
-                    except sqlite3.OperationalError:
-                        pass # 列已存在，跳过
-                
+                with self._conn:
+                    for col_name, col_type in new_columns_v4:
+                        try:
+                            self._conn.execute(
+                                f"ALTER TABLE photos ADD COLUMN {col_name} {col_type}"
+                            )
+                        except sqlite3.OperationalError:
+                            pass  # 列已存在，跳过
+                    self._update_schema_version("4")
                 current_version = "4"
-                self._update_schema_version(current_version)
                 print("✅ Database schema upgraded to v4")
 
     def _update_schema_version(self, version):
-        """更新数据库中的版本号"""
+        """更新数据库中的版本号（由调用方负责提交事务）"""
         with self._lock:
             self._conn.execute(
                 "UPDATE meta SET value = ? WHERE key = 'schema_version'",
                 (version,)
             )
-            self._safe_commit()
 
     # ==========================================================================
     #  写入操作
@@ -460,6 +444,7 @@ class ReportDB:
             鸟种名称列表（已去重、去空值）
         """
         column = "bird_species_en" if use_en else "bird_species_cn"
+        assert column in {"bird_species_en", "bird_species_cn"}, f"Invalid column: {column}"
         order_clause = f"{column} COLLATE NOCASE" if use_en else column
 
         with self._lock:
@@ -524,6 +509,7 @@ class ReportDB:
             species_val = filters.get("bird_species_cn")
 
         if isinstance(species_val, str) and species_val.strip():
+            assert species_col in {"bird_species_en", "bird_species_cn"}, f"Invalid column: {species_col}"
             where_clauses.append(f"{species_col} = ?")
             params.append(species_val.strip())
 
