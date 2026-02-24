@@ -171,8 +171,8 @@ class DetailPanel(QWidget):
         view_bar = QWidget()
         view_bar.setStyleSheet(f"background-color: {COLORS['bg_card']}; border-bottom: 1px solid {COLORS['border_subtle']};")
         vb_layout = QHBoxLayout(view_bar)
-        vb_layout.setContentsMargins(12, 8, 12, 8)
-        vb_layout.setSpacing(8)
+        vb_layout.setContentsMargins(8, 4, 8, 4)
+        vb_layout.setSpacing(6)
 
         self._crop_btn = QPushButton(self.i18n.t("browser.crop_view"))
         self._full_btn = QPushButton(self.i18n.t("browser.full_view"))
@@ -191,15 +191,14 @@ class DetailPanel(QWidget):
         nav_bar = QWidget()
         nav_bar.setStyleSheet(f"background-color: {COLORS['bg_card']};")
         nb_layout = QHBoxLayout(nav_bar)
-        nb_layout.setContentsMargins(12, 8, 12, 8)
-        nb_layout.setSpacing(8)
+        nb_layout.setContentsMargins(8, 4, 8, 4)
+        nb_layout.setSpacing(6)
 
         prev_btn = QPushButton(f"◀  {self.i18n.t('browser.prev')}")
         next_btn = QPushButton(f"{self.i18n.t('browser.next')}  ▶")
         for btn in (prev_btn, next_btn):
             btn.setObjectName("secondary")
-            btn.setFixedHeight(30)
-            btn.setStyleSheet("QPushButton { padding: 4px 10px; font-size: 12px; }")
+            btn.setFixedHeight(28)
         prev_btn.clicked.connect(self.prev_requested)
         next_btn.clicked.connect(self.next_requested)
         nb_layout.addWidget(prev_btn)
@@ -394,7 +393,8 @@ class DetailPanel(QWidget):
             f" border: 1px solid {COLORS['accent']};"
             f" border-radius: 6px;"
             f" color: {COLORS['accent']};"
-            f" font-size: 12px; }}"
+            f" font-size: 12px;"
+            f" padding: 2px 8px; }}"
         )
 
     def _switch_view(self, use_crop: bool):
