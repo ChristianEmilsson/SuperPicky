@@ -449,6 +449,102 @@ class ReportDB:
             )
             return [dict(row) for row in cursor.fetchall()]
 
+    def get_distinct_species(self, use_en: bool = False) -> List[str]:
+        """
+        获取数据库中去重后的鸟种名称列表（用于结果浏览器筛选下拉框）。
+
+        Args:
+            use_en: True 使用英文鸟种列，False 使用中文鸟种列
+
+        Returns:
+            鸟种名称列表（已去重、去空值）
+        """
+        column = "bird_species_en" if use_en else "bird_species_cn"
+        order_clause = f"{column} COLLATE NOCASE" if use_en else column
+
+        with self._lock:
+            cursor = self._conn.execute(
+                f"""
+                SELECT DISTINCT {column}
+                FROM photos
+                WHERE {column} IS NOT NULL
+                  AND TRIM({column}) != ''
+                ORDER BY {order_clause}
+                """
+            )
+            return [row[0] for row in cursor.fetchall()]
+
+    def get_photos_by_filters(self, filters: Optional[dict] = None) -> List[dict]:
+        """
+        按结果浏览器筛选条件查询照片。
+
+        支持的 filters 键：
+            - ratings: List[int]
+            - focus_statuses: List[str]
+            - is_flying: List[int]
+            - bird_species_cn / bird_species_en: str
+            - sort_by: filename | sharpness_desc | aesthetic_desc
+        """
+        filters = filters or {}
+
+        where_clauses = []
+        params: List[Any] = []
+
+        ratings = filters.get("ratings")
+        if isinstance(ratings, list):
+            if not ratings:
+                return []
+            placeholders = ", ".join(["?"] * len(ratings))
+            where_clauses.append(f"rating IN ({placeholders})")
+            params.extend(ratings)
+
+        focus_statuses = filters.get("focus_statuses")
+        if isinstance(focus_statuses, list):
+            if not focus_statuses:
+                return []
+            placeholders = ", ".join(["?"] * len(focus_statuses))
+            where_clauses.append(f"focus_status IN ({placeholders})")
+            params.extend(focus_statuses)
+
+        is_flying = filters.get("is_flying")
+        if isinstance(is_flying, list):
+            if not is_flying:
+                return []
+            placeholders = ", ".join(["?"] * len(is_flying))
+            where_clauses.append(f"is_flying IN ({placeholders})")
+            params.extend(is_flying)
+
+        species_col = None
+        species_val = None
+        if "bird_species_en" in filters:
+            species_col = "bird_species_en"
+            species_val = filters.get("bird_species_en")
+        elif "bird_species_cn" in filters:
+            species_col = "bird_species_cn"
+            species_val = filters.get("bird_species_cn")
+
+        if isinstance(species_val, str) and species_val.strip():
+            where_clauses.append(f"{species_col} = ?")
+            params.append(species_val.strip())
+
+        where_sql = ""
+        if where_clauses:
+            where_sql = "WHERE " + " AND ".join(where_clauses)
+
+        sort_by = filters.get("sort_by") or "filename"
+        if sort_by == "sharpness_desc":
+            order_sql = "ORDER BY COALESCE(adj_sharpness, head_sharp, -1e99) DESC, filename ASC"
+        elif sort_by == "aesthetic_desc":
+            order_sql = "ORDER BY COALESCE(adj_topiq, nima_score, -1e99) DESC, filename ASC"
+        else:
+            order_sql = "ORDER BY filename ASC"
+
+        sql = f"SELECT * FROM photos {where_sql} {order_sql}"
+
+        with self._lock:
+            cursor = self._conn.execute(sql, params)
+            return [dict(row) for row in cursor.fetchall()]
+
     def get_statistics(self) -> dict:
         """
         获取评分统计信息。

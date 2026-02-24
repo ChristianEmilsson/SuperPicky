@@ -313,12 +313,12 @@ class ExifToolManager:
                 self._stop_process()
                 return False
 
-    def _get_arw_write_mode(self) -> str:
-        """获取 ARW 写入策略"""
+    def _get_arw_write_mode(self, file_path: Optional[str] = None) -> str:
+        """获取 ARW 写入策略；若传入 file_path 且为 ARW 则强制返回 sidecar（只写 XMP）。"""
         try:
             from advanced_config import get_advanced_config
             cfg = get_advanced_config()
-            mode = cfg.config.get("arw_write_mode", "auto")
+            mode = cfg.get_arw_write_mode_for_file(file_path)
         except Exception:
             mode = "auto"
         mode = str(mode).strip().lower()
@@ -574,9 +574,9 @@ class ExifToolManager:
             return False
 
     def _write_metadata_arw(self, item: Dict[str, any]) -> bool:
-        """ARW 写入策略（embedded / inplace / sidecar / auto）"""
-        mode = self._get_arw_write_mode()
+        """ARW 写入策略（embedded / inplace / sidecar / auto）；ARW 格式强制走 sidecar（XMP）"""
         file_path = item.get('file')
+        mode = self._get_arw_write_mode(file_path)
         if not file_path or not os.path.exists(file_path):
             return False
 
@@ -1031,11 +1031,9 @@ class ExifToolManager:
             print(f"❌ File not found: {file_path}")
             return False
 
-        # ARW 在 sidecar/auto 模式下不修改 RAW 本体
+        # ARW 强制只清 XMP 侧车，不修改 RAW 本体
         if self._is_arw(file_path):
-            mode = self._get_arw_write_mode()
-            if mode in {'sidecar', 'auto'}:
-                return self._reset_xmp_sidecar(file_path)
+            return self._reset_xmp_sidecar(file_path)
 
         # 删除Rating、Pick、City、Country和Province-State字段
         cmd = [
@@ -1133,19 +1131,17 @@ class ExifToolManager:
             # V4.0.3: 预先清理可能存在的残留 _exiftool_tmp 文件
             self.cleanup_temp_files(valid_files)
 
-            # ARW 在 sidecar/auto 模式下只清理 XMP 侧车
-            mode = self._get_arw_write_mode()
-            if mode in {'sidecar', 'auto'}:
-                arw_files = [f for f in valid_files if self._is_arw(f)]
-                if arw_files:
-                    for f in arw_files:
-                        if self._reset_xmp_sidecar(f):
-                            stats['success'] += 1
-                        else:
-                            stats['failed'] += 1
-                    valid_files = [f for f in valid_files if f not in arw_files]
-                    if not valid_files:
-                        continue
+            # ARW 强制只清理 XMP 侧车，不修改 RAW 本体
+            arw_files = [f for f in valid_files if self._is_arw(f)]
+            if arw_files:
+                for f in arw_files:
+                    if self._reset_xmp_sidecar(f):
+                        stats['success'] += 1
+                    else:
+                        stats['failed'] += 1
+                valid_files = [f for f in valid_files if f not in arw_files]
+                if not valid_files:
+                    continue
 
             # 构建ExifTool命令（移除-if条件，强制重置）
             # V4.0: 添加 XMP 字段清除（City/State/Country/Description）
