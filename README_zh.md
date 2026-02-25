@@ -59,10 +59,10 @@
 
 ### macOS
 **Apple Silicon (M1/M2/M3/M4) (v4.1.0 Beta)**
-- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0.dmg) | [Google Drive](https://drive.google.com/file/d/1b_-GZOVO1VNrxIchGjIQ7-Sdd0TLfAFJ/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1GPoCea9zmdVWAu9QbGawlQ?pwd=vffx) 提取码: vffx
+- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0.dmg) | [Google Drive](https://drive.google.com/file/d/1b_-GZOVO1VNrxIchGjIQ7-Sdd0TLfAFJ/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1GPoCea9zmdVWAu9QbGawlQ?pwd=vffx) 提取码: vffx | [夸克网盘](https://pan.quark.cn/s/46cf8ec8f063)
 
 **Intel (2020年前 Mac) (v4.1.0 Beta)**
-- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0_Intel.dmg) | [Google Drive](https://drive.google.com/file/d/1igArTfwPdpNmBcaehx4aEt4aYv8Yi04Z/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/19yQiz655ebZwb2x4jM-75Q?pwd=b2tt) 提取码: b2tt
+- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0_Intel.dmg) | [Google Drive](https://drive.google.com/file/d/1igArTfwPdpNmBcaehx4aEt4aYv8Yi04Z/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/19yQiz655ebZwb2x4jM-75Q?pwd=b2tt) 提取码: b2tt | [夸克网盘](https://pan.quark.cn/s/33751818ac71)
 
 1. 下载对应版本的 DMG 文件
 2. 双击 DMG 文件，将应用拖入 Applications
@@ -70,7 +70,7 @@
 
 ### Windows
 **CUDA-GPU Version (v4.1.0 Beta)**
-- [百度网盘](https://pan.baidu.com/s/1XBaGXPim_WzjpNBgG-altg?pwd=c2a6) 提取码: c2a6 | [Google Drive](https://drive.google.com/file/d/1IKSxB3KbQdDO7VhnsGnHjOb2EgqZIgSB/view?usp=sharing) | [夸克网盘](https://pan.quark.cn/s/73ba64372f98)
+- [百度网盘](https://pan.baidu.com/s/1XBaGXPim_WzjpNBgG-altg?pwd=c2a6) 提取码: c2a6 | [Google Drive](https://drive.google.com/file/d/1IKSxB3KbQdDO7VhnsGnHjOb2EgqZIgSB/view?usp=sharing) | [夸克网盘](https://pan.quark.cn/s/d15276717367)
 
 **CPU Version (v4.1.0 Beta)**
 - [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_4.1.0_Win64_CPU.zip) | [百度网盘](https://pan.baidu.com/s/1krjIG3rsSbUUI4PeVUh2Iw?pwd=kd45) 提取码: kd45 | [Google Drive](https://drive.google.com/file/d/1UHFUqGt3q-6hXYzZCeR9cUEmkniL48A4/view?usp=sharing) | [夸克网盘](https://pan.quark.cn/s/462025bd8b3a)

@@ -67,17 +67,19 @@ Automatically set thresholds based on your experience:
 - [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0.dmg)
 - [Google Drive (Mirror)](https://drive.google.com/file/d/1b_-GZOVO1VNrxIchGjIQ7-Sdd0TLfAFJ/view?usp=sharing)
 - [Baidu Netdisk](https://pan.baidu.com/s/1GPoCea9zmdVWAu9QbGawlQ?pwd=vffx) Code: vffx
+- [Quark](https://pan.quark.cn/s/46cf8ec8f063)
 
 **Intel (Pre-2020 Mac) (v4.1.0 Beta)**
 - [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0_Intel.dmg)
 - [Google Drive (Mirror)](https://drive.google.com/file/d/1igArTfwPdpNmBcaehx4aEt4aYv8Yi04Z/view?usp=sharing)
 - [Baidu Netdisk](https://pan.baidu.com/s/19yQiz655ebZwb2x4jM-75Q?pwd=b2tt) Code: b2tt
+- [Quark](https://pan.quark.cn/s/33751818ac71)
 
 ### Windows
 **CUDA-GPU Version (v4.1.0 Beta)**
 - [Baidu Netdisk](https://pan.baidu.com/s/1XBaGXPim_WzjpNBgG-altg?pwd=c2a6) Code: c2a6
 - [Google Drive (Mirror)](https://drive.google.com/file/d/1IKSxB3KbQdDO7VhnsGnHjOb2EgqZIgSB/view?usp=sharing)
-- [Quark](https://pan.quark.cn/s/73ba64372f98)
+- [Quark](https://pan.quark.cn/s/d15276717367)
 
 **CPU Version (v4.1.0 Beta)**
 - [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_4.1.0_Win64_CPU.zip)
