@@ -62,15 +62,15 @@
 - [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0.dmg) | [百度网盘](https://pan.baidu.com/s/1GPoCea9zmdVWAu9QbGawlQ?pwd=vffx) 提取码: vffx
 
 **Intel (2020年前 Mac) (v4.1.0 Beta)**
-- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0_Intel.dmg) | [百度网盘](https://pan.baidu.com/s/19yQiz655ebZwb2x4jM-75Q?pwd=b2tt) 提取码: b2tt
+- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0_Intel.dmg) | [Google Drive](https://drive.google.com/file/d/1igArTfwPdpNmBcaehx4aEt4aYv8Yi04Z/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/19yQiz655ebZwb2x4jM-75Q?pwd=b2tt) 提取码: b2tt
 
 1. 下载对应版本的 DMG 文件
 2. 双击 DMG 文件，将应用拖入 Applications
 3. 首次打开：右键点击应用选择"打开"
 
 ### Windows
-**CUDA-GPU Version (v4.0.6 Beta)**
-- [百度网盘](https://pan.baidu.com/s/1UUfnal8rT2Mizkdcs0xpwg?pwd=igew) 提取码: igew
+**CUDA-GPU Version (v4.1.0 Beta)**
+- [百度网盘](https://pan.baidu.com/s/14yzWYPdUm52gKsMW52yDEQ?pwd=2dgs) 提取码: 2dgs
 
 **CPU Version (v4.0.6 Beta)**
 - [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_4.0.6_Win64_CPU.zip) | [Google Drive](https://drive.google.com/file/d/1m-IEASCsAa3Znertanw1NcbX3IKKi2M3/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1VtVnNXJQYKEQw4oo_pZRlw) 提取码: xgnj

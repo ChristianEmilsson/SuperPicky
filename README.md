@@ -69,11 +69,12 @@ Automatically set thresholds based on your experience:
 
 **Intel (Pre-2020 Mac) (v4.1.0 Beta)**
 - [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0_Intel.dmg)
+- [Google Drive (Mirror)](https://drive.google.com/file/d/1igArTfwPdpNmBcaehx4aEt4aYv8Yi04Z/view?usp=sharing)
 - [Baidu Netdisk](https://pan.baidu.com/s/19yQiz655ebZwb2x4jM-75Q?pwd=b2tt) Code: b2tt
 
 ### Windows
-**CUDA-GPU Version (v4.0.6 Beta)**
-- [Baidu Netdisk](https://pan.baidu.com/s/1UUfnal8rT2Mizkdcs0xpwg?pwd=igew) Code: igew
+**CUDA-GPU Version (v4.1.0 Beta)**
+- [Baidu Netdisk](https://pan.baidu.com/s/14yzWYPdUm52gKsMW52yDEQ?pwd=2dgs) Code: 2dgs
 
 **CPU Version (v4.0.6 Beta)**
 - [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_4.0.6_Win64_CPU.zip)
