@@ -70,7 +70,7 @@
 
 ### Windows
 **CUDA-GPU Version (v4.1.0 Beta)**
-- [百度网盘](https://pan.baidu.com/s/14yzWYPdUm52gKsMW52yDEQ?pwd=2dgs) 提取码: 2dgs
+- [百度网盘](https://pan.baidu.com/s/14yzWYPdUm52gKsMW52yDEQ?pwd=2dgs) 提取码: 2dgs | [夸克网盘](https://pan.quark.cn/s/73ba64372f98)
 
 **CPU Version (v4.0.6 Beta)**
 - [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_4.0.6_Win64_CPU.zip) | [Google Drive](https://drive.google.com/file/d/1m-IEASCsAa3Znertanw1NcbX3IKKi2M3/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1VtVnNXJQYKEQw4oo_pZRlw) 提取码: xgnj

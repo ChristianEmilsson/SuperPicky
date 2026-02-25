@@ -76,6 +76,7 @@ Automatically set thresholds based on your experience:
 ### Windows
 **CUDA-GPU Version (v4.1.0 Beta)**
 - [Baidu Netdisk](https://pan.baidu.com/s/14yzWYPdUm52gKsMW52yDEQ?pwd=2dgs) Code: 2dgs
+- [Quark](https://pan.quark.cn/s/73ba64372f98)
 
 **CPU Version (v4.0.6 Beta)**
 - [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_4.0.6_Win64_CPU.zip)
