@@ -990,6 +990,7 @@ header {
 .download-links {
     display: flex;
     gap: var(--space-sm);
+    flex-wrap: wrap;
 }
 
 /* Sub-row layout for combined download cards */
