@@ -1,5 +1,39 @@
 # SuperPicky Release Notes
 
+## V4.1.0 (2026-02-25) - Result Browser & HEIF Support / 结果浏览器与 HEIF 支持
+
+### New Features
+- **[🆕 UI] Result Browser (选鸟结果浏览器)**:
+  - Three-panel layout: Filter Panel + Thumbnail Grid + Detail Panel.
+  - Filter by rating, focus, exposure, flight status, and species.
+  - Full-screen viewer with keyboard navigation.
+  - Side-by-side comparison viewer for multi-selection.
+  - Right-click to open in Lightroom/Photoshop/Finder.
+  - In-browser star rating with database write-back.
+- **[🆕 Format] HEIF/HEIC Support (macOS)**:
+  - Native HEIF reading on macOS ARM via ImageIO.
+  - Full EXIF metadata preservation.
+
+### Improvements
+- **[Perf]** Async thumbnail loading with LRU cache.
+- **[UX]** Auto-launch Result Browser after processing.
+- **[UX]** Thumbnail size slider with real-time adjustment.
+
+### Downloads
+**macOS Apple Silicon (M1/M2/M3/M4)**:
+- [GitHub](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0.dmg) | [Google Drive](https://drive.google.com/file/d/1b_-GZOVO1VNrxIchGjIQ7-Sdd0TLfAFJ/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1GPoCea9zmdVWAu9QbGawlQ?pwd=vffx) (vffx)
+
+**macOS Intel (Pre-2020 Mac)**:
+- [GitHub](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0_Intel.dmg) | [Google Drive](https://drive.google.com/file/d/1igArTfwPdpNmBcaehx4aEt4aYv8Yi04Z/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/19yQiz655ebZwb2x4jM-75Q?pwd=b2tt) (b2tt)
+
+**Windows CUDA-GPU**:
+- [百度网盘](https://pan.baidu.com/s/1XBaGXPim_WzjpNBgG-altg?pwd=c2a6) (c2a6) | [Google Drive](https://drive.google.com/file/d/1IKSxB3KbQdDO7VhnsGnHjOb2EgqZIgSB/view?usp=sharing) | [夸克网盘](https://pan.quark.cn/s/73ba64372f98)
+
+**Windows CPU**:
+- [GitHub](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_4.1.0_Win64_CPU.zip) | [百度网盘](https://pan.baidu.com/s/1krjIG3rsSbUUI4PeVUh2Iw?pwd=kd45) (kd45) | [Google Drive](https://drive.google.com/file/d/1UHFUqGt3q-6hXYzZCeR9cUEmkniL48A4/view?usp=sharing)
+
+---
+
 ## V4.0.6 Beta (2026-02-18) - OSEA Model & Offline Intelligence / OSEA 模型与离线智能
 
 ### New Features
@@ -152,27 +186,27 @@ This release brings a major architectural overhaul, migrating from CSV to SQLite
 
 ---
 
-## Downloads
+## Downloads (Latest: V4.1.0)
 
 ### macOS Apple Silicon (M1/M2/M3/M4)
-- GitHub: [SuperPicky_arm64_V4.0.5.dmg](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.5/SuperPicky_arm64_V4.0.5.dmg)
-- Google Drive: [SuperPicky_arm64_V4.0.5.dmg](https://drive.google.com/file/d/1ykFNcV9rOpp_w04lOer0dyel7chGkS_Q/view?usp=sharing)
-- 百度网盘: [SuperPicky_arm64_V4.0.5.dmg](https://pan.baidu.com/s/1QcBZvhwYn0W2n_vkA4gNaA?pwd=mx69) 提取码: mx69
+- GitHub: [SuperPicky_v4.1.0.dmg](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0.dmg)
+- Google Drive: [SuperPicky_v4.1.0.dmg](https://drive.google.com/file/d/1b_-GZOVO1VNrxIchGjIQ7-Sdd0TLfAFJ/view?usp=sharing)
+- 百度网盘: [SuperPicky_v4.1.0.dmg](https://pan.baidu.com/s/1GPoCea9zmdVWAu9QbGawlQ?pwd=vffx) 提取码: vffx
 
-### macOS Intel
-- GitHub: [SuperPicky_v4.0.5_Intel.dmg](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.5/SuperPicky_v4.0.5_Intel.dmg)
-- Google Drive: [SuperPicky_v4.0.5_Intel.dmg](https://drive.google.com/file/d/1mYN8FS3xfgSWm7l1dMIA9UfPBCmWbNG7/view?usp=sharing)
-- 百度网盘: [SuperPicky_v4.0.5_Intel.dmg](https://pan.baidu.com/s/1fQ8Wjq0oq1K9GmQTQS7rZA?pwd=cc2f) 提取码: cc2f
+### macOS Intel (Pre-2020 Mac)
+- GitHub: [SuperPicky_v4.1.0_Intel.dmg](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_v4.1.0_Intel.dmg)
+- Google Drive: [SuperPicky_v4.1.0_Intel.dmg](https://drive.google.com/file/d/1igArTfwPdpNmBcaehx4aEt4aYv8Yi04Z/view?usp=sharing)
+- 百度网盘: [SuperPicky_v4.1.0_Intel.dmg](https://pan.baidu.com/s/19yQiz655ebZwb2x4jM-75Q?pwd=b2tt) 提取码: b2tt
 
-### Windows (v4.0.5)
+### Windows (v4.1.0)
 
 **CUDA-GPU Version**
-- [Google Drive](https://drive.google.com/file/d/17-dFw2pZKXn53zmYAZ7HQNHTyndCT76E/view?usp=drive_link)
-- [百度网盘](https://pan.baidu.com/s/14tnSXnI2LIeZf4egu4xxNg?pwd=jfuz) 提取码: jfuz
-- [Google Drive](https://drive.google.com/file/d/17-dFw2pZKXn53zmYAZ7HQNHTyndCT76E/view?usp=drive_link)
+- [百度网盘](https://pan.baidu.com/s/1XBaGXPim_WzjpNBgG-altg?pwd=c2a6) 提取码: c2a6
+- [Google Drive](https://drive.google.com/file/d/1IKSxB3KbQdDO7VhnsGnHjOb2EgqZIgSB/view?usp=sharing)
+- [夸克网盘](https://pan.quark.cn/s/73ba64372f98)
 
-**CPU Version (v4.0.4)**
-- GitHub: [SuperPicky4.0.4_Win64_No_CUDA.zip](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.4/SuperPicky4.0.4_Win64_No_CUDA.zip)
-- Google Drive: [SuperPicky_Win_v4.0.4_CPU](https://drive.google.com/file/d/1QWfDsb4L7wMoUoo17p6iiW1L9Lf-OAEv/view?usp=sharing)
-- 百度网盘: [SuperPicky_Win_v4.0.4_CPU](https://pan.baidu.com/s/1zhWtMwAzthrLAeKxKf4SZw?pwd=2mrt) 提取码: 2mrt
+**CPU Version**
+- GitHub: [SuperPicky_4.1.0_Win64_CPU.zip](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_4.1.0_Win64_CPU.zip)
+- [百度网盘](https://pan.baidu.com/s/1krjIG3rsSbUUI4PeVUh2Iw?pwd=kd45) 提取码: kd45
+- [Google Drive](https://drive.google.com/file/d/1UHFUqGt3q-6hXYzZCeR9cUEmkniL48A4/view?usp=sharing)
 
