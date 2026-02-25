@@ -70,10 +70,10 @@
 
 ### Windows
 **CUDA-GPU Version (v4.1.0 Beta)**
-- [百度网盘](https://pan.baidu.com/s/1XBaGXPim_WzjpNBgG-altg?pwd=c2a6) 提取码: c2a6 | [夸克网盘](https://pan.quark.cn/s/73ba64372f98)
+- [百度网盘](https://pan.baidu.com/s/1XBaGXPim_WzjpNBgG-altg?pwd=c2a6) 提取码: c2a6 | [Google Drive](https://drive.google.com/file/d/1IKSxB3KbQdDO7VhnsGnHjOb2EgqZIgSB/view?usp=sharing) | [夸克网盘](https://pan.quark.cn/s/73ba64372f98)
 
 **CPU Version (v4.1.0 Beta)**
-- [百度网盘](https://pan.baidu.com/s/1krjIG3rsSbUUI4PeVUh2Iw?pwd=kd45) 提取码: kd45
+- [百度网盘](https://pan.baidu.com/s/1krjIG3rsSbUUI4PeVUh2Iw?pwd=kd45) 提取码: kd45 | [Google Drive](https://drive.google.com/file/d/1UHFUqGt3q-6hXYzZCeR9cUEmkniL48A4/view?usp=sharing)
 
 
 1. 下载并解压 ZIP 文件
