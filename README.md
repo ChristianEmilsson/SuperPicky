@@ -80,6 +80,7 @@ Automatically set thresholds based on your experience:
 - [Quark](https://pan.quark.cn/s/73ba64372f98)
 
 **CPU Version (v4.1.0 Beta)**
+- [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_4.1.0_Win64_CPU.zip)
 - [Baidu Netdisk](https://pan.baidu.com/s/1krjIG3rsSbUUI4PeVUh2Iw?pwd=kd45) Code: kd45
 - [Google Drive (Mirror)](https://drive.google.com/file/d/1UHFUqGt3q-6hXYzZCeR9cUEmkniL48A4/view?usp=sharing)
 
