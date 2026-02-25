@@ -74,7 +74,7 @@
             <!-- Software Interface Preview -->
             <div class="hero-preview">
                 <div class="hero-preview-frame">
-                    <img src="img/en/birdid-result.jpg" alt="SuperPicky Interface">
+                    <img src="img/V410/Screen/识鸟.png" alt="SuperPicky V4.1.0 Interface">
                     <div class="hero-preview-glow"></div>
                 </div>
             </div>
@@ -113,9 +113,37 @@
     <!-- Showcase Section -->
     <section class="showcase">
         <div class="container">
-            <div class="showcase-frame">
-                <img src="img/V_3_9_4/hero对比图.png" alt="AI Detection">
-                <div class="showcase-glow"></div>
+            <div class="showcase-tabs">
+                <button class="showcase-tab active" onclick="switchShowcase(0)">
+                    <span class="lang-cn">📋 结果浏览器</span>
+                    <span class="lang-en">📋 Result Browser</span>
+                </button>
+                <button class="showcase-tab" onclick="switchShowcase(1)">
+                    <span class="lang-cn">🔍 全屏查看器</span>
+                    <span class="lang-en">🔍 Fullscreen Viewer</span>
+                </button>
+            </div>
+            <div class="showcase-panels">
+                <div class="showcase-panel active">
+                    <div class="showcase-frame">
+                        <img src="img/V410/Screen/结果浏览器全窗口截图（三栏布局：左筛选 + 中网格 + 右详情）.jpeg" alt="Result Browser">
+                        <div class="showcase-glow"></div>
+                    </div>
+                    <p class="showcase-caption">
+                        <span class="lang-cn">选鸟结果浏览器 — 三栏布局：筛选 · 缩略图网格 · EXIF 详情</span>
+                        <span class="lang-en">Result Browser — Filter · Thumbnail Grid · EXIF Detail</span>
+                    </p>
+                </div>
+                <div class="showcase-panel">
+                    <div class="showcase-frame">
+                        <img src="img/V410/Screen/全屏查看器界面.jpeg" alt="Fullscreen Viewer">
+                        <div class="showcase-glow"></div>
+                    </div>
+                    <p class="showcase-caption">
+                        <span class="lang-cn">全屏查看器 — AF 对焦框 · 键盘导航 · 100% 放大</span>
+                        <span class="lang-en">Fullscreen Viewer — AF Box · Keyboard Nav · 100% Zoom</span>
+                    </p>
+                </div>
             </div>
         </div>
     </section>
@@ -133,17 +161,6 @@
                 <div class="feature-card">
                     <div class="feature-number">01</div>
                     <h3>
-                        <span class="lang-cn">多模型协作</span>
-                        <span class="lang-en">Multi-Model AI</span>
-                    </h3>
-                    <p>
-                        <span class="lang-cn">YOLO11 检测 + SuperEyes 鸟眼 + SuperFlier 飞鸟姿态</span>
-                        <span class="lang-en">YOLO11 + SuperEyes + SuperFlier BIF detection</span>
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-number">02</div>
-                    <h3>
                         <span class="lang-cn">智能评分</span>
                         <span class="lang-en">Smart Rating</span>
                     </h3>
@@ -153,7 +170,7 @@
                     </p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-number">03</div>
+                    <div class="feature-number">02</div>
                     <h3>
                         <span class="lang-cn">对焦判定</span>
                         <span class="lang-en">Focus Detection</span>
@@ -164,7 +181,7 @@
                     </p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-number">04</div>
+                    <div class="feature-number">03</div>
                     <h3>
                         <span class="lang-cn">连拍分组</span>
                         <span class="lang-en">Burst Grouping</span>
@@ -177,7 +194,7 @@
 
                 <!-- V4.0.0 NEW features -->
                 <div class="feature-card featured-feature">
-                    <div class="feature-number">05 <span class="beta-badge">🆕 V4</span></div>
+                    <div class="feature-number">04 <span class="beta-badge">🆕 V4</span></div>
                     <h3>
                         <span class="lang-cn">AI 鸟种识别</span>
                         <span class="lang-en">AI Bird ID</span>
@@ -188,7 +205,7 @@
                     </p>
                 </div>
                 <div class="feature-card featured-feature">
-                    <div class="feature-number">06 <span class="beta-badge">🆕 V4</span></div>
+                    <div class="feature-number">05 <span class="beta-badge">🆕 V4</span></div>
                     <h3>
                         <span class="lang-cn">飞鸟与鸟眼识别</span>
                         <span class="lang-en">BIF & Bird Eye Detection</span>
@@ -196,6 +213,18 @@
                     <p>
                         <span class="lang-cn">SuperFlier 飞鸟姿态 + SuperEyes 鸟眼定位识别</span>
                         <span class="lang-en">SuperFlier BIF detection + SuperEyes bird eye localization</span>
+                    </p>
+                </div>
+                <div class="feature-card featured-feature">
+                    <div class="feature-number">06 <span class="beta-badge">🆕 V4.1</span></div>
+                    <h3>
+                        <span class="lang-cn">选鸟结果浏览器</span>
+                        <span class="lang-en">Result Browser</span>
+                    </h3>
+                    <p>
+                        <span class="lang-cn">缩略图网格 · 智能筛选 · 全屏查看 · 对比评分 · 一站式浏览选片结果</span>
+                        <span class="lang-en">Thumbnail grid · Smart filters · Fullscreen viewer · Side-by-side
+                            comparison</span>
                     </p>
                 </div>
             </div>
@@ -581,6 +610,17 @@
     </footer>
 
     <!-- Language Toggle Script -->
+    <script>
+        // Showcase tab switching
+        function switchShowcase(index) {
+            document.querySelectorAll('.showcase-tab').forEach((tab, i) => {
+                tab.classList.toggle('active', i === index);
+            });
+            document.querySelectorAll('.showcase-panel').forEach((panel, i) => {
+                panel.classList.toggle('active', i === index);
+            });
+        }
+    </script>
     <script>
         function setLang(lang) {
             document.documentElement.setAttribute('data-lang', lang);
