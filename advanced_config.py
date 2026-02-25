@@ -81,6 +81,11 @@ class AdvancedConfig:
         # 浏览器排序偏好（用户上次选择）
         # 可选值: "filename" | "sharpness_desc" | "aesthetic_desc"
         "browser_sort": "sharpness_desc",
+
+        # 主界面复选框状态
+        "flight_check": True,    # 飞鸟检测默认开启
+        "burst_check": True,     # 连拍检测默认开启
+        "exposure_check": False, # 曝光检测默认关闭
     }
 
     def __init__(self, config_file=None):
@@ -348,6 +353,28 @@ class AdvancedConfig:
         """保存浏览器排序偏好。"""
         if value in ("filename", "sharpness_desc", "aesthetic_desc"):
             self.config["browser_sort"] = value
+
+    # 主界面复选框状态 getter/setter
+    @property
+    def flight_check(self):
+        return self.config.get("flight_check", True)
+
+    @property
+    def burst_check(self):
+        return self.config.get("burst_check", True)
+
+    @property
+    def exposure_check(self):
+        return self.config.get("exposure_check", False)
+
+    def set_flight_check(self, value):
+        self.config["flight_check"] = bool(value)
+
+    def set_burst_check(self, value):
+        self.config["burst_check"] = bool(value)
+
+    def set_exposure_check(self, value):
+        self.config["exposure_check"] = bool(value)
 
     def get_dict(self):
         """获取配置字典（用于传递给其他模块）"""

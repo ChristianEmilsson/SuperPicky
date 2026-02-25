@@ -988,7 +988,7 @@ class SuperPickyMainWindow(QMainWindow):
         flight_layout.addWidget(flight_label)
 
         self.flight_check = QCheckBox()
-        self.flight_check.setChecked(True)
+        self.flight_check.setChecked(self.config.flight_check)
         flight_layout.addWidget(self.flight_check)
 
         header_layout.addLayout(flight_layout)
@@ -1002,7 +1002,7 @@ class SuperPickyMainWindow(QMainWindow):
         burst_layout.addWidget(burst_label)
         
         self.burst_check = QCheckBox()
-        self.burst_check.setChecked(True)  # 默认开启
+        self.burst_check.setChecked(self.config.burst_check)
         burst_layout.addWidget(self.burst_check)
         
         header_layout.addLayout(burst_layout)
@@ -1016,10 +1016,15 @@ class SuperPickyMainWindow(QMainWindow):
         exposure_layout.addWidget(exposure_label)
         
         self.exposure_check = QCheckBox()
-        self.exposure_check.setChecked(False)  # V4.2: 默认关闭
+        self.exposure_check.setChecked(self.config.exposure_check)
         exposure_layout.addWidget(self.exposure_check)
-        
+
         header_layout.addLayout(exposure_layout)
+
+        # 持久化复选框状态
+        self.flight_check.stateChanged.connect(self._save_check_states)
+        self.burst_check.stateChanged.connect(self._save_check_states)
+        self.exposure_check.stateChanged.connect(self._save_check_states)
         
         # V4.2: 自动识鸟开关
         birdid_layout = QHBoxLayout()
@@ -2603,6 +2608,13 @@ class SuperPickyMainWindow(QMainWindow):
         # 更新水平显示标签
         self._update_skill_level_label(level_key)
     
+    def _save_check_states(self):
+        """持久化主界面复选框状态"""
+        self.config.set_flight_check(self.flight_check.isChecked())
+        self.config.set_burst_check(self.burst_check.isChecked())
+        self.config.set_exposure_check(self.exposure_check.isChecked())
+        self.config.save()
+
     def _check_custom_mode(self):
         """检查当前滑块值是否与任何预设匹配，如果不匹配则切换到自选模式"""
         # 如果正在应用预设，跳过检查
