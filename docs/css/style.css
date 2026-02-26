@@ -993,6 +993,11 @@ header {
     flex-wrap: wrap;
 }
 
+.download-links .btn {
+    padding: 10px 18px;
+    font-size: 13px;
+}
+
 /* Sub-row layout for combined download cards */
 .download-sub-rows {
     width: 100%;
